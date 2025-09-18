@@ -26,8 +26,14 @@
 - ✅ **Completed**: Version number displayed in title bar
 - ✅ **Completed**: Removed unnecessary yellow header section
 - ✅ **Completed**: Fixed scrolling functionality for certificate navigation
-- ✅ **Completed**: Version updated to 0.2.0 according to semver methodology (MINOR version for new features)
-- ✅ **Completed**: CHANGELOG.md created with detailed release notes
+- ✅ **Completed**: HTTPS certificate chain fetching from any website URL
+- ✅ **Completed**: TLS handshake certificate extraction using rustls
+- ✅ **Completed**: Improved text mode certificate tree formatting for better readability
+- ✅ **Completed**: Added color-coded validity status in text mode (green/yellow/red)
+- ✅ **Completed**: Implemented aligned date columns in text output
+- ✅ **Completed**: Simplified tree structure with clean connectors
+- ✅ **Completed**: Version updated to 0.3.0 according to semver methodology (MINOR version for new features)
+- ✅ **Completed**: CHANGELOG.md updated with comprehensive release notes for v0.3.0
 
 ## Next Steps
 - **Potential Enhancements**:

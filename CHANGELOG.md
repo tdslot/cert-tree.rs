@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2025-09-18
+
+### Added
+- Enhanced text mode display with color-coded certificate validity status
+- Aligned date columns in text output for consistent formatting
+- Simplified tree structure with clean connectors (├── └──)
+- Smart truncation of long certificate names with ellipsis
+- Terminal width detection for responsive column alignment
+
+### Changed
+- Improved text mode visual hierarchy and readability
+- Better spacing and alignment in certificate tree display
+- Enhanced color coding for validity status (green/yellow/red)
+
+### Technical
+- Added `term_size` dependency for terminal width detection
+- Implemented dynamic column positioning based on terminal size
+- Enhanced `display_tree_node_text()` function with color support
+- Added ANSI color codes for cross-platform terminal coloring
+
 ## [0.2.0] - 2025-09-18
 
 ### Added
@@ -18,6 +38,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Responsive layout that adapts to terminal width changes
   - Dynamic column sizing with left-aligned names anchored to left edge
   - Right-aligned dates anchored to right edge with consistent spacing
+- HTTPS certificate chain fetching from any website URL
+- TLS handshake certificate extraction using rustls library
+- Support for both direct certificate URLs and regular HTTPS websites
+- Improved text mode certificate tree formatting with clean visual hierarchy
+- Better validity status display with consistent date formatting
+- Added color-coded output in text mode (green for valid, yellow for expiring, red for expired)
+- Implemented aligned date columns with consistent positioning
+- Simplified tree structure with clean connectors (├── └──)
+- Smart truncation of long certificate names with ellipsis
 
 ### Changed
 - Improved TUI layout with better column alignment and spacing

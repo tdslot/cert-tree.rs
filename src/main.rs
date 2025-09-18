@@ -20,6 +20,16 @@ use crossterm::{
 };
 use std::io;
 use std::collections::HashMap;
+use rustls::{ClientConfig, RootCertStore};
+use webpki_roots::TLS_SERVER_ROOTS;
+use std::sync::Arc;
+use term_size;
+
+impl From<rustls::Error> for CertError {
+    fn from(err: rustls::Error) -> Self {
+        CertError::Tls(err.to_string())
+    }
+}
 
 #[derive(Error, Debug)]
 pub enum CertError {
@@ -27,6 +37,8 @@ pub enum CertError {
     Io(#[from] std::io::Error),
     #[error("HTTP error: {0}")]
     Http(#[from] reqwest::Error),
+    #[error("TLS error: {0}")]
+    Tls(String),
     #[error("X.509 parsing error: {0}")]
     X509Parse(String),
     #[error("Invalid certificate format")]
@@ -121,6 +133,92 @@ pub fn load_certificate_from_url(url: &str) -> Result<Vec<u8>, CertError> {
     let response = client.get(url).send()?;
     let data = response.bytes()?;
     Ok(data.to_vec())
+}
+
+pub fn fetch_certificate_chain_from_url(url: &str) -> Result<Vec<CertificateInfo>, CertError> {
+    // Parse the URL to extract hostname
+    let url_parsed = url::Url::parse(url).map_err(|_| CertError::InvalidFormat)?;
+    let hostname = url_parsed.host_str().ok_or(CertError::InvalidFormat)?;
+
+    // First, try to fetch as direct certificate data (for URLs like cacert.pem)
+    let client = reqwest::blocking::Client::new();
+    match client.get(url).send() {
+        Ok(response) => {
+            let data = response.bytes()?;
+            let content = String::from_utf8_lossy(&data);
+
+            // Check if the URL contains certificate data
+            if content.contains("-----BEGIN CERTIFICATE-----") {
+                return parse_certificate_chain(&data);
+            }
+        }
+        Err(_) => {
+            // If direct fetch fails, try to get certificate chain from HTTPS connection
+        }
+    }
+
+    // For HTTPS URLs, establish a TLS connection and capture the certificate chain
+    fetch_certificate_chain_via_tls(hostname)
+}
+
+fn fetch_certificate_chain_via_tls(hostname: &str) -> Result<Vec<CertificateInfo>, CertError> {
+    use std::io::{Read, Write};
+    use rustls::client::ClientConnection;
+
+    // Set up TLS configuration
+    let mut root_store = RootCertStore::empty();
+    root_store.add_trust_anchors(TLS_SERVER_ROOTS.iter().map(|ta| {
+        rustls::OwnedTrustAnchor::from_subject_spki_name_constraints(
+            ta.subject,
+            ta.spki,
+            ta.name_constraints,
+        )
+    }));
+
+    let config = ClientConfig::builder()
+        .with_safe_defaults()
+        .with_root_certificates(root_store)
+        .with_no_client_auth();
+
+    // Create a TCP connection
+    let mut socket = std::net::TcpStream::connect((hostname, 443))?;
+    socket.set_read_timeout(Some(std::time::Duration::from_secs(10)))?;
+    socket.set_write_timeout(Some(std::time::Duration::from_secs(10)))?;
+
+    let server_name = rustls::ServerName::try_from(hostname)
+        .map_err(|_| CertError::InvalidFormat)?;
+
+    let mut conn = ClientConnection::new(Arc::new(config), server_name)?;
+
+    // Perform TLS handshake
+    let mut tls_stream = rustls::Stream::new(&mut conn, &mut socket);
+
+    // Send a minimal HTTP request to trigger the handshake
+    let request = format!("GET / HTTP/1.0\r\nHost: {}\r\n\r\n", hostname);
+    tls_stream.write_all(request.as_bytes())?;
+
+    // Read response to complete handshake
+    let mut buffer = [0u8; 1024];
+    let _ = tls_stream.read(&mut buffer);
+
+    // Extract certificate chain from the connection
+    if let Some(certs) = conn.peer_certificates() {
+        let mut certificates = Vec::new();
+        for cert_der in certs {
+            match X509Certificate::from_der(cert_der.as_ref()) {
+                Ok((_, cert)) => {
+                    let cert_info = extract_cert_info(&cert)?;
+                    certificates.push(cert_info);
+                }
+                Err(e) => {
+                    return Err(CertError::X509Parse(format!("Failed to parse certificate: {}", e)));
+                }
+            }
+        }
+        Ok(certificates)
+    } else {
+        Err(CertError::X509Parse("No certificates found in TLS handshake".to_string()))
+    }
 }
 
 pub fn parse_certificate(data: &[u8]) -> Result<CertificateInfo, CertError> {
@@ -585,39 +683,66 @@ fn display_tui(cert: &CertificateInfo) -> Result<(), Box<dyn std::error::Error>>
 pub fn display_certificate_tree_text(tree: &CertificateTree) {
     for (i, root) in tree.roots.iter().enumerate() {
         let prefix = if i == tree.roots.len() - 1 { "━ " } else { "━ " };
-        display_tree_node_text(root, &format!("{}{}", prefix, root.cert.subject), true, i == tree.roots.len() - 1);
+        display_tree_node_text(root, prefix, true, i == tree.roots.len() - 1);
     }
 }
 
 fn display_tree_node_text(node: &CertificateNode, prefix: &str, is_last: bool, is_root_last: bool) {
-    // Display current certificate
-    let validity_info = match node.validity_status {
-        ValidityStatus::Expired => {
-            if let Ok(expiry) = DateTime::parse_from_rfc2822(&node.cert.not_after) {
-                format!(" [EXPIRED on: {}]", expiry.format("%Y-%m-%d %H:%M:%S"))
-            } else {
-                " [EXPIRED]".to_string()
-            }
-        }
-        _ => {
-            if let Ok(expiry) = DateTime::parse_from_rfc2822(&node.cert.not_after) {
-                format!(" [valid until: {}]", expiry.format("%Y-%m-%d %H:%M:%S"))
-            } else {
-                "".to_string()
-            }
-        }
+    // Calculate terminal width for proper alignment
+    let _term_width = term_size::dimensions().map(|(w, _)| w).unwrap_or(80) as usize;
+    let date_column_start: usize = 80; // Fixed position for date column
+
+    // Get certificate name and truncate if too long
+    let prefix_len = prefix.len();
+    let max_name_len = if date_column_start > prefix_len + 5 {
+        date_column_start - prefix_len - 5
+    } else {
+        20 // fallback minimum
     };
 
-    println!("{}{}{}", prefix, node.cert.subject, validity_info);
+    let display_name = if node.cert.subject.len() > max_name_len {
+        let truncate_len = if max_name_len > 3 { max_name_len - 3 } else { max_name_len };
+        format!("{}...", &node.cert.subject[..truncate_len])
+    } else {
+        node.cert.subject.clone()
+    };
 
-    // Display children
+    // Format validity date
+    let date_str = if let Ok(expiry) = DateTime::parse_from_rfc2822(&node.cert.not_after) {
+        expiry.format("%Y-%m-%d").to_string()
+    } else {
+        "Invalid".to_string()
+    };
+
+    // Calculate padding needed to align date column
+    let current_line_len = prefix_len + display_name.len();
+    let padding_needed = if current_line_len < date_column_start {
+        date_column_start - current_line_len
+    } else {
+        1
+    };
+    let padding = " ".repeat(padding_needed);
+
+    // Color codes for terminal output
+    let (status_text, color_code) = match node.validity_status {
+        ValidityStatus::Expired => ("EXPIRED", "\x1b[31m"), // Red
+        ValidityStatus::ExpiringSoon => ("EXPIRES SOON", "\x1b[33m"), // Yellow
+        ValidityStatus::Valid => ("VALID", "\x1b[32m"), // Green
+    };
+
+    // Print the line with aligned date column
+    println!("{}{}{}{} {} {} \x1b[0m", prefix, display_name, padding, color_code, date_str, status_text);
+
+    // Display children with simplified tree structure
     for (i, child) in node.children.iter().enumerate() {
         let is_last_child = i == node.children.len() - 1;
-        let connector = if is_last_child { "┗━ " } else { "┣━ " };
-        let new_prefix = format!("{}{}", prefix, if is_last { "    " } else { "│   " });
-        let child_prefix = format!("{}{}{}", new_prefix, connector, child.cert.subject);
+        let connector = if is_last_child { "└── " } else { "├── " };
 
-        display_tree_node_text(child, &child_prefix, is_last_child, is_root_last);
+        // Simplified continuation line
+        let continuation = if is_last { "    " } else { "│   " };
+        let new_prefix = format!("{}{}", prefix, continuation);
+
+        display_tree_node_text(child, &format!("{}{}", new_prefix, connector), is_last_child, is_root_last);
     }
 }
 
@@ -764,19 +889,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::process::exit(0);
     }
 
-    let data = if let Some(file) = &args.file {
-        load_certificate_from_file(file)?
+    let certificates = if let Some(file) = &args.file {
+        let data = load_certificate_from_file(file)?;
+        parse_certificate_chain(&data)?
     } else if let Some(url) = &args.url {
-        load_certificate_from_url(url)?
+        fetch_certificate_chain_from_url(url)?
     } else if let Some(data_str) = &args.data {
-        data_str.as_bytes().to_vec()
+        let data = data_str.as_bytes().to_vec();
+        parse_certificate_chain(&data)?
     } else {
         eprintln!("Error: Must provide --file, --url, or --data");
         std::process::exit(1);
     };
-
-    // Try to parse as certificate chain first
-    let certificates = parse_certificate_chain(&data)?;
 
     if certificates.len() == 1 {
         // Single certificate - use existing logic
