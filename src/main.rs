@@ -681,18 +681,17 @@ fn display_tui(cert: &CertificateInfo) -> Result<(), Box<dyn std::error::Error>>
 
 pub fn display_certificate_tree_text(tree: &CertificateTree) {
     for (i, root) in tree.roots.iter().enumerate() {
-        let prefix = if i == tree.roots.len() - 1 { "━ " } else { "━ " };
-        display_tree_node_text(root, prefix, true, i == tree.roots.len() - 1);
+        let prefix = "━ ";
+        display_tree_node_text(root, prefix, 0, i == tree.roots.len() - 1);
     }
 }
 
-fn display_tree_node_text(node: &CertificateNode, prefix: &str, is_last: bool, is_root_last: bool) {
-    // Fixed column positions for consistent alignment
-    let name_column_end: usize = 65; // End position for certificate name column
-    let date_column_start: usize = 70; // Start position for date column
+fn display_tree_node_text(node: &CertificateNode, prefix: &str, depth: usize, _is_last: bool) {
+    // Fixed column positions - dates should align regardless of tree depth
+    let date_column_start: usize = 80; // Fixed position for date column
 
     // Get certificate name and truncate if too long
-    let available_name_space = name_column_end.saturating_sub(prefix.len());
+    let available_name_space = date_column_start.saturating_sub(prefix.len()) - 5; // Leave space for date and status
     let display_name = if node.cert.subject.len() > available_name_space {
         let truncate_len = if available_name_space > 3 { available_name_space - 3 } else { available_name_space };
         format!("{}...", &node.cert.subject[..truncate_len])
@@ -726,16 +725,15 @@ fn display_tree_node_text(node: &CertificateNode, prefix: &str, is_last: bool, i
     // Print the line with perfectly aligned columns
     println!("{}{}{}{}{} {} \x1b[0m", prefix, display_name, padding, color_code, date_str, status_text);
 
-    // Display children with clean tree structure
+    // Display children with cascading tree structure
     for (i, child) in node.children.iter().enumerate() {
         let is_last_child = i == node.children.len() - 1;
-        let connector = if is_last_child { "└── " } else { "├── " };
 
-        // Clean continuation line
-        let continuation = if is_last { "    " } else { "│   " };
-        let new_prefix = format!("{}{}", prefix, continuation);
+        // Create cascading indentation for child level (4 spaces per level)
+        let child_indent = " ".repeat(5 + (depth * 4)); // 5 spaces base + 4 per depth level
+        let child_prefix = format!("{}└ ", child_indent);
 
-        display_tree_node_text(child, &format!("{}{}", new_prefix, connector), is_last_child, is_root_last);
+        display_tree_node_text(child, &child_prefix, depth + 1, is_last_child);
     }
 }
 

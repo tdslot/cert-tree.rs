@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2025-09-18
+
+### Added
+- Implemented cascading tree structure in text mode with clean indentation
+- Perfect column alignment for dates in text output
+- Enhanced tree visualization with proper depth-based indentation
+- Improved visual hierarchy with cascading `└` connectors
+
+### Changed
+- Restructured text mode tree display for better readability
+- Updated indentation system to use 4-space increments per level
+- Improved column positioning for consistent date alignment
+- Enhanced tree structure to match user-specified format
+
+### Technical
+- Refactored `display_tree_node_text()` function for cascading display
+- Implemented depth-based indentation calculation
+- Added fixed column positioning for date alignment
+- Maintained color coding while improving tree structure
+
 ## [0.3.0] - 2025-09-18
 
 ### Added
@@ -47,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implemented aligned date columns with consistent positioning
 - Simplified tree structure with clean connectors (├── └──)
 - Smart truncation of long certificate names with ellipsis
+- Implemented cascading tree structure with proper indentation levels
 
 ### Changed
 - Improved TUI layout with better column alignment and spacing

@@ -33,8 +33,10 @@
 - ✅ **Completed**: Implemented perfectly aligned date columns in text output
 - ✅ **Completed**: Simplified tree structure with clean connectors and proper spacing
 - ✅ **Completed**: Fixed column alignment with consistent positioning
-- ✅ **Completed**: Version updated to 0.3.0 according to semver methodology (MINOR version for new features)
-- ✅ **Completed**: CHANGELOG.md updated with comprehensive release notes for v0.3.0
+- ✅ **Completed**: Implemented cascading tree structure with proper indentation
+- ✅ **Completed**: Version updated to 0.4.0 according to semver methodology (MINOR version for new features)
+- ✅ **Completed**: CHANGELOG.md updated with comprehensive release notes for v0.4.0
+- ✅ **Completed**: Implemented cascading tree structure with proper indentation levels
 
 ## Next Steps
 - **Potential Enhancements**:
