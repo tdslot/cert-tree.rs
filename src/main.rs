@@ -23,7 +23,6 @@ use std::collections::HashMap;
 use rustls::{ClientConfig, RootCertStore};
 use webpki_roots::TLS_SERVER_ROOTS;
 use std::sync::Arc;
-use term_size;
 
 impl From<rustls::Error> for CertError {
     fn from(err: rustls::Error) -> Self {
@@ -688,20 +687,14 @@ pub fn display_certificate_tree_text(tree: &CertificateTree) {
 }
 
 fn display_tree_node_text(node: &CertificateNode, prefix: &str, is_last: bool, is_root_last: bool) {
-    // Calculate terminal width for proper alignment
-    let _term_width = term_size::dimensions().map(|(w, _)| w).unwrap_or(80) as usize;
-    let date_column_start: usize = 80; // Fixed position for date column
+    // Fixed column positions for consistent alignment
+    let name_column_end: usize = 65; // End position for certificate name column
+    let date_column_start: usize = 70; // Start position for date column
 
     // Get certificate name and truncate if too long
-    let prefix_len = prefix.len();
-    let max_name_len = if date_column_start > prefix_len + 5 {
-        date_column_start - prefix_len - 5
-    } else {
-        20 // fallback minimum
-    };
-
-    let display_name = if node.cert.subject.len() > max_name_len {
-        let truncate_len = if max_name_len > 3 { max_name_len - 3 } else { max_name_len };
+    let available_name_space = name_column_end.saturating_sub(prefix.len());
+    let display_name = if node.cert.subject.len() > available_name_space {
+        let truncate_len = if available_name_space > 3 { available_name_space - 3 } else { available_name_space };
         format!("{}...", &node.cert.subject[..truncate_len])
     } else {
         node.cert.subject.clone()
@@ -714,12 +707,12 @@ fn display_tree_node_text(node: &CertificateNode, prefix: &str, is_last: bool, i
         "Invalid".to_string()
     };
 
-    // Calculate padding needed to align date column
-    let current_line_len = prefix_len + display_name.len();
-    let padding_needed = if current_line_len < date_column_start {
-        date_column_start - current_line_len
+    // Calculate exact padding to align date column
+    let name_end_pos = prefix.len() + display_name.len();
+    let padding_needed = if name_end_pos < date_column_start {
+        date_column_start - name_end_pos
     } else {
-        1
+        1 // minimum space
     };
     let padding = " ".repeat(padding_needed);
 
@@ -730,15 +723,15 @@ fn display_tree_node_text(node: &CertificateNode, prefix: &str, is_last: bool, i
         ValidityStatus::Valid => ("VALID", "\x1b[32m"), // Green
     };
 
-    // Print the line with aligned date column
-    println!("{}{}{}{} {} {} \x1b[0m", prefix, display_name, padding, color_code, date_str, status_text);
+    // Print the line with perfectly aligned columns
+    println!("{}{}{}{}{} {} \x1b[0m", prefix, display_name, padding, color_code, date_str, status_text);
 
-    // Display children with simplified tree structure
+    // Display children with clean tree structure
     for (i, child) in node.children.iter().enumerate() {
         let is_last_child = i == node.children.len() - 1;
         let connector = if is_last_child { "└── " } else { "├── " };
 
-        // Simplified continuation line
+        // Clean continuation line
         let continuation = if is_last { "    " } else { "│   " };
         let new_prefix = format!("{}{}", prefix, continuation);
 

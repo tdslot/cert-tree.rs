@@ -30,8 +30,9 @@
 - ✅ **Completed**: TLS handshake certificate extraction using rustls
 - ✅ **Completed**: Improved text mode certificate tree formatting for better readability
 - ✅ **Completed**: Added color-coded validity status in text mode (green/yellow/red)
-- ✅ **Completed**: Implemented aligned date columns in text output
-- ✅ **Completed**: Simplified tree structure with clean connectors
+- ✅ **Completed**: Implemented perfectly aligned date columns in text output
+- ✅ **Completed**: Simplified tree structure with clean connectors and proper spacing
+- ✅ **Completed**: Fixed column alignment with consistent positioning
 - ✅ **Completed**: Version updated to 0.3.0 according to semver methodology (MINOR version for new features)
 - ✅ **Completed**: CHANGELOG.md updated with comprehensive release notes for v0.3.0
 
