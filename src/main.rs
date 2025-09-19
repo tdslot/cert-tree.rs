@@ -760,9 +760,23 @@ fn display_tui(cert: &CertificateInfo) -> Result<(), Box<dyn std::error::Error>>
                 ]),
                 Line::from(vec![
                     Span::styled("Validity: ", Style::default().fg(Color::Blue)),
-                    Span::styled(&cert.not_before, Style::default().fg(Color::White)),
+                    Span::styled(
+                        if let Ok(dt) = DateTime::parse_from_rfc2822(&cert.not_before) {
+                            dt.to_utc().format("%Y-%m-%dT%H:%M:%SZ").to_string()
+                        } else {
+                            cert.not_before.clone()
+                        },
+                        Style::default().fg(Color::White),
+                    ),
                     Span::raw(" → "),
-                    Span::styled(&cert.not_after, Style::default().fg(Color::White)),
+                    Span::styled(
+                        if let Ok(dt) = DateTime::parse_from_rfc2822(&cert.not_after) {
+                            dt.to_utc().format("%Y-%m-%dT%H:%M:%SZ").to_string()
+                        } else {
+                            cert.not_after.clone()
+                        },
+                        Style::default().fg(Color::White),
+                    ),
                 ]),
                 Line::from(vec![
                     Span::styled("Status: ", Style::default().fg(Color::Blue)),
@@ -1077,9 +1091,23 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
                 ]),
                 Line::from(vec![
                     Span::styled("Validity Period: ", Style::default().fg(Color::Blue)),
-                    Span::styled(&cert.not_before, Style::default().fg(Color::White)),
+                    Span::styled(
+                        if let Ok(dt) = DateTime::parse_from_rfc2822(&cert.not_before) {
+                            dt.to_utc().format("%Y-%m-%dT%H:%M:%SZ").to_string()
+                        } else {
+                            cert.not_before.clone()
+                        },
+                        Style::default().fg(Color::White),
+                    ),
                     Span::raw(" → "),
-                    Span::styled(&cert.not_after, Style::default().fg(Color::White)),
+                    Span::styled(
+                        if let Ok(dt) = DateTime::parse_from_rfc2822(&cert.not_after) {
+                            dt.to_utc().format("%Y-%m-%dT%H:%M:%SZ").to_string()
+                        } else {
+                            cert.not_after.clone()
+                        },
+                        Style::default().fg(Color::White),
+                    ),
                 ]),
                 Line::from(vec![
                     Span::styled("Status: ", Style::default().fg(Color::Blue)),
