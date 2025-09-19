@@ -351,7 +351,7 @@ cert_tree --file cert.pem
 
 ## Examples
 
-### Inspect a single certificate (verbose output)
+### Inspect a single certificate (text mode)
 
 ```bash
 cert_tree --file certificate.pem --text
@@ -359,31 +359,7 @@ cert_tree --file certificate.pem --text
 
 Output:
 ```
-Certificate Information:
-======================
-CN: example.com
-Issuer: CN=DigiCert Global Root CA, OU=www.digicert.com, O=DigiCert Inc, C=US
-Serial Number: 01 63 6d 8f 54 22 46 0e 8e 84 47 4d 23 05 12 57
-Validity:
-  Not Before: Mon, 10 Nov 2014 00:00:00 +0000
-  Not After: Mon, 10 Nov 2024 12:00:00 +0000
-Public Key Algorithm: RSA (2048 bits)
-Signature Algorithm: OID(1.2.840.113549.1.1.11)
-Version: 3
-Is CA: false
-Subject Alternative Names:
-  example.com
-  www.example.com
-Extensions:
-  2.5.29.14 (non-critical)
-  2.5.29.35 (non-critical)
-  2.5.29.19 (non-critical)
-  2.5.29.31 (non-critical)
-  2.5.29.32 (non-critical)
-  2.5.29.37 (non-critical)
-  2.5.29.15 (non-critical)
-  2.5.29.17 (non-critical)
-  2.5.29.23 (non-critical)
+━ example.com                                                                                 [1] [VALID until: 2024-11-10 12:00:00]
 ```
 
 
