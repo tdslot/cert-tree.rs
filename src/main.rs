@@ -40,6 +40,29 @@ fn extract_cn(subject: &str) -> String {
     subject.to_string()
 }
 
+// Function to map OID to human-readable extension name
+fn oid_to_name(oid: &str) -> Option<String> {
+    match oid {
+        "2.5.29.14" => Some("Subject Key Identifier".to_string()),
+        "2.5.29.15" => Some("Key Usage".to_string()),
+        "2.5.29.16" => Some("Private Key Usage Period".to_string()),
+        "2.5.29.17" => Some("Subject Alternative Name".to_string()),
+        "2.5.29.18" => Some("Issuer Alternative Name".to_string()),
+        "2.5.29.19" => Some("Basic Constraints".to_string()),
+        "2.5.29.30" => Some("Name Constraints".to_string()),
+        "2.5.29.31" => Some("CRL Distribution Points".to_string()),
+        "2.5.29.32" => Some("Certificate Policies".to_string()),
+        "2.5.29.33" => Some("Policy Mappings".to_string()),
+        "2.5.29.35" => Some("Authority Information Access".to_string()),
+        "2.5.29.36" => Some("Policy Constraints".to_string()),
+        "2.5.29.37" => Some("Extended Key Usage".to_string()),
+        "2.5.29.46" => Some("Freshest CRL".to_string()),
+        "1.3.6.1.5.5.7.1.1" => Some("Authority Information Access".to_string()),
+        "1.3.6.1.4.1.11129.2.4.2" => Some("Signed Certificate Timestamp".to_string()),
+        _ => None,
+    }
+}
+
 impl From<rustls::Error> for CertError {
     fn from(err: rustls::Error) -> Self {
         CertError::Tls(err.to_string())
@@ -449,7 +472,7 @@ fn extract_cert_info(cert: &X509Certificate) -> Result<CertificateInfo, CertErro
 
         extensions.push(ExtensionInfo {
             oid: oid_str.clone(),
-            name: None,
+            name: oid_to_name(&oid_str),
             critical,
             value,
         });
@@ -1365,7 +1388,20 @@ mod tests {
             public_key_algorithm: "RSA".to_string(),
             signature_algorithm: "SHA256-RSA".to_string(),
             version: 3,
-            extensions: vec![],
+            extensions: vec![
+                ExtensionInfo {
+                    oid: "2.5.29.14".to_string(),
+                    name: oid_to_name("2.5.29.14"),
+                    critical: false,
+                    value: "KeyIdentifier(...)".to_string(),
+                },
+                ExtensionInfo {
+                    oid: "2.5.29.17".to_string(),
+                    name: oid_to_name("2.5.29.17"),
+                    critical: false,
+                    value: "GeneralNames(...)".to_string(),
+                },
+            ],
             is_ca: false,
             key_usage: Some("Digital Signature".to_string()),
             subject_alt_names: vec!["example.com".to_string()],
