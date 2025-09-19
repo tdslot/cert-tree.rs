@@ -7,6 +7,7 @@
 - **Documentation Status**: README.md updated to match actual CLI implementation
 
 ## Recent Changes
+- ✅ **Completed**: Fixed documentation example for --text command to show correct tree output format instead of incorrect "Certificate Information:" verbose format
 - ✅ **Completed**: Enhanced TUI navigation system with Tab-based details pane activation
 - ✅ **Completed**: Replaced 'j'/'k' key bindings with intuitive Tab toggle for details pane focus
 - ✅ **Completed**: Added context-aware arrow key navigation (list vs details scrolling)
