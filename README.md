@@ -359,7 +359,7 @@ cert_tree --file certificate.pem --text
 
 Output:
 ```
-━ example.com                                                                                 [1] [VALID until: 2024-11-10 12:00:00]
+━ example.com                      [1] [VALID until: 2024-11-10 12:00:00]
 ```
 
 
