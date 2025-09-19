@@ -112,12 +112,12 @@ pub struct Args {
     #[arg(short = 'U', long)]
     pub url: Option<String>,
 
-    /// Interactive TUI mode (default: true)
-    #[arg(short = 'i', long, default_value = "true")]
+    /// Interactive TUI mode
+    #[arg(short = 'i', long, default_value = "false")]
     pub interactive: bool,
 
     /// Force text output mode (non-interactive)
-    #[arg(short = 't', long)]
+    #[arg(short = 't', long, default_value = "true")]
     pub text: bool,
 }
 
@@ -1325,12 +1325,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Multiple certificates - build and display tree
         let tree = build_certificate_tree(certificates);
 
-        if args.text || !args.interactive {
-            // Text mode for certificate chains
-            display_certificate_tree_text(&tree);
-        } else {
-            // TUI mode for certificate chains (default)
+        if args.interactive {
+            // TUI mode for certificate chains
             display_certificate_tree_tui(&tree)?;
+        } else {
+            // Default to text mode
+            display_certificate_tree_text(&tree);
         }
     }
 

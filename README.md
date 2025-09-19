@@ -8,10 +8,10 @@ A command-line utility for inspecting X.509 certificates in a tree-like structur
 - **Certificate Chain Support**: Automatically detect and display certificate hierarchies
 - **HTTPS Certificate Chain Fetching**: Extract certificate chains from any HTTPS website via TLS handshake
 - Display certificate information in multiple formats:
-  - Tree view (default)
-  - Verbose text output
+  - Text mode (default - non-interactive)
   - Interactive TUI with colors and detailed certificate inspection
-  - Text mode for certificate chains (non-interactive)
+  - Tree view for certificate chains
+  - Verbose text output for single certificates
 - Show detailed certificate information including:
   - Subject and issuer (CN only for cleaner display)
   - Validity dates with expiration status
@@ -267,13 +267,13 @@ cert_tree --url https://example.com/certificate.pem
 ### Output Formats
 
 ```bash
-# Tree view (default)
+# Text mode (default - non-interactive)
 cert_tree --file cert.pem
 
-# Interactive TUI with colors (default)
-cert_tree --file cert.pem
+# Interactive TUI with colors
+cert_tree --file cert.pem --interactive
 
-# Text mode for certificate chains (non-interactive)
+# Text mode for certificate chains (explicit)
 cert_tree --file cert-chain.pem --text
 ```
 
@@ -302,8 +302,8 @@ Output:
 ```
 
 ```bash
-# Interactive TUI for certificate chains (default)
-cert_tree --file ca_list.pem
+# Interactive TUI for certificate chains
+cert_tree --file ca_list.pem --interactive
 ```
 *TUI mode provides color-coded display with interactive navigation*
 
@@ -311,8 +311,8 @@ cert_tree --file ca_list.pem
 
 - `-f, --file <FILE>`: Certificate file path (PEM or DER)
 - `-U, --url <URL>`: Certificate URL
-- `-i, --interactive`: Interactive TUI mode (default: true)
-- `-t, --text`: Force text output mode (non-interactive)
+- `-i, --interactive`: Interactive TUI mode (default: false)
+- `-t, --text`: Force text output mode (non-interactive, default: true)
 - `-h, --help`: Print help information
 - `-V, --version`: Print version information
 

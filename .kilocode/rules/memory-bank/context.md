@@ -7,6 +7,13 @@
 - **Documentation Status**: README.md updated to match actual CLI implementation
 
 ## Recent Changes
+- ✅ **Completed**: Modified CLI default behavior to make text output mode the default instead of interactive TUI
+- ✅ **Completed**: Changed `-i, --interactive` default from `true` to `false`
+- ✅ **Completed**: Made `-t, --text` the default behavior when no output mode is specified
+- ✅ **Completed**: Updated clap derive configuration for new default values
+- ✅ **Completed**: Simplified main function logic to prioritize interactive mode when explicitly requested
+- ✅ **Completed**: Version updated to 0.9.0 according to semver methodology (MINOR version for CLI behavior change)
+- ✅ **Completed**: CHANGELOG.md updated with release notes for v0.9.0
 - ✅ **Completed**: Updated validity period display in TUI to use ISO 8601 date-time format (YYYY-MM-DDTHH:MM:SSZ)
 - ✅ **Completed**: Enhanced both single certificate and certificate chain TUI modes with standardized ISO 8601 formatting
 - ✅ **Completed**: Version updated to 0.8.1 according to semver methodology (PATCH version for display format improvement)

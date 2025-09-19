@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2025-09-19
+
+### Changed
+- **CLI Default Behavior**: Modified command-line options to make text output mode the default instead of interactive TUI
+- **Interactive Flag**: Changed `-i, --interactive` default from `true` to `false`
+- **Text Flag**: Made `-t, --text` the default behavior when no output mode is specified
+- **User Experience**: Improved default behavior for non-interactive environments (scripts, automation, CI/CD)
+
+### Technical
+- **Args Structure**: Updated clap derive configuration for new default values
+- **Logic Flow**: Simplified main function logic to prioritize interactive mode when explicitly requested
+- **Backward Compatibility**: Maintained all existing functionality while changing default behavior
+
 ## [0.8.1] - 2025-09-19
 
 ### Changed
