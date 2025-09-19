@@ -20,7 +20,7 @@ A command-line utility for inspecting X.509 certificates in a tree-like structur
   - CA status
 - **Color-coded validity status**: Green (valid), Yellow (expiring soon), Red (expired)
 - **Sequence numbering**: Bracketed sequence numbers [1], [2] for certificate identification
-- **Enhanced TUI**: Interactive navigation with Tab-based pane switching, scrollable certificate list and details, version display, responsive layout
+- **Enhanced TUI**: Interactive navigation with Tab-based pane switching, scrollable certificate list and details, version display, responsive layout, ISO 8601 date-time format
 - Comprehensive error handling for invalid certificates
 - Efficient parsing using the `x509-parser` crate
 
@@ -343,6 +343,7 @@ cert_tree --file cert.pem
 - Version number displayed in title bar
 - Dynamic column sizing that adapts to terminal width
 - Responsive layout for different terminal sizes
+- ISO 8601 date-time format for precise validity periods (e.g., 2024-11-10T12:00:00Z)
 - Interactive interface (Tab Toggle Panes | ↑/↓ Navigate/Scroll | PageUp/PageDown Fast Nav | 'q' Quit)
 - Clean, organized layout with borders and sections
 - Human-readable formatting for all certificate fields
