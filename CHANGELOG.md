@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reduced minimum spacing requirements for better date display in moderately narrow terminals
 - Added safeguards for extremely narrow terminals to prevent formatting panics
 - Ensured minimum column widths are maintained for proper display
-- Shifted date column in TUI to the left by 4 characters for better visual alignment
+- Shifted date column in TUI to the left by 8 characters for better visual alignment
 - Verified time format fix works correctly in both TUI and text modes
 
 ### Technical
