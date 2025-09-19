@@ -34,9 +34,12 @@
 - ✅ **Completed**: Simplified tree structure with clean connectors and proper spacing
 - ✅ **Completed**: Fixed column alignment with consistent positioning
 - ✅ **Completed**: Implemented cascading tree structure with proper indentation
-- ✅ **Completed**: Version updated to 0.4.0 according to semver methodology (MINOR version for new features)
-- ✅ **Completed**: CHANGELOG.md updated with comprehensive release notes for v0.4.0
+- ✅ **Completed**: Version updated to 0.5.0 according to semver methodology (MINOR version for new features)
+- ✅ **Completed**: CHANGELOG.md updated with comprehensive release notes for v0.5.0
+- ✅ **Completed**: Implemented bracketed sequence numbers [1], [2] and status/date formatting
 - ✅ **Completed**: Implemented cascading tree structure with proper indentation levels
+- ✅ **Completed**: Added sequence numbers in square brackets [1], [2], etc. to certificate display
+- ✅ **Completed**: Moved VALID status to front of date/time format with square brackets
 
 ## Next Steps
 - **Potential Enhancements**:

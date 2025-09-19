@@ -680,18 +680,22 @@ fn display_tui(cert: &CertificateInfo) -> Result<(), Box<dyn std::error::Error>>
 }
 
 pub fn display_certificate_tree_text(tree: &CertificateTree) {
+    let mut sequence_num = 0;
     for (i, root) in tree.roots.iter().enumerate() {
         let prefix = "━ ";
-        display_tree_node_text(root, prefix, 0, i == tree.roots.len() - 1);
+        display_tree_node_text(root, prefix, 0, &mut sequence_num, i == tree.roots.len() - 1);
     }
 }
 
-fn display_tree_node_text(node: &CertificateNode, prefix: &str, depth: usize, _is_last: bool) {
-    // Fixed column positions - dates should align regardless of tree depth
-    let date_column_start: usize = 80; // Fixed position for date column
+fn display_tree_node_text(node: &CertificateNode, prefix: &str, depth: usize, sequence_num: &mut usize, _is_last: bool) {
+    // Increment sequence number for this certificate
+    *sequence_num += 1;
 
-    // Get certificate name and truncate if too long
-    let available_name_space = date_column_start.saturating_sub(prefix.len()) - 5; // Leave space for date and status
+    // Fixed column positions - dates should align regardless of tree depth
+    let date_column_start: usize = 90; // Fixed position for date column
+
+    // Get certificate name (without sequence number)
+    let available_name_space = date_column_start.saturating_sub(prefix.len()) - 5; // Leave space for brackets and content
     let display_name = if node.cert.subject.len() > available_name_space {
         let truncate_len = if available_name_space > 3 { available_name_space - 3 } else { available_name_space };
         format!("{}...", &node.cert.subject[..truncate_len])
@@ -699,9 +703,9 @@ fn display_tree_node_text(node: &CertificateNode, prefix: &str, depth: usize, _i
         node.cert.subject.clone()
     };
 
-    // Format validity date
+    // Format validity date with time
     let date_str = if let Ok(expiry) = DateTime::parse_from_rfc2822(&node.cert.not_after) {
-        expiry.format("%Y-%m-%d").to_string()
+        expiry.format("%Y-%m-%d %H:%M").to_string()
     } else {
         "Invalid".to_string()
     };
@@ -722,8 +726,8 @@ fn display_tree_node_text(node: &CertificateNode, prefix: &str, depth: usize, _i
         ValidityStatus::Valid => ("VALID", "\x1b[32m"), // Green
     };
 
-    // Print the line with perfectly aligned columns
-    println!("{}{}{}{}{} {} \x1b[0m", prefix, display_name, padding, color_code, date_str, status_text);
+    // Print the line with sequence number and status/date in separate square brackets
+    println!("{}{}{}{}[{}] [{} until: {}]\x1b[0m", prefix, display_name, padding, color_code, sequence_num, status_text, date_str);
 
     // Display children with cascading tree structure
     for (i, child) in node.children.iter().enumerate() {
@@ -733,7 +737,7 @@ fn display_tree_node_text(node: &CertificateNode, prefix: &str, depth: usize, _i
         let child_indent = " ".repeat(5 + (depth * 4)); // 5 spaces base + 4 per depth level
         let child_prefix = format!("{}└ ", child_indent);
 
-        display_tree_node_text(child, &child_prefix, depth + 1, is_last_child);
+        display_tree_node_text(child, &child_prefix, depth + 1, sequence_num, is_last_child);
     }
 }
 

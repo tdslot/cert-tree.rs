@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2025-09-19
+
+### Added
+- Implemented sequence numbers in separate square brackets [1], [2], etc.
+- Reformatted status/date display with square brackets: [VALID until: YYYY-MM-DD HH:MM]
+- Separated sequence numbers from certificate names for cleaner display
+- Enhanced visual formatting with dual bracket system
+
+### Changed
+- Updated text mode output format to use bracketed sequence numbers and status
+- Improved readability by separating numbering from certificate names
+- Enhanced visual consistency with uniform bracket formatting
+
+### Technical
+- Modified `display_tree_node_text()` function to support bracketed formatting
+- Updated sequence number display logic for separate bracket placement
+- Maintained color coding and alignment while improving format structure
+
 ## [0.4.0] - 2025-09-18
 
 ### Added
@@ -68,6 +86,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Simplified tree structure with clean connectors (├── └──)
 - Smart truncation of long certificate names with ellipsis
 - Implemented cascading tree structure with proper indentation levels
+- Added sequence numbers in separate square brackets [1], [2], etc. before status/date
+- Moved VALID status to front of date/time format: "[VALID until: YYYY-MM-DD HH:MM]"
+- Separated sequence numbers from certificate names for cleaner display
 
 ### Changed
 - Improved TUI layout with better column alignment and spacing
