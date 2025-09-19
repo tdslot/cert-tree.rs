@@ -6,6 +6,38 @@
 - **Current Phase**: Production ready with advanced features
 
 ## Recent Changes
+- ✅ **Completed**: Enhanced TUI navigation system with Tab-based details pane activation
+- ✅ **Completed**: Replaced 'j'/'k' key bindings with intuitive Tab toggle for details pane focus
+- ✅ **Completed**: Added context-aware arrow key navigation (list vs details scrolling)
+- ✅ **Completed**: Implemented Page Up/Page Down support for fast certificate list navigation
+- ✅ **Completed**: Added visual feedback for active pane with color-coded borders
+- ✅ **Completed**: Certificate list: yellow border when active, transparent background
+- ✅ **Completed**: Details pane: yellow border when active, transparent background
+- ✅ **Completed**: Terminal-adaptive background styling that matches user's terminal theme
+- ✅ **Completed**: Enhanced footer with dynamic, context-sensitive instructions
+- ✅ **Completed**: Improved user experience with more discoverable and accessible navigation
+- ✅ **Completed**: Added comprehensive code documentation for the new navigation system
+- ✅ **Completed**: Enhanced responsiveness for long certificate lists and details
+- ✅ **Completed**: Version updated to 0.8.0 according to semver methodology (MINOR version for new features)
+- ✅ **Completed**: CHANGELOG.md updated with comprehensive release notes for v0.8.0
+- ✅ **Completed**: Enhanced interactive TUI with detailed certificate information display
+- ✅ **Completed**: Added certificate details section in TUI that shows comprehensive certificate information when selecting a certificate from the chain
+- ✅ **Completed**: Implemented scrollable certificate details panel with 'j'/'k' keys for navigation
+- ✅ **Completed**: Added real-time certificate details update upon selection change
+- ✅ **Completed**: Enhanced TUI layout with 4 sections: title, certificate list, certificate details, and footer
+- ✅ **Completed**: Improved user experience with detailed certificate inspection including issuer, subject, validity, serial number, signature algorithm, public key, extensions, and revocation status
+- ✅ **Completed**: Updated TUI layout from 3 sections to 4 sections for better information display
+- ✅ **Completed**: Enhanced footer instructions to include details scrolling ('j'/'k' keys)
+- ✅ **Completed**: Improved certificate selection mechanism with direct access to certificate data
+- ✅ **Completed**: Restructured certificate display data structure for better TUI integration
+- ✅ **Completed**: Added `CertificateDisplayItem` struct to encapsulate display and certificate data
+- ✅ **Completed**: Modified `flatten_certificate_tree()` to include certificate information
+- ✅ **Completed**: Updated TUI rendering to support detailed certificate information panel
+- ✅ **Completed**: Implemented scroll state management for certificate details section
+- ✅ **Completed**: Enhanced keyboard handling for both navigation and details scrolling
+- ✅ **Completed**: Version updated to 0.7.0 according to semver methodology (MINOR version for new features)
+- ✅ **Completed**: CHANGELOG.md updated with comprehensive release notes for v0.7.0
+- ✅ **Completed**: Code review performed - removed unused dependencies (tokio, tokio-rustls, term_size) and obsolete commented code
 - ✅ **Completed**: Modified certificate display to show only CN instead of full subject
 - ✅ **Completed**: Added extract_cn() function to parse CN from certificate subject
 - ✅ **Completed**: Updated all display modes (tree, verbose, TUI, text) to use CN only

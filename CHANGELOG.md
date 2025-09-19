@@ -5,6 +5,73 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2025-09-19
+
+### Added
+- **Enhanced Navigation System**: Completely redesigned TUI navigation for improved usability
+- **Tab-based Details Pane Activation**: Press Tab to toggle focus between certificate list and details pane
+- **Context-aware Arrow Keys**: ↑/↓ keys navigate list when details inactive, scroll details when active
+- **Page Up/Page Down Support**: Fast navigation through certificate lists (10 items at a time)
+- **Visual Feedback**: Both certificate list and details pane show activation state with color-coded borders and dynamic titles
+- **Terminal-Adaptive Background**: Removed background colors to dynamically match terminal window color scheme
+- **Transparent Styling**: Background adapts to user's terminal theme for better integration
+- **Dynamic Footer Instructions**: Context-sensitive help text that changes based on current focus
+
+### Changed
+- **Replaced 'j'/'k' Key Bindings**: Removed vi-style navigation in favor of more intuitive Tab-based system
+- **Enhanced User Experience**: More discoverable and accessible navigation patterns
+- **Improved Responsiveness**: Better handling of long certificate lists and details
+
+### Technical
+- **State Management**: Added `details_pane_active` flag for focus tracking
+- **Enhanced Key Handling**: Context-aware key processing based on active pane
+- **Visual State Indicators**: Dynamic UI elements that reflect current navigation state
+- **Improved Code Documentation**: Added comprehensive comments explaining the new navigation system
+
+## [0.7.0] - 2025-09-19
+
+### Added
+- Enhanced interactive TUI with detailed certificate information display
+- Added certificate details section in TUI that shows comprehensive certificate information when selecting a certificate from the chain
+- Implemented scrollable certificate details panel with 'j'/'k' keys for navigation
+- Added real-time certificate details update upon selection change
+- Enhanced TUI layout with 4 sections: title, certificate list, certificate details, and footer
+- Improved user experience with detailed certificate inspection including:
+  - Issuer information and subject details
+  - Validity period with color-coded status
+  - Serial number and version information
+  - Public key algorithm and signature algorithm details
+  - Key usage and subject alternative names
+  - Certificate extensions with criticality indicators
+  - CA status and other certificate attributes
+
+### Changed
+- Updated TUI layout from 3 sections to 4 sections for better information display
+- Enhanced footer instructions to include details scrolling ('j'/'k' keys)
+- Improved certificate selection mechanism with direct access to certificate data
+- Restructured certificate display data structure for better TUI integration
+
+### Technical
+- Added `CertificateDisplayItem` struct to encapsulate display and certificate data
+- Modified `flatten_certificate_tree()` to include certificate information
+- Updated TUI rendering to support detailed certificate information panel
+- Implemented scroll state management for certificate details section
+- Enhanced keyboard handling for both navigation and details scrolling
+
+## [0.6.1] - 2025-09-19
+
+### Maintenance
+- Performed comprehensive code review and optimization
+- Removed unused dependencies: tokio, tokio-rustls, term_size
+- Cleaned up obsolete commented code in certificate parsing functions
+- Optimized dependency tree for faster compilation and smaller binary size
+
+### Technical
+- Removed 3 unused dependencies from Cargo.toml
+- Cleaned up commented extension parsing code in extract_cert_info()
+- Maintained all existing functionality while reducing code complexity
+- Improved code maintainability and reduced compilation time
+
 ## [0.6.0] - 2025-09-19
 
 ### Added

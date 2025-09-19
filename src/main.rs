@@ -113,21 +113,10 @@ pub struct Args {
     #[arg(short = 'U', long)]
     pub url: Option<String>,
 
-    /// Certificate data as string (PEM or DER)
-    #[arg(short, long)]
-    pub data: Option<String>,
 
     /// Interactive TUI mode (default: true)
     #[arg(short = 'i', long, default_value = "true")]
     pub interactive: bool,
-
-    /// Output file (optional)
-    #[arg(short, long)]
-    pub output: Option<String>,
-
-    /// Verbose output
-    #[arg(short, long)]
-    pub verbose: bool,
 
     /// Force text output mode (non-interactive)
     #[arg(short = 't', long)]
@@ -326,7 +315,15 @@ pub fn build_certificate_tree(certificates: Vec<CertificateInfo>) -> Certificate
     CertificateTree { roots }
 }
 
-fn flatten_certificate_tree(tree: &CertificateTree) -> Vec<(String, String, ValidityStatus)> {
+#[derive(Clone)]
+struct CertificateDisplayItem {
+    display_name: String,
+    valid_until: String,
+    validity_status: ValidityStatus,
+    certificate_info: CertificateInfo,
+}
+
+fn flatten_certificate_tree(tree: &CertificateTree) -> Vec<CertificateDisplayItem> {
     let mut certificates = Vec::new();
     for root in &tree.roots {
         flatten_node(root, &mut certificates, 0);
@@ -334,11 +331,11 @@ fn flatten_certificate_tree(tree: &CertificateTree) -> Vec<(String, String, Vali
     certificates
 }
 
-fn flatten_node(node: &CertificateNode, certificates: &mut Vec<(String, String, ValidityStatus)>, depth: usize) {
+fn flatten_node(node: &CertificateNode, certificates: &mut Vec<CertificateDisplayItem>, depth: usize) {
     // Format certificate name with indentation - use only CN
     let indent = "  ".repeat(depth);
     let cn = extract_cn(&node.cert.subject);
-    let name = format!("{}{}", indent, cn);
+    let display_name = format!("{}{}", indent, cn);
 
     // Format validity date
     let valid_until = if let Ok(expiry) = DateTime::parse_from_rfc2822(&node.cert.not_after) {
@@ -347,7 +344,12 @@ fn flatten_node(node: &CertificateNode, certificates: &mut Vec<(String, String, 
         "Invalid Date".to_string()
     };
 
-    certificates.push((name, valid_until, node.validity_status.clone()));
+    certificates.push(CertificateDisplayItem {
+        display_name,
+        valid_until,
+        validity_status: node.validity_status.clone(),
+        certificate_info: node.cert.clone(),
+    });
 
     // Add children
     for child in &node.children {
@@ -420,7 +422,6 @@ fn extract_cert_info(cert: &X509Certificate) -> Result<CertificateInfo, CertErro
 
     for ext in cert.extensions() {
         let oid_str = ext.oid.to_string();
-        let _name = ext.oid.to_id_string();
         let critical = ext.critical;
         let value = format!("{:?}", ext.value);
 
@@ -430,22 +431,6 @@ fn extract_cert_info(cert: &X509Certificate) -> Result<CertificateInfo, CertErro
             critical,
             value,
         });
-
-        // Extract specific extensions
-        // TODO: Fix parsed_extension API
-        // if let Some(parsed_ext) = ext.parsed_extension() {
-        //     match parsed_ext {
-        //         x509_parser::extensions::ParsedExtension::KeyUsage(ku) => {
-        //             key_usage = Some(format!("{:?}", ku));
-        //         }
-        //         x509_parser::extensions::ParsedExtension::SubjectAlternativeName(san) => {
-        //             for name in &san.general_names {
-        //                 subject_alt_names.push(format!("{:?}", name));
-        //             }
-        //         }
-        //         _ => {}
-        //     }
-        // }
     }
 
     let is_ca = cert.is_ca();
@@ -783,6 +768,14 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
     let mut list_state = ratatui::widgets::ListState::default();
     list_state.select(Some(0));
 
+    // Scroll state for certificate details pane
+    let mut details_scroll: u16 = 0;
+
+    // State to track if details pane is active for focused navigation
+    // When active, arrow keys control details scrolling instead of list navigation
+    // Toggle with Tab key for better accessibility and usability
+    let mut details_pane_active = false;
+
     // Force initial clear and small delay to ensure proper layout on startup
     terminal.clear()?;
     std::thread::sleep(std::time::Duration::from_millis(50));
@@ -796,7 +789,8 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
                 .direction(Direction::Vertical)
                 .constraints([
                     Constraint::Length(3), // Title
-                    Constraint::Min(10),   // Certificate list
+                    Constraint::Min(5),    // Certificate list
+                    Constraint::Min(5),    // Certificate details
                     Constraint::Length(3), // Footer
                 ])
                 .split(size);
@@ -823,23 +817,23 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
             let items: Vec<ListItem> = certificates
                 .iter()
                 .enumerate()
-                .map(|(_i, (name, valid_until, status))| {
+                .map(|(_i, item)| {
                     // Truncate long names if necessary
-                    let display_name = if name.len() > available_name_width {
+                    let display_name = if item.display_name.len() > available_name_width {
                         if available_name_width > 3 {
-                            format!("{}...", name.chars().take(available_name_width-3).collect::<String>())
+                            format!("{}...", item.display_name.chars().take(available_name_width-3).collect::<String>())
                         } else {
-                            name.chars().take(available_name_width).collect::<String>()
+                            item.display_name.chars().take(available_name_width).collect::<String>()
                         }
                     } else {
-                        name.clone()
+                        item.display_name.clone()
                     };
 
                     // Format date according to available space
-                    let formatted_date = if let Ok(expiry) = DateTime::parse_from_rfc2822(valid_until) {
+                    let formatted_date = if let Ok(expiry) = DateTime::parse_from_rfc2822(&item.valid_until) {
                         expiry.format(date_format).to_string()
                     } else {
-                        valid_until.clone()
+                        item.valid_until.clone()
                     };
 
                     // Create formatted strings for each column
@@ -849,16 +843,33 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
 
                     let line = Line::from(vec![
                         Span::styled(name_part, Style::default().fg(Color::White)),
-                        Span::styled(date_part, Style::default().fg(status.color())),
+                        Span::styled(date_part, Style::default().fg(item.validity_status.color())),
                     ]);
 
                     ListItem::new(line)
                 })
                 .collect();
 
-            // Create the list widget with scrolling
+            // Create the list widget with visual feedback for active state
+            let list_title = if !details_pane_active {
+                "Certificates (Active - Use ↑/↓/PgUp/PgDn to navigate)"
+            } else {
+                "Certificates (Press Tab to activate)"
+            };
+
+            let list_block = if !details_pane_active {
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(list_title)
+                    .border_style(Style::default().fg(Color::Yellow))
+            } else {
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(list_title)
+            };
+
             let list = List::new(items)
-                .block(Block::default().borders(Borders::ALL).title("Certificates"))
+                .block(list_block)
                 .highlight_style(Style::default().add_modifier(Modifier::BOLD))
                 .highlight_symbol(">> ");
 
@@ -866,30 +877,183 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
             let list_area = chunks[1];
             f.render_stateful_widget(list, list_area, &mut list_state);
 
-            // Footer with instructions
-            let footer = Paragraph::new("↑/↓ Navigate | 'q' Quit | 't' Text Mode")
+            // Certificate details section
+            let selected_index = list_state.selected().unwrap_or(0);
+            let selected_cert = &certificates[selected_index];
+            let cert = &selected_cert.certificate_info;
+
+            let mut details_lines = vec![
+                Line::from(vec![
+                    Span::styled("Subject: ", Style::default().fg(Color::Blue)),
+                    Span::styled(&cert.subject, Style::default().fg(Color::White)),
+                ]),
+                Line::from(vec![
+                    Span::styled("Issuer: ", Style::default().fg(Color::Blue)),
+                    Span::styled(&cert.issuer, Style::default().fg(Color::White)),
+                ]),
+                Line::from(vec![
+                    Span::styled("Serial Number: ", Style::default().fg(Color::Blue)),
+                    Span::styled(&cert.serial_number, Style::default().fg(Color::White)),
+                ]),
+                Line::from(vec![
+                    Span::styled("Validity Period: ", Style::default().fg(Color::Blue)),
+                    Span::styled(&cert.not_before, Style::default().fg(Color::White)),
+                    Span::raw(" → "),
+                    Span::styled(&cert.not_after, Style::default().fg(Color::White)),
+                ]),
+                Line::from(vec![
+                    Span::styled("Status: ", Style::default().fg(Color::Blue)),
+                    Span::styled(selected_cert.validity_status.text(), Style::default().fg(selected_cert.validity_status.color())),
+                ]),
+                Line::from(vec![
+                    Span::styled("Version: ", Style::default().fg(Color::Blue)),
+                    Span::styled(cert.version.to_string(), Style::default().fg(Color::White)),
+                ]),
+                Line::from(vec![
+                    Span::styled("Public Key Algorithm: ", Style::default().fg(Color::Blue)),
+                    Span::styled(&cert.public_key_algorithm, Style::default().fg(Color::Green)),
+                ]),
+                Line::from(vec![
+                    Span::styled("Signature Algorithm: ", Style::default().fg(Color::Blue)),
+                    Span::styled(&cert.signature_algorithm, Style::default().fg(Color::Green)),
+                ]),
+                Line::from(vec![
+                    Span::styled("Is CA: ", Style::default().fg(Color::Blue)),
+                    Span::styled(cert.is_ca.to_string(), Style::default().fg(if cert.is_ca { Color::Yellow } else { Color::White })),
+                ]),
+            ];
+
+            if let Some(ku) = &cert.key_usage {
+                details_lines.push(Line::from(vec![
+                    Span::styled("Key Usage: ", Style::default().fg(Color::Blue)),
+                    Span::styled(ku, Style::default().fg(Color::Magenta)),
+                ]));
+            }
+
+            if !cert.subject_alt_names.is_empty() {
+                details_lines.push(Line::from(vec![
+                    Span::styled("Subject Alternative Names: ", Style::default().fg(Color::Blue)),
+                    Span::styled(cert.subject_alt_names.join(", "), Style::default().fg(Color::Cyan)),
+                ]));
+            }
+
+            if !cert.extensions.is_empty() {
+                details_lines.push(Line::from(vec![
+                    Span::styled("Extensions:", Style::default().fg(Color::Blue)),
+                ]));
+                for ext in &cert.extensions {
+                    let ext_name = ext.name.as_deref().unwrap_or(&ext.oid);
+                    details_lines.push(Line::from(vec![
+                        Span::raw("  "),
+                        Span::styled(ext_name, Style::default().fg(Color::Cyan)),
+                        Span::raw(" ("),
+                        Span::styled(if ext.critical { "critical" } else { "non-critical" }, Style::default().fg(if ext.critical { Color::Red } else { Color::Green })),
+                        Span::raw(")"),
+                    ]));
+                }
+            }
+
+            // Create details paragraph with visual feedback for active state
+            let details_title = if details_pane_active {
+                "Certificate Details (Active - Use ↑/↓ to scroll)"
+            } else {
+                "Certificate Details (Press Tab to activate)"
+            };
+
+            let details_block = if details_pane_active {
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(details_title)
+                    .border_style(Style::default().fg(Color::Yellow))
+            } else {
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(details_title)
+            };
+
+            let details_paragraph = Paragraph::new(details_lines)
+                .block(details_block)
+                .scroll((details_scroll, 0));
+            f.render_widget(details_paragraph, chunks[2]);
+
+            // Footer with instructions - dynamic based on details pane state
+            let footer_text = if details_pane_active {
+                "Tab: Deactivate Details | ↑/↓: Scroll Details | PgUp/PgDn: Navigate List | 'q' Quit | 't' Text Mode"
+            } else {
+                "↑/↓/PgUp/PgDn: Navigate List | Tab: Activate Details | 'q' Quit | 't' Text Mode"
+            };
+
+            let footer = Paragraph::new(footer_text)
                 .style(Style::default().fg(Color::Gray))
                 .block(Block::default().borders(Borders::ALL));
-            f.render_widget(footer, chunks[2]);
+            f.render_widget(footer, chunks[3]);
         })?;
 
-        // Handle input
+        // Enhanced Navigation System:
+        // - Tab: Toggle details pane activation/deactivation
+        // - When details pane inactive: ↑/↓/PgUp/PgDn navigate certificate list
+        // - When details pane active: ↑/↓ scroll certificate details, PgUp/PgDn disabled
+        // - 'q'/Esc: Quit application
+        // - 't': Switch to text mode
         if event::poll(std::time::Duration::from_millis(100))? {
             if let Event::Key(key) = event::read()? {
                 match key.code {
                     KeyCode::Char('q') | KeyCode::Esc => break,
+
+                    // Tab key toggles details pane activation
+                    KeyCode::Tab => {
+                        details_pane_active = !details_pane_active;
+                    }
+
+                    // Navigation keys - behavior depends on details pane state
                     KeyCode::Up => {
-                        let i = list_state.selected().unwrap_or(0);
-                        if i > 0 {
-                            list_state.select(Some(i - 1));
+                        if details_pane_active {
+                            // Scroll details up when details pane is active
+                            if details_scroll > 0 {
+                                details_scroll = details_scroll.saturating_sub(1);
+                            }
+                        } else {
+                            // Navigate list up when details pane is inactive
+                            let i = list_state.selected().unwrap_or(0);
+                            if i > 0 {
+                                list_state.select(Some(i - 1));
+                            }
                         }
                     }
                     KeyCode::Down => {
-                        let i = list_state.selected().unwrap_or(0);
-                        if i < certificates.len() - 1 {
-                            list_state.select(Some(i + 1));
+                        if details_pane_active {
+                            // Scroll details down when details pane is active
+                            if details_scroll < 50 { // Arbitrary max scroll limit
+                                details_scroll += 1;
+                            }
+                        } else {
+                            // Navigate list down when details pane is inactive
+                            let i = list_state.selected().unwrap_or(0);
+                            if i < certificates.len() - 1 {
+                                list_state.select(Some(i + 1));
+                            }
                         }
                     }
+
+                    // Page Up/Page Down for fast list navigation (only when details pane inactive)
+                    KeyCode::PageUp => {
+                        if !details_pane_active {
+                            let i = list_state.selected().unwrap_or(0);
+                            let page_size = 10; // Scroll by 10 items
+                            let new_index = i.saturating_sub(page_size);
+                            list_state.select(Some(new_index));
+                        }
+                    }
+                    KeyCode::PageDown => {
+                        if !details_pane_active {
+                            let i = list_state.selected().unwrap_or(0);
+                            let page_size = 10; // Scroll by 10 items
+                            let new_index = (i + page_size).min(certificates.len() - 1);
+                            list_state.select(Some(new_index));
+                        }
+                    }
+
+                    // Text mode switch
                     KeyCode::Char('t') => {
                         // Switch to text mode
                         disable_raw_mode()?;
@@ -925,7 +1089,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
     // If no input arguments provided, show help
-    if args.file.is_none() && args.url.is_none() && args.data.is_none() {
+    if args.file.is_none() && args.url.is_none() {
         Args::command().print_help().unwrap();
         std::process::exit(0);
     }
@@ -935,11 +1099,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         parse_certificate_chain(&data)?
     } else if let Some(url) = &args.url {
         fetch_certificate_chain_from_url(url)?
-    } else if let Some(data_str) = &args.data {
-        let data = data_str.as_bytes().to_vec();
-        parse_certificate_chain(&data)?
     } else {
-        eprintln!("Error: Must provide --file, --url, or --data");
+        eprintln!("Error: Must provide --file or --url");
         std::process::exit(1);
     };
 

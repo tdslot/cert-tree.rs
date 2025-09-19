@@ -71,7 +71,7 @@
   - Real-time validity status determination
 
 #### Async Runtime
-- **tokio (v1.0)**
+- **tokio (v1.0)** (removed - not currently used)
   - Async runtime for future enhancements
   - Full feature set for comprehensive support
   - Performance optimizations
