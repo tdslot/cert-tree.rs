@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.1] - 2025-09-19
+
+### Changed
+- **ISO 8601 Date Format**: Updated validity period display in TUI to use standardized ISO 8601 date-time format (YYYY-MM-DDTHH:MM:SSZ)
+- **Enhanced Date Display**: Both single certificate and certificate chain TUI modes now show validity periods in ISO 8601 format for better consistency and readability
+
+### Technical
+- **Date Formatting**: Modified `display_tui()` and `display_certificate_tree_tui()` functions to parse RFC 2822 dates and format them as ISO 8601 UTC timestamps
+- **Improved Consistency**: Standardized date display across all TUI modes for better user experience
+
 ## [0.8.0] - 2025-09-19
 
 ### Added

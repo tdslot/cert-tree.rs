@@ -7,6 +7,10 @@
 - **Documentation Status**: README.md updated to match actual CLI implementation
 
 ## Recent Changes
+- ✅ **Completed**: Updated validity period display in TUI to use ISO 8601 date-time format (YYYY-MM-DDTHH:MM:SSZ)
+- ✅ **Completed**: Enhanced both single certificate and certificate chain TUI modes with standardized ISO 8601 formatting
+- ✅ **Completed**: Version updated to 0.8.1 according to semver methodology (PATCH version for display format improvement)
+- ✅ **Completed**: CHANGELOG.md updated with release notes for v0.8.1
 - ✅ **Completed**: Fixed documentation example for --text command to show correct tree output format instead of incorrect "Certificate Information:" verbose format
 - ✅ **Completed**: Enhanced TUI navigation system with Tab-based details pane activation
 - ✅ **Completed**: Replaced 'j'/'k' key bindings with intuitive Tab toggle for details pane focus
