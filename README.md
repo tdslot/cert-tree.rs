@@ -16,7 +16,7 @@ A command-line utility for inspecting X.509 certificates in a tree-like structur
   - Subject and issuer (CN only for cleaner display)
   - Validity dates with expiration status
   - Public key and signature algorithms
-  - Extensions (Key Usage, Subject Alternative Names, etc.)
+  - **Human-readable extensions** (Key Usage, Subject Alternative Names, Authority Information Access, etc.)
   - CA status
 - **Color-coded validity status**: Green (valid), Yellow (expiring soon), Red (expired)
 - **Sequence numbering**: Bracketed sequence numbers [1], [2] for certificate identification
@@ -348,7 +348,7 @@ cert_tree --file cert.pem
 - Clean, organized layout with borders and sections
 - Human-readable formatting for all certificate fields
 - Column headers and right-aligned dates
-- Detailed certificate inspection panel with scrollable information
+- Detailed certificate inspection panel with scrollable information including human-readable extension names
 
 ## Examples
 

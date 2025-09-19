@@ -7,6 +7,12 @@
 - **Documentation Status**: README.md updated to match actual CLI implementation
 
 ## Recent Changes
+- ✅ **Completed**: Enhanced certificate extension display with human-readable names instead of OIDs
+- ✅ **Completed**: Added OID to human-readable name mapping function supporting common X.509 extensions
+- ✅ **Completed**: Updated all display modes (verbose, tree, TUI) to show human-readable extension names
+- ✅ **Completed**: Maintained backward compatibility by showing OIDs for unmapped extensions
+- ✅ **Completed**: Version updated to 0.10.0 according to semver methodology (MINOR version for new feature)
+- ✅ **Completed**: CHANGELOG.md updated with release notes for v0.10.0
 - ✅ **Completed**: Modified CLI default behavior to make text output mode the default instead of interactive TUI
 - ✅ **Completed**: Changed `-i, --interactive` default from `true` to `false`
 - ✅ **Completed**: Made `-t, --text` the default behavior when no output mode is specified
@@ -127,7 +133,7 @@
 - **Documentation**: Comprehensive README and inline documentation
 
 ## Known Limitations
-- Extension parsing is partially implemented (basic OID display)
+- Extension parsing is enhanced with human-readable names for common extensions
 - No certificate chain validation yet
 - Limited support for exotic certificate formats
 

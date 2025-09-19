@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 2025-09-19
+
+### Added
+- **Human-Readable Extension Names**: Enhanced certificate extension display with human-readable names instead of raw OIDs
+- **OID Mapping Function**: Added comprehensive mapping function supporting common X.509 extensions including:
+  - Subject Key Identifier
+  - Key Usage
+  - Basic Constraints
+  - Subject Alternative Name
+  - Authority Information Access
+  - Private Key Usage Period
+  - Certificate Policies
+  - Extended Key Usage
+  - And many more common extensions
+
+### Changed
+- **Extension Display**: All display modes (verbose, tree, TUI) now show human-readable extension names
+- **Backward Compatibility**: Unmapped OIDs still display as-is to maintain compatibility
+- **User Experience**: Certificate inspection is now much more accessible to users without deep X.509 knowledge
+
+### Technical
+- **Extension Processing**: Updated `extract_cert_info()` function to populate extension names using OID mapping
+- **Display Functions**: Modified all display functions to use human-readable names when available
+- **Code Organization**: Added `oid_to_name()` function for clean, maintainable extension name mapping
+
 ## [0.9.0] - 2025-09-19
 
 ### Changed
