@@ -6,11 +6,13 @@ A command-line utility for inspecting X.509 certificates in a tree-like structur
 
 - Parse X.509 certificates from files (PEM/DER), URLs, or command-line input
 - **Certificate Chain Support**: Automatically detect and display certificate hierarchies
+- **HTTPS Certificate Chain Fetching**: Extract certificate chains from any HTTPS website via TLS handshake
 - Display certificate information in multiple formats:
   - Tree view (default)
   - Verbose text output
   - JSON export
   - Interactive TUI with colors
+  - Text mode for certificate chains (non-interactive)
 - Show detailed certificate information including:
   - Subject and issuer
   - Validity dates with expiration status
@@ -18,6 +20,8 @@ A command-line utility for inspecting X.509 certificates in a tree-like structur
   - Extensions (Key Usage, Subject Alternative Names, etc.)
   - CA status
 - **Color-coded validity status**: Green (valid), Yellow (expiring soon), Red (expired)
+- **Sequence numbering**: Bracketed sequence numbers [1], [2] for certificate identification
+- **Enhanced TUI**: Scrollable certificate list, version display, keyboard navigation, responsive layout
 - Comprehensive error handling for invalid certificates
 - Efficient parsing using the `x509-parser` crate
 
@@ -47,7 +51,10 @@ cargo install --git <repository-url> cert_tree
 # Inspect a certificate file
 cert_tree --file certificate.pem
 
-# Inspect a certificate from a URL
+# Inspect certificate chain from HTTPS website (TLS handshake)
+cert_tree --url https://example.com
+
+# Inspect a certificate from a direct URL
 cert_tree --url https://example.com/certificate.pem
 
 # Inspect certificate data from command line
@@ -79,21 +86,24 @@ cert_tree --file cert.pem --format json --output cert.json
 ### Certificate Chain Examples
 
 ```bash
+# Display certificate chain from HTTPS website
+cert_tree --url https://github.com --text
+
 # Display certificate chain in text format
 cert_tree --file ca_list.pem --text
 ```
 
 Output:
 ```
-━ CorpRoot            [valid until: 2040-05-05 18:19:20]
-    ┣━ ServerCA       [valid until: 2025-05-29 19:51:12]
-    ┣━ example_cert   [valid until: 2025-06-15 00:07:55]
-    ┗━ example_2      [valid until: 2025-06-04 14:56:07]
-━ RootCert            [valid until: 2029-04-28 14:53:22]
-    ┣━ example_cert3  [EXPIRED on: 2019-06-03 13:26:21]
-    ┣━ other          [valid until: 2022-09-05 21:32:11]
-    ┣━ other1         [EXPIRED on: 2017-06-16 21:12:18]
-    ┗━ AnotherOne     [valid until: 2023-10-06 15:30:47]
+━ CorpRoot                                              [1] [VALID until: 2040-05-05 18:19]
+     └ ServerCA                                         [2] [VALID until: 2025-05-29 19:51]
+         ├ example_cert                                  [3] [VALID until: 2025-06-15 00:07]
+         └ example_2                                     [4] [VALID until: 2025-06-04 14:56]
+━ RootCert                                              [5] [VALID until: 2029-04-28 14:53]
+     └ example_cert3                                     [6] [EXPIRED until: 2019-06-03 13:26]
+         ├ other                                         [7] [EXPIRED until: 2022-09-05 21:32]
+         ├ other1                                        [8] [EXPIRED until: 2017-06-16 21:12]
+         └ AnotherOne                                    [9] [VALID until: 2023-10-06 15:30]
 ```
 
 ```bash
@@ -116,7 +126,7 @@ cert_tree --file ca_list.pem --format tui
 
 ## Interactive TUI Mode
 
-The TUI (Terminal User Interface) mode provides a beautiful, color-coded display of certificate information:
+The TUI (Terminal User Interface) mode provides a beautiful, color-coded display of certificate information with advanced navigation features:
 
 ```bash
 cert_tree --file cert.pem --format tui
@@ -133,11 +143,15 @@ cert_tree --file cert.pem --format tui
 - 🟦 **Cyan**: Subject alternative names
 
 ### TUI Features
-- Real-time certificate validity status
-- Color-coded visual indicators
-- Interactive interface (press 'q' to quit)
+- Real-time certificate validity status with color coding
+- Scrollable certificate list with keyboard navigation (↑/↓ arrows)
+- Version number displayed in title bar
+- Dynamic column sizing that adapts to terminal width
+- Responsive layout for different terminal sizes
+- Interactive interface (↑/↓ Navigate | 'q' Quit | 't' Text Mode)
 - Clean, organized layout with borders and sections
 - Human-readable formatting for all certificate fields
+- Column headers and right-aligned dates
 
 ## Examples
 
@@ -192,6 +206,8 @@ Output:
 - `clap`: Command-line argument parsing
 - `x509-parser`: X.509 certificate parsing
 - `reqwest`: HTTP client for URL fetching
+- `rustls`: TLS library for certificate chain extraction
+- `webpki-roots`: Trusted root certificates for TLS validation
 - `serde` & `serde_json`: JSON serialization
 - `anyhow` & `thiserror`: Error handling
 - `ratatui`: Terminal user interface framework

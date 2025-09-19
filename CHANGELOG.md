@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2025-09-19
+
+### Fixed
+- Fixed Unicode string slicing bug in TUI display that caused panics when resizing terminal with certificates containing multi-byte characters
+- Replaced byte-based string slicing with character-based slicing to properly handle UTF-8 characters
+- Fixed TUI layout initialization issue that caused display problems for a few seconds on startup
+- Added terminal clear and small delay on TUI startup to ensure proper layout calculation
+- Fixed time format in text mode to include seconds (HH:MM:SS instead of HH:MM)
+- Updated date column alignment in text mode to accommodate longer time format
+- Added adaptive date formatting in TUI for narrow terminals (full date/time, date/time without seconds, or date only)
+- Optimized terminal width thresholds to prioritize showing seconds when possible
+- Reduced minimum spacing requirements for better date display in moderately narrow terminals
+- Added safeguards for extremely narrow terminals to prevent formatting panics
+- Ensured minimum column widths are maintained for proper display
+- Verified time format fix works correctly in both TUI and text modes
+
+### Technical
+- Updated `display_certificate_tree_tui()` and `display_tree_node_text()` functions to use `chars().take()` instead of byte slicing
+- Improved Unicode compatibility for certificate names with special characters
+
 ## [0.5.0] - 2025-09-19
 
 ### Added

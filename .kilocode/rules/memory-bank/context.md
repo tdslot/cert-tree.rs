@@ -35,11 +35,21 @@
 - ✅ **Completed**: Fixed column alignment with consistent positioning
 - ✅ **Completed**: Implemented cascading tree structure with proper indentation
 - ✅ **Completed**: Version updated to 0.5.0 according to semver methodology (MINOR version for new features)
+- ✅ **Completed**: Version updated to 0.5.1 according to semver methodology (PATCH version for bug fix)
 - ✅ **Completed**: CHANGELOG.md updated with comprehensive release notes for v0.5.0
 - ✅ **Completed**: Implemented bracketed sequence numbers [1], [2] and status/date formatting
 - ✅ **Completed**: Implemented cascading tree structure with proper indentation levels
 - ✅ **Completed**: Added sequence numbers in square brackets [1], [2], etc. to certificate display
 - ✅ **Completed**: Moved VALID status to front of date/time format with square brackets
+- ✅ **Completed**: Fixed Unicode string slicing bug in TUI display (byte index boundary issue with multi-byte characters)
+- ✅ **Completed**: Fixed TUI layout initialization issue that caused display problems for a few seconds on startup
+- ✅ **Completed**: Fixed time format in text mode to include seconds (HH:MM:SS instead of HH:MM)
+- ✅ **Completed**: Added adaptive date formatting in TUI for narrow terminals (full date/time, date/time without seconds, or date only)
+- ✅ **Completed**: Optimized terminal width thresholds to prioritize showing seconds when possible
+- ✅ **Completed**: Reduced minimum spacing requirements for better date display in moderately narrow terminals
+- ✅ **Completed**: Added safeguards for extremely narrow terminals to prevent formatting panics
+- ✅ **Completed**: Ensured minimum column widths are maintained for proper display
+- ✅ **Completed**: Verified time format fix works correctly in both TUI and text modes
 
 ## Next Steps
 - **Potential Enhancements**:

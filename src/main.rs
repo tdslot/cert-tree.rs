@@ -569,6 +569,10 @@ fn display_tui(cert: &CertificateInfo) -> Result<(), Box<dyn std::error::Error>>
 
     let validity_status = ValidityStatus::from_dates(&cert.not_after);
 
+    // Force initial clear and small delay to ensure proper layout on startup
+    terminal.clear()?;
+    std::thread::sleep(std::time::Duration::from_millis(50));
+
     loop {
         terminal.draw(|f| {
             let size = f.size();
@@ -692,20 +696,20 @@ fn display_tree_node_text(node: &CertificateNode, prefix: &str, depth: usize, se
     *sequence_num += 1;
 
     // Fixed column positions - dates should align regardless of tree depth
-    let date_column_start: usize = 90; // Fixed position for date column
+    let date_column_start: usize = 93; // Fixed position for date column (adjusted for seconds in time format)
 
     // Get certificate name (without sequence number)
     let available_name_space = date_column_start.saturating_sub(prefix.len()) - 5; // Leave space for brackets and content
     let display_name = if node.cert.subject.len() > available_name_space {
         let truncate_len = if available_name_space > 3 { available_name_space - 3 } else { available_name_space };
-        format!("{}...", &node.cert.subject[..truncate_len])
+        format!("{}...", node.cert.subject.chars().take(truncate_len).collect::<String>())
     } else {
         node.cert.subject.clone()
     };
 
     // Format validity date with time
     let date_str = if let Ok(expiry) = DateTime::parse_from_rfc2822(&node.cert.not_after) {
-        expiry.format("%Y-%m-%d %H:%M").to_string()
+        expiry.format("%Y-%m-%d %H:%M:%S").to_string()
     } else {
         "Invalid".to_string()
     };
@@ -754,6 +758,10 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
     let mut list_state = ratatui::widgets::ListState::default();
     list_state.select(Some(0));
 
+    // Force initial clear and small delay to ensure proper layout on startup
+    terminal.clear()?;
+    std::thread::sleep(std::time::Duration::from_millis(50));
+
     loop {
         terminal.draw(|f| {
             let size = f.size();
@@ -777,9 +785,22 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
 
             // Calculate dynamic column widths based on terminal size
             let terminal_width = size.width as usize;
-            let date_width = 19; // Fixed width for "YYYY-MM-DD HH:MM:SS"
-            let min_gap = 3; // Minimum gap between columns
-            let available_name_width = terminal_width.saturating_sub(date_width + min_gap);
+            let min_gap = 2; // Minimum gap between columns
+            let min_name_width = 8; // Minimum width for certificate names
+
+            // Choose date format based on available space - prioritize showing seconds
+            let (date_width, date_format) = if terminal_width >= 17 + min_gap + min_name_width {
+                (19, "%Y-%m-%d %H:%M:%S") // Full format with seconds (try to fit even if slightly tight)
+            } else if terminal_width >= 14 + min_gap + min_name_width {
+                (16, "%Y-%m-%d %H:%M") // Shorter format without seconds
+            } else if terminal_width >= 8 + min_gap + min_name_width {
+                (10, "%Y-%m-%d") // Date only for narrow terminals
+            } else {
+                // Extremely narrow terminal - use minimal format
+                (8, "%Y-%m-%d") // Short date for very narrow terminals
+            };
+
+            let available_name_width = terminal_width.saturating_sub(date_width + min_gap).max(min_name_width);
 
             // Create list items
             let items: Vec<ListItem> = certificates
@@ -789,7 +810,7 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
                     // Truncate long names if necessary
                     let display_name = if name.len() > available_name_width {
                         if available_name_width > 3 {
-                            format!("{}...", &name[..available_name_width-3])
+                            format!("{}...", name.chars().take(available_name_width-3).collect::<String>())
                         } else {
                             name.chars().take(available_name_width).collect::<String>()
                         }
@@ -797,9 +818,17 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
                         name.clone()
                     };
 
+                    // Format date according to available space
+                    let formatted_date = if let Ok(expiry) = DateTime::parse_from_rfc2822(valid_until) {
+                        expiry.format(date_format).to_string()
+                    } else {
+                        valid_until.clone()
+                    };
+
                     // Create formatted strings for each column
                     let name_part = format!("{:<width$}", display_name, width = available_name_width);
-                    let date_part = format!("{:>19}", valid_until);
+                    let safe_date_width = date_width.max(formatted_date.len());
+                    let date_part = format!("{:>width$}", formatted_date, width = safe_date_width);
 
                     let line = Line::from(vec![
                         Span::styled(name_part, Style::default().fg(Color::White)),
