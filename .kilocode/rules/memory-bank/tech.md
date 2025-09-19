@@ -35,14 +35,8 @@
 #### Data Processing
 - **serde (v1.0)**
   - Serialization framework
-  - JSON output support
   - Derive macros for automatic implementation
   - Type-safe data structures
-
-- **serde_json (v1.0)**
-  - JSON serialization/deserialization
-  - Human-readable JSON output
-  - Efficient parsing
 
 #### Error Handling
 - **thiserror (v1.0)**

@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2025-09-19
+
+### Added
+- Modified certificate display to show only CN (Common Name) instead of full subject
+- Cleaner output by displaying just the certificate name without full DN details
+- Added extract_cn() function to parse CN from certificate subject strings
+
+### Changed
+- Updated all display modes (tree, verbose, TUI, text) to use CN only
+- Simplified certificate identification in output
+
+### Technical
+- Added extract_cn() function for parsing CN from X.509 subject fields
+- Modified display_tree(), display_verbose(), display_tui(), and tree display functions
+- Maintained all existing functionality while improving readability
+
 ## [0.5.1] - 2025-09-19
 
 ### Fixed

@@ -24,6 +24,23 @@ use rustls::{ClientConfig, RootCertStore};
 use webpki_roots::TLS_SERVER_ROOTS;
 use std::sync::Arc;
 
+// Function to extract CN from certificate subject
+fn extract_cn(subject: &str) -> String {
+    // Parse the DN format: C=US, ST=New Jersey, L=Jersey City, O=The USERTRUST Network, CN=USERTrust RSA Cer...
+    let parts: Vec<&str> = subject.split(',').collect();
+
+    for part in parts {
+        let trimmed = part.trim();
+        if trimmed.starts_with("CN=") {
+            return trimmed[3..].to_string(); // Remove "CN=" prefix
+        }
+    }
+
+    // If no CN found, return the whole subject as fallback
+    subject.to_string()
+}
+
+
 impl From<rustls::Error> for CertError {
     fn from(err: rustls::Error) -> Self {
         CertError::Tls(err.to_string())
@@ -100,9 +117,9 @@ pub struct Args {
     #[arg(short, long)]
     pub data: Option<String>,
 
-    /// Output format: tree (default), json, verbose, tui
-    #[arg(short, long, default_value = "tree")]
-    pub format: String,
+    /// Interactive TUI mode (default: true)
+    #[arg(short = 'i', long, default_value = "true")]
+    pub interactive: bool,
 
     /// Output file (optional)
     #[arg(short, long)]
@@ -112,7 +129,7 @@ pub struct Args {
     #[arg(short, long)]
     pub verbose: bool,
 
-    /// Text output mode (non-interactive)
+    /// Force text output mode (non-interactive)
     #[arg(short = 't', long)]
     pub text: bool,
 }
@@ -318,9 +335,10 @@ fn flatten_certificate_tree(tree: &CertificateTree) -> Vec<(String, String, Vali
 }
 
 fn flatten_node(node: &CertificateNode, certificates: &mut Vec<(String, String, ValidityStatus)>, depth: usize) {
-    // Format certificate name with indentation
+    // Format certificate name with indentation - use only CN
     let indent = "  ".repeat(depth);
-    let name = format!("{}{}", indent, node.cert.subject);
+    let cn = extract_cn(&node.cert.subject);
+    let name = format!("{}{}", indent, cn);
 
     // Format validity date
     let valid_until = if let Ok(expiry) = DateTime::parse_from_rfc2822(&node.cert.not_after) {
@@ -450,7 +468,8 @@ fn extract_cert_info(cert: &X509Certificate) -> Result<CertificateInfo, CertErro
 
 pub fn display_tree(cert: &CertificateInfo, prefix: &str, is_last: bool) {
     let connector = if is_last { "└── " } else { "├── " };
-    println!("{}{}{}", prefix, connector, cert.subject);
+    let cn = extract_cn(&cert.subject);
+    println!("{}{}{}", prefix, connector, cn);
 
     let new_prefix = format!("{}{}", prefix, if is_last { "    " } else { "│   " });
 
@@ -488,7 +507,8 @@ pub fn display_tree(cert: &CertificateInfo, prefix: &str, is_last: bool) {
 pub fn display_verbose(cert: &CertificateInfo) {
     println!("Certificate Information:");
     println!("======================");
-    println!("Subject: {}", cert.subject);
+    let cn = extract_cn(&cert.subject);
+    println!("CN: {}", cn);
     println!("Issuer: {}", cert.issuer);
     println!("Serial Number: {}", cert.serial_number);
     println!("Validity:");
@@ -559,6 +579,7 @@ impl ValidityStatus {
     }
 }
 
+
 fn display_tui(cert: &CertificateInfo) -> Result<(), Box<dyn std::error::Error>> {
     // Setup terminal
     enable_raw_mode()?;
@@ -594,10 +615,11 @@ fn display_tui(cert: &CertificateInfo) -> Result<(), Box<dyn std::error::Error>>
             f.render_widget(title, chunks[0]);
 
             // Certificate information
+            let cn = extract_cn(&cert.subject);
             let mut cert_info = vec![
                 Line::from(vec![
-                    Span::styled("Subject: ", Style::default().fg(Color::Blue)),
-                    Span::styled(&cert.subject, Style::default().fg(Color::White)),
+                    Span::styled("CN: ", Style::default().fg(Color::Blue)),
+                    Span::styled(&cn, Style::default().fg(Color::White)),
                 ]),
                 Line::from(vec![
                     Span::styled("Issuer: ", Style::default().fg(Color::Blue)),
@@ -698,13 +720,14 @@ fn display_tree_node_text(node: &CertificateNode, prefix: &str, depth: usize, se
     // Fixed column positions - dates should align regardless of tree depth
     let date_column_start: usize = 93; // Fixed position for date column (adjusted for seconds in time format)
 
-    // Get certificate name (without sequence number)
+    // Get certificate name (without sequence number) - use only CN
+    let cn = extract_cn(&node.cert.subject);
     let available_name_space = date_column_start.saturating_sub(prefix.len()) - 5; // Leave space for brackets and content
-    let display_name = if node.cert.subject.len() > available_name_space {
+    let display_name = if cn.len() > available_name_space {
         let truncate_len = if available_name_space > 3 { available_name_space - 3 } else { available_name_space };
-        format!("{}...", node.cert.subject.chars().take(truncate_len).collect::<String>())
+        format!("{}...", cn.chars().take(truncate_len).collect::<String>())
     } else {
-        node.cert.subject.clone()
+        cn.clone()
     };
 
     // Format validity date with time
@@ -745,7 +768,9 @@ fn display_tree_node_text(node: &CertificateNode, prefix: &str, depth: usize, se
     }
 }
 
+
 fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn std::error::Error>> {
+
     // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -788,19 +813,11 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
             let min_gap = 2; // Minimum gap between columns
             let min_name_width = 8; // Minimum width for certificate names
 
-            // Choose date format based on available space - prioritize showing seconds
-            let (date_width, date_format) = if terminal_width >= 17 + min_gap + min_name_width {
-                (19, "%Y-%m-%d %H:%M:%S") // Full format with seconds (try to fit even if slightly tight)
-            } else if terminal_width >= 14 + min_gap + min_name_width {
-                (16, "%Y-%m-%d %H:%M") // Shorter format without seconds
-            } else if terminal_width >= 8 + min_gap + min_name_width {
-                (10, "%Y-%m-%d") // Date only for narrow terminals
-            } else {
-                // Extremely narrow terminal - use minimal format
-                (8, "%Y-%m-%d") // Short date for very narrow terminals
-            };
+            // Always show seconds for better precision - force full format
+            let (date_width, date_format) = (19, "%Y-%m-%d %H:%M:%S");
 
             let available_name_width = terminal_width.saturating_sub(date_width + min_gap).max(min_name_width);
+
 
             // Create list items
             let items: Vec<ListItem> = certificates
@@ -828,7 +845,7 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
                     // Create formatted strings for each column
                     let name_part = format!("{:<width$}", display_name, width = available_name_width);
                     let safe_date_width = date_width.max(formatted_date.len());
-                    let date_part = format!("{:>width$}", formatted_date, width = safe_date_width.saturating_sub(8));
+                    let date_part = format!("{:>width$}", formatted_date, width = safe_date_width.saturating_sub(12));
 
                     let line = Line::from(vec![
                         Span::styled(name_part, Style::default().fg(Color::White)),
@@ -930,34 +947,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Single certificate - use existing logic
         let cert_info = &certificates[0];
 
-        match args.format.as_str() {
-            "tree" => {
-                display_tree(cert_info, "", true);
-            }
-            "json" => {
-                let json = serde_json::to_string_pretty(cert_info)?;
-                if let Some(output_file) = &args.output {
-                    fs::write(output_file, &json)?;
-                } else {
-                    println!("{}", json);
-                }
-            }
-            "verbose" => {
-                display_verbose(cert_info);
-            }
-            "tui" => {
-                display_tui(cert_info)?;
-            }
-            _ => {
-                eprintln!("Error: Invalid format. Use 'tree', 'json', 'verbose', or 'tui'");
-                std::process::exit(1);
-            }
+        if args.interactive {
+            display_tui(cert_info)?;
+        } else {
+            display_verbose(cert_info);
         }
     } else {
         // Multiple certificates - build and display tree
         let tree = build_certificate_tree(certificates);
 
-        if args.text {
+        if args.text || !args.interactive {
             // Text mode for certificate chains
             display_certificate_tree_text(&tree);
         } else {
@@ -968,6 +967,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
 
 #[cfg(test)]
 mod tests {
@@ -1009,7 +1009,7 @@ mod tests {
     }
 
     #[test]
-    fn test_certificate_info_serialization() {
+    fn test_certificate_info_creation() {
         let cert = CertificateInfo {
             subject: "CN=test".to_string(),
             issuer: "CN=issuer".to_string(),
@@ -1025,9 +1025,10 @@ mod tests {
             subject_alt_names: vec![],
         };
 
-        let json = serde_json::to_string(&cert).unwrap();
-        let deserialized: CertificateInfo = serde_json::from_str(&json).unwrap();
-        assert_eq!(cert.subject, deserialized.subject);
-        assert_eq!(cert.is_ca, deserialized.is_ca);
+        // Test basic field access
+        assert_eq!(cert.subject, "CN=test");
+        assert_eq!(cert.issuer, "CN=issuer");
+        assert_eq!(cert.is_ca, true);
+        assert_eq!(cert.version, 3);
     }
 }

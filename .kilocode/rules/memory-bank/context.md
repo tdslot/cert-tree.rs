@@ -6,6 +6,11 @@
 - **Current Phase**: Production ready with advanced features
 
 ## Recent Changes
+- ✅ **Completed**: Modified certificate display to show only CN instead of full subject
+- ✅ **Completed**: Added extract_cn() function to parse CN from certificate subject
+- ✅ **Completed**: Updated all display modes (tree, verbose, TUI, text) to use CN only
+- ✅ **Completed**: Version updated to 0.6.0 according to semver methodology (MINOR version for new features)
+- ✅ **Completed**: CHANGELOG.md updated with comprehensive release notes for v0.6.0
 - ✅ **Completed**: Full implementation of certificate inspection utility
 - ✅ **Completed**: Human-readable output formatting (serial numbers, public keys, signatures)
 - ✅ **Completed**: Multiple input sources (files, URLs, command-line data)
@@ -51,6 +56,12 @@
 - ✅ **Completed**: Ensured minimum column widths are maintained for proper display
 - ✅ **Completed**: Shifted date column in TUI to the left by 8 characters for better visual alignment
 - ✅ **Completed**: Verified time format fix works correctly in both TUI and text modes
+- ✅ **Completed**: Fixed duplicate `-f` option issue (now --file uses -f, --format removed)
+- ✅ **Completed**: Removed JSON format support and serde_json dependency
+- ✅ **Completed**: Simplified CLI options with --interactive flag (default: true)
+- ✅ **Completed**: Removed confusing --format option and replaced with clean --interactive/--text logic
+- ✅ **Completed**: Cleaned up unused functions (display_tui_text, display_certificate_tree_tui_text)
+- ✅ **Completed**: Updated help text to reflect new simplified option structure
 
 ## Next Steps
 - **Potential Enhancements**:

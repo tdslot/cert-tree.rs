@@ -13,7 +13,7 @@ To provide security professionals, developers, and system administrators with an
 
 ## Key Requirements
 - **Input Sources**: Files (PEM/DER), URLs, command-line data
-- **Output Formats**: Tree view, JSON, verbose text, interactive TUI
+- **Output Formats**: Tree view, verbose text, interactive TUI
 - **Certificate Chains**: Automatic parsing and display of certificate hierarchies
 - **Performance**: Fast parsing with minimal memory footprint
 - **Reliability**: Comprehensive error handling and validation
