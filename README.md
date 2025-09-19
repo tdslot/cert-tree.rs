@@ -10,18 +10,17 @@ A command-line utility for inspecting X.509 certificates in a tree-like structur
 - Display certificate information in multiple formats:
   - Tree view (default)
   - Verbose text output
-  - JSON export
-  - Interactive TUI with colors
+  - Interactive TUI with colors and detailed certificate inspection
   - Text mode for certificate chains (non-interactive)
 - Show detailed certificate information including:
-  - Subject and issuer
+  - Subject and issuer (CN only for cleaner display)
   - Validity dates with expiration status
   - Public key and signature algorithms
   - Extensions (Key Usage, Subject Alternative Names, etc.)
   - CA status
 - **Color-coded validity status**: Green (valid), Yellow (expiring soon), Red (expired)
 - **Sequence numbering**: Bracketed sequence numbers [1], [2] for certificate identification
-- **Enhanced TUI**: Scrollable certificate list, version display, keyboard navigation, responsive layout
+- **Enhanced TUI**: Interactive navigation with Tab-based pane switching, scrollable certificate list and details, version display, responsive layout
 - Comprehensive error handling for invalid certificates
 - Efficient parsing using the `x509-parser` crate
 
@@ -67,20 +66,14 @@ cert_tree --data "-----BEGIN CERTIFICATE-----...-----END CERTIFICATE-----"
 # Tree view (default)
 cert_tree --file cert.pem
 
-# Interactive TUI with colors
-cert_tree --file cert.pem --format tui
+# Interactive TUI with colors (default)
+cert_tree --file cert.pem
 
 # Text mode for certificate chains (non-interactive)
 cert_tree --file cert-chain.pem --text
 
-# Verbose output
-cert_tree --file cert.pem --format verbose
-
-# JSON output
-cert_tree --file cert.pem --format json
-
-# Save JSON to file
-cert_tree --file cert.pem --format json --output cert.json
+# Verbose output (use with --text or TUI)
+cert_tree --file cert.pem --verbose
 ```
 
 ### Certificate Chain Examples
@@ -117,8 +110,7 @@ cert_tree --file ca_list.pem --format tui
 - `-f, --file <FILE>`: Path to certificate file (PEM or DER)
 - `-U, --url <URL>`: URL to fetch certificate from
 - `-d, --data <DATA>`: Certificate data as string
-- `--format <FORMAT>`: Output format (tree, json, verbose, tui) [default: tree]
-- `-o, --output <FILE>`: Output file for JSON format
+- `-i, --interactive`: Interactive TUI mode (default: true)
 - `-t, --text`: Text output mode (non-interactive, for certificate chains)
 - `-v, --verbose`: Enable verbose output
 - `-h, --help`: Print help information
@@ -144,14 +136,18 @@ cert_tree --file cert.pem --format tui
 
 ### TUI Features
 - Real-time certificate validity status with color coding
-- Scrollable certificate list with keyboard navigation (↑/↓ arrows)
+- Interactive navigation with Tab-based pane switching between certificate list and details
+- Context-aware arrow keys: navigate list when details inactive, scroll details when active
+- Page Up/Page Down support for fast navigation through certificate lists
+- Visual feedback with color-coded borders indicating active pane
 - Version number displayed in title bar
 - Dynamic column sizing that adapts to terminal width
 - Responsive layout for different terminal sizes
-- Interactive interface (↑/↓ Navigate | 'q' Quit | 't' Text Mode)
+- Interactive interface (Tab Toggle Panes | ↑/↓ Navigate/Scroll | PageUp/PageDown Fast Nav | 'q' Quit)
 - Clean, organized layout with borders and sections
 - Human-readable formatting for all certificate fields
 - Column headers and right-aligned dates
+- Detailed certificate inspection panel with scrollable information
 
 ## Examples
 
@@ -177,29 +173,6 @@ C=NO, ST=Some Test Certificate, L=Oslo, O=Internet Widgits Pty Ltd, OU=Home, CN=
     └── 2.5.29.19 (critical)
 ```
 
-### JSON Export
-
-```bash
-cert_tree --file cert.pem --format json
-```
-
-Output:
-```json
-{
-  "subject": "CN=example.com,O=Example Inc",
-  "issuer": "CN=CA,O=Example Inc",
-  "serial_number": "12345678901234567890",
-  "not_before": "Mon, 01 Jan 2023 00:00:00 +0000",
-  "not_after": "Tue, 31 Dec 2024 23:59:59 +0000",
-  "public_key_algorithm": "RSA",
-  "signature_algorithm": "SHA256-RSA",
-  "version": 3,
-  "extensions": [...],
-  "is_ca": false,
-  "key_usage": "Digital Signature, Key Encipherment",
-  "subject_alt_names": ["DNS:example.com"]
-}
-```
 
 ## Dependencies
 
@@ -208,12 +181,10 @@ Output:
 - `reqwest`: HTTP client for URL fetching
 - `rustls`: TLS library for certificate chain extraction
 - `webpki-roots`: Trusted root certificates for TLS validation
-- `serde` & `serde_json`: JSON serialization
 - `anyhow` & `thiserror`: Error handling
 - `ratatui`: Terminal user interface framework
 - `crossterm`: Cross-platform terminal manipulation
 - `chrono`: Date/time processing for validity calculations
-- `tokio`: Async runtime (for future enhancements)
 
 ## Error Handling
 
