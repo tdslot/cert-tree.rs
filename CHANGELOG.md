@@ -28,6 +28,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Visual State Indicators**: Dynamic UI elements that reflect current navigation state
 - **Improved Code Documentation**: Added comprehensive comments explaining the new navigation system
 
+### Documentation
+- **README.md Update**: Fixed CLI options documentation to match actual implementation
+- **Removed Invalid Options**: Removed references to non-existent --data, --verbose, and --format options
+- **Updated Examples**: Cleaned up usage examples to use only existing CLI options
+- **Verified Accuracy**: Confirmed all CLI references match the actual binary output
+
 ## [0.7.0] - 2025-09-19
 
 ### Added

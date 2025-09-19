@@ -1,10 +1,10 @@
-use clap::{Parser, CommandFactory};
-use serde::{Deserialize, Serialize};
-use std::fs;
-use std::path::Path;
-use thiserror::Error;
-use x509_parser::prelude::*;
 use chrono::{DateTime, Utc};
+use clap::{CommandFactory, Parser};
+use crossterm::{
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+};
 use ratatui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
@@ -13,16 +13,16 @@ use ratatui::{
     widgets::{Block, Borders, List, ListItem, Paragraph},
     Terminal,
 };
-use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
-    execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-};
-use std::io;
-use std::collections::HashMap;
 use rustls::{ClientConfig, RootCertStore};
-use webpki_roots::TLS_SERVER_ROOTS;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::fs;
+use std::io;
+use std::path::Path;
 use std::sync::Arc;
+use thiserror::Error;
+use webpki_roots::TLS_SERVER_ROOTS;
+use x509_parser::prelude::*;
 
 // Function to extract CN from certificate subject
 fn extract_cn(subject: &str) -> String {
@@ -39,7 +39,6 @@ fn extract_cn(subject: &str) -> String {
     // If no CN found, return the whole subject as fallback
     subject.to_string()
 }
-
 
 impl From<rustls::Error> for CertError {
     fn from(err: rustls::Error) -> Self {
@@ -113,7 +112,6 @@ pub struct Args {
     #[arg(short = 'U', long)]
     pub url: Option<String>,
 
-
     /// Interactive TUI mode (default: true)
     #[arg(short = 'i', long, default_value = "true")]
     pub interactive: bool,
@@ -167,8 +165,8 @@ pub fn fetch_certificate_chain_from_url(url: &str) -> Result<Vec<CertificateInfo
 }
 
 fn fetch_certificate_chain_via_tls(hostname: &str) -> Result<Vec<CertificateInfo>, CertError> {
-    use std::io::{Read, Write};
     use rustls::client::ClientConnection;
+    use std::io::{Read, Write};
 
     // Set up TLS configuration
     let mut root_store = RootCertStore::empty();
@@ -190,8 +188,8 @@ fn fetch_certificate_chain_via_tls(hostname: &str) -> Result<Vec<CertificateInfo
     socket.set_read_timeout(Some(std::time::Duration::from_secs(10)))?;
     socket.set_write_timeout(Some(std::time::Duration::from_secs(10)))?;
 
-    let server_name = rustls::ServerName::try_from(hostname)
-        .map_err(|_| CertError::InvalidFormat)?;
+    let server_name =
+        rustls::ServerName::try_from(hostname).map_err(|_| CertError::InvalidFormat)?;
 
     let mut conn = ClientConnection::new(Arc::new(config), server_name)?;
 
@@ -216,20 +214,27 @@ fn fetch_certificate_chain_via_tls(hostname: &str) -> Result<Vec<CertificateInfo
                     certificates.push(cert_info);
                 }
                 Err(e) => {
-                    return Err(CertError::X509Parse(format!("Failed to parse certificate: {}", e)));
+                    return Err(CertError::X509Parse(format!(
+                        "Failed to parse certificate: {}",
+                        e
+                    )));
                 }
             }
         }
         Ok(certificates)
     } else {
-        Err(CertError::X509Parse("No certificates found in TLS handshake".to_string()))
+        Err(CertError::X509Parse(
+            "No certificates found in TLS handshake".to_string(),
+        ))
     }
 }
 
 pub fn parse_certificate(data: &[u8]) -> Result<CertificateInfo, CertError> {
     // Try PEM first
     if let Ok((_, pem)) = pem::parse_x509_pem(data) {
-        let cert = pem.parse_x509().map_err(|e| CertError::X509Parse(e.to_string()))?;
+        let cert = pem
+            .parse_x509()
+            .map_err(|e| CertError::X509Parse(e.to_string()))?;
         return extract_cert_info(&cert);
     }
 
@@ -285,7 +290,8 @@ pub fn build_certificate_tree(certificates: Vec<CertificateInfo>) -> Certificate
         cert_map.insert(cert.subject.clone(), cert.clone());
 
         // Group certificates by issuer
-        issuer_map.entry(cert.issuer.clone())
+        issuer_map
+            .entry(cert.issuer.clone())
             .or_insert_with(Vec::new)
             .push(cert.subject.clone());
     }
@@ -331,7 +337,11 @@ fn flatten_certificate_tree(tree: &CertificateTree) -> Vec<CertificateDisplayIte
     certificates
 }
 
-fn flatten_node(node: &CertificateNode, certificates: &mut Vec<CertificateDisplayItem>, depth: usize) {
+fn flatten_node(
+    node: &CertificateNode,
+    certificates: &mut Vec<CertificateDisplayItem>,
+    depth: usize,
+) {
     // Format certificate name with indentation - use only CN
     let indent = "  ".repeat(depth);
     let cn = extract_cn(&node.cert.subject);
@@ -373,7 +383,8 @@ fn build_tree_node(
         for (i, subject) in issued_certs.iter().enumerate() {
             if let Some(child_cert) = cert_map.get(subject) {
                 if !processed.contains(subject) {
-                    let child_node = build_tree_node(child_cert, cert_map, issuer_map, processed, index + i + 1);
+                    let child_node =
+                        build_tree_node(child_cert, cert_map, issuer_map, processed, index + i + 1);
                     children.push(child_node);
                 }
             }
@@ -391,26 +402,37 @@ fn build_tree_node(
 fn extract_cert_info(cert: &X509Certificate) -> Result<CertificateInfo, CertError> {
     let subject = cert.subject().to_string();
     let issuer = cert.issuer().to_string();
-    let serial = format!("{:x}", cert.serial).as_bytes().chunks(2).map(|chunk| {
-        std::str::from_utf8(chunk).unwrap_or("??")
-    }).collect::<Vec<_>>().join(" ");
-    let not_before = cert.validity().not_before.to_rfc2822().unwrap_or_else(|_| "Invalid date".to_string());
-    let not_after = cert.validity().not_after.to_rfc2822().unwrap_or_else(|_| "Invalid date".to_string());
+    let serial = format!("{:x}", cert.serial)
+        .as_bytes()
+        .chunks(2)
+        .map(|chunk| std::str::from_utf8(chunk).unwrap_or("??"))
+        .collect::<Vec<_>>()
+        .join(" ");
+    let not_before = cert
+        .validity()
+        .not_before
+        .to_rfc2822()
+        .unwrap_or_else(|_| "Invalid date".to_string());
+    let not_after = cert
+        .validity()
+        .not_after
+        .to_rfc2822()
+        .unwrap_or_else(|_| "Invalid date".to_string());
 
     let public_key_alg = match cert.public_key().parsed() {
-        Ok(pk) => {
-            match pk {
-                x509_parser::public_key::PublicKey::RSA(rsa_key) => {
-                    let key_size = rsa_key.modulus.len() * 8;
-                    format!("RSA ({} bits)", key_size)
-                }
-                x509_parser::public_key::PublicKey::EC(_) => "ECDSA".to_string(),
-                x509_parser::public_key::PublicKey::DSA(_) => "DSA".to_string(),
-                x509_parser::public_key::PublicKey::GostR3410(_) => "GOST R 34.10".to_string(),
-                x509_parser::public_key::PublicKey::GostR3410_2012(_) => "GOST R 34.10-2012".to_string(),
-                _ => "Unknown".to_string(),
+        Ok(pk) => match pk {
+            x509_parser::public_key::PublicKey::RSA(rsa_key) => {
+                let key_size = rsa_key.modulus.len() * 8;
+                format!("RSA ({} bits)", key_size)
             }
-        }
+            x509_parser::public_key::PublicKey::EC(_) => "ECDSA".to_string(),
+            x509_parser::public_key::PublicKey::DSA(_) => "DSA".to_string(),
+            x509_parser::public_key::PublicKey::GostR3410(_) => "GOST R 34.10".to_string(),
+            x509_parser::public_key::PublicKey::GostR3410_2012(_) => {
+                "GOST R 34.10-2012".to_string()
+            }
+            _ => "Unknown".to_string(),
+        },
         Err(_) => "Unknown".to_string(),
     };
 
@@ -458,33 +480,143 @@ pub fn display_tree(cert: &CertificateInfo, prefix: &str, is_last: bool) {
 
     let new_prefix = format!("{}{}", prefix, if is_last { "    " } else { "│   " });
 
-    println!("{}{}Issuer: {}", new_prefix, if cert.extensions.is_empty() { "└── " } else { "├── " }, cert.issuer);
-    println!("{}{}Serial: {}", new_prefix, if cert.extensions.is_empty() { "└── " } else { "├── " }, cert.serial_number);
-    println!("{}{}Valid: {} to {}", new_prefix, if cert.extensions.is_empty() { "└── " } else { "├── " }, cert.not_before, cert.not_after);
-    println!("{}{}Public Key: {}", new_prefix, if cert.extensions.is_empty() { "└── " } else { "├── " }, cert.public_key_algorithm);
-    println!("{}{}Signature: {}", new_prefix, if cert.extensions.is_empty() { "└── " } else { "├── " }, cert.signature_algorithm);
-    println!("{}{}Version: {}", new_prefix, if cert.extensions.is_empty() { "└── " } else { "├── " }, cert.version);
-    println!("{}{}Is CA: {}", new_prefix, if cert.extensions.is_empty() { "└── " } else { "├── " }, cert.is_ca);
+    println!(
+        "{}{}Issuer: {}",
+        new_prefix,
+        if cert.extensions.is_empty() {
+            "└── "
+        } else {
+            "├── "
+        },
+        cert.issuer
+    );
+    println!(
+        "{}{}Serial: {}",
+        new_prefix,
+        if cert.extensions.is_empty() {
+            "└── "
+        } else {
+            "├── "
+        },
+        cert.serial_number
+    );
+    println!(
+        "{}{}Valid: {} to {}",
+        new_prefix,
+        if cert.extensions.is_empty() {
+            "└── "
+        } else {
+            "├── "
+        },
+        cert.not_before,
+        cert.not_after
+    );
+    println!(
+        "{}{}Public Key: {}",
+        new_prefix,
+        if cert.extensions.is_empty() {
+            "└── "
+        } else {
+            "├── "
+        },
+        cert.public_key_algorithm
+    );
+    println!(
+        "{}{}Signature: {}",
+        new_prefix,
+        if cert.extensions.is_empty() {
+            "└── "
+        } else {
+            "├── "
+        },
+        cert.signature_algorithm
+    );
+    println!(
+        "{}{}Version: {}",
+        new_prefix,
+        if cert.extensions.is_empty() {
+            "└── "
+        } else {
+            "├── "
+        },
+        cert.version
+    );
+    println!(
+        "{}{}Is CA: {}",
+        new_prefix,
+        if cert.extensions.is_empty() {
+            "└── "
+        } else {
+            "├── "
+        },
+        cert.is_ca
+    );
 
     if let Some(ku) = &cert.key_usage {
-        println!("{}{}Key Usage: {}", new_prefix, if cert.extensions.is_empty() { "└── " } else { "├── " }, ku);
+        println!(
+            "{}{}Key Usage: {}",
+            new_prefix,
+            if cert.extensions.is_empty() {
+                "└── "
+            } else {
+                "├── "
+            },
+            ku
+        );
     }
 
     if !cert.subject_alt_names.is_empty() {
-        println!("{}{}Subject Alt Names:", new_prefix, if cert.extensions.is_empty() { "└── " } else { "├── " });
+        println!(
+            "{}{}Subject Alt Names:",
+            new_prefix,
+            if cert.extensions.is_empty() {
+                "└── "
+            } else {
+                "├── "
+            }
+        );
         for (i, san) in cert.subject_alt_names.iter().enumerate() {
-            let san_connector = if i == cert.subject_alt_names.len() - 1 && cert.extensions.is_empty() { "└── " } else { "├── " };
-            println!("{}{}{}{}", new_prefix, if cert.extensions.is_empty() { "    " } else { "│   " }, san_connector, san);
+            let san_connector =
+                if i == cert.subject_alt_names.len() - 1 && cert.extensions.is_empty() {
+                    "└── "
+                } else {
+                    "├── "
+                };
+            println!(
+                "{}{}{}{}",
+                new_prefix,
+                if cert.extensions.is_empty() {
+                    "    "
+                } else {
+                    "│   "
+                },
+                san_connector,
+                san
+            );
         }
     }
 
     if !cert.extensions.is_empty() {
         println!("{}{}Extensions:", new_prefix, "└── ");
         for (i, ext) in cert.extensions.iter().enumerate() {
-            let ext_connector = if i == cert.extensions.len() - 1 { "└── " } else { "├── " };
+            let ext_connector = if i == cert.extensions.len() - 1 {
+                "└── "
+            } else {
+                "├── "
+            };
             let ext_prefix = format!("{}{}", new_prefix, "    ");
             let ext_name = ext.name.as_deref().unwrap_or(&ext.oid);
-            println!("{}{}{} ({})", ext_prefix, ext_connector, ext_name, if ext.critical { "critical" } else { "non-critical" });
+            println!(
+                "{}{}{} ({})",
+                ext_prefix,
+                ext_connector,
+                ext_name,
+                if ext.critical {
+                    "critical"
+                } else {
+                    "non-critical"
+                }
+            );
         }
     }
 }
@@ -517,7 +649,16 @@ pub fn display_verbose(cert: &CertificateInfo) {
 
     println!("Extensions:");
     for ext in &cert.extensions {
-        println!("  {} ({}) - {}", ext.name.as_deref().unwrap_or(&ext.oid), if ext.critical { "critical" } else { "non-critical" }, ext.value);
+        println!(
+            "  {} ({}) - {}",
+            ext.name.as_deref().unwrap_or(&ext.oid),
+            if ext.critical {
+                "critical"
+            } else {
+                "non-critical"
+            },
+            ext.value
+        );
     }
 }
 
@@ -564,7 +705,6 @@ impl ValidityStatus {
     }
 }
 
-
 fn display_tui(cert: &CertificateInfo) -> Result<(), Box<dyn std::error::Error>> {
     // Setup terminal
     enable_raw_mode()?;
@@ -595,7 +735,11 @@ fn display_tui(cert: &CertificateInfo) -> Result<(), Box<dyn std::error::Error>>
 
             // Title block
             let title = Paragraph::new("🔐 Certificate Inspector")
-                .style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+                .style(
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                )
                 .block(Block::default().borders(Borders::ALL).title("cert-tree.rs"));
             f.render_widget(title, chunks[0]);
 
@@ -622,11 +766,17 @@ fn display_tui(cert: &CertificateInfo) -> Result<(), Box<dyn std::error::Error>>
                 ]),
                 Line::from(vec![
                     Span::styled("Status: ", Style::default().fg(Color::Blue)),
-                    Span::styled(validity_status.text(), Style::default().fg(validity_status.color())),
+                    Span::styled(
+                        validity_status.text(),
+                        Style::default().fg(validity_status.color()),
+                    ),
                 ]),
                 Line::from(vec![
                     Span::styled("Public Key: ", Style::default().fg(Color::Blue)),
-                    Span::styled(&cert.public_key_algorithm, Style::default().fg(Color::Green)),
+                    Span::styled(
+                        &cert.public_key_algorithm,
+                        Style::default().fg(Color::Green),
+                    ),
                 ]),
                 Line::from(vec![
                     Span::styled("Signature: ", Style::default().fg(Color::Blue)),
@@ -638,7 +788,14 @@ fn display_tui(cert: &CertificateInfo) -> Result<(), Box<dyn std::error::Error>>
                 ]),
                 Line::from(vec![
                     Span::styled("Is CA: ", Style::default().fg(Color::Blue)),
-                    Span::styled(cert.is_ca.to_string(), Style::default().fg(if cert.is_ca { Color::Yellow } else { Color::White })),
+                    Span::styled(
+                        cert.is_ca.to_string(),
+                        Style::default().fg(if cert.is_ca {
+                            Color::Yellow
+                        } else {
+                            Color::White
+                        }),
+                    ),
                 ]),
             ];
 
@@ -652,12 +809,18 @@ fn display_tui(cert: &CertificateInfo) -> Result<(), Box<dyn std::error::Error>>
             if !cert.subject_alt_names.is_empty() {
                 cert_info.push(Line::from(vec![
                     Span::styled("Subject Alt Names: ", Style::default().fg(Color::Blue)),
-                    Span::styled(cert.subject_alt_names.join(", "), Style::default().fg(Color::Cyan)),
+                    Span::styled(
+                        cert.subject_alt_names.join(", "),
+                        Style::default().fg(Color::Cyan),
+                    ),
                 ]));
             }
 
-            let cert_paragraph = Paragraph::new(cert_info)
-                .block(Block::default().borders(Borders::ALL).title("Certificate Details"));
+            let cert_paragraph = Paragraph::new(cert_info).block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title("Certificate Details"),
+            );
             f.render_widget(cert_paragraph, chunks[1]);
 
             // Footer with instructions
@@ -694,11 +857,23 @@ pub fn display_certificate_tree_text(tree: &CertificateTree) {
     let mut sequence_num = 0;
     for (i, root) in tree.roots.iter().enumerate() {
         let prefix = "━ ";
-        display_tree_node_text(root, prefix, 0, &mut sequence_num, i == tree.roots.len() - 1);
+        display_tree_node_text(
+            root,
+            prefix,
+            0,
+            &mut sequence_num,
+            i == tree.roots.len() - 1,
+        );
     }
 }
 
-fn display_tree_node_text(node: &CertificateNode, prefix: &str, depth: usize, sequence_num: &mut usize, _is_last: bool) {
+fn display_tree_node_text(
+    node: &CertificateNode,
+    prefix: &str,
+    depth: usize,
+    sequence_num: &mut usize,
+    _is_last: bool,
+) {
     // Increment sequence number for this certificate
     *sequence_num += 1;
 
@@ -709,7 +884,11 @@ fn display_tree_node_text(node: &CertificateNode, prefix: &str, depth: usize, se
     let cn = extract_cn(&node.cert.subject);
     let available_name_space = date_column_start.saturating_sub(prefix.len()) - 5; // Leave space for brackets and content
     let display_name = if cn.len() > available_name_space {
-        let truncate_len = if available_name_space > 3 { available_name_space - 3 } else { available_name_space };
+        let truncate_len = if available_name_space > 3 {
+            available_name_space - 3
+        } else {
+            available_name_space
+        };
         format!("{}...", cn.chars().take(truncate_len).collect::<String>())
     } else {
         cn.clone()
@@ -735,11 +914,14 @@ fn display_tree_node_text(node: &CertificateNode, prefix: &str, depth: usize, se
     let (status_text, color_code) = match node.validity_status {
         ValidityStatus::Expired => ("EXPIRED", "\x1b[31m"), // Red
         ValidityStatus::ExpiringSoon => ("EXPIRES SOON", "\x1b[33m"), // Yellow
-        ValidityStatus::Valid => ("VALID", "\x1b[32m"), // Green
+        ValidityStatus::Valid => ("VALID", "\x1b[32m"),     // Green
     };
 
     // Print the line with sequence number and status/date in separate square brackets
-    println!("{}{}{}{}[{}] [{} until: {}]\x1b[0m", prefix, display_name, padding, color_code, sequence_num, status_text, date_str);
+    println!(
+        "{}{}{}{}[{}] [{} until: {}]\x1b[0m",
+        prefix, display_name, padding, color_code, sequence_num, status_text, date_str
+    );
 
     // Display children with cascading tree structure
     for (i, child) in node.children.iter().enumerate() {
@@ -753,9 +935,7 @@ fn display_tree_node_text(node: &CertificateNode, prefix: &str, depth: usize, se
     }
 }
 
-
 fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn std::error::Error>> {
-
     // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -1023,7 +1203,8 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
                     KeyCode::Down => {
                         if details_pane_active {
                             // Scroll details down when details pane is active
-                            if details_scroll < 50 { // Arbitrary max scroll limit
+                            if details_scroll < 50 {
+                                // Arbitrary max scroll limit
                                 details_scroll += 1;
                             }
                         } else {
@@ -1084,7 +1265,6 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
     Ok(())
 }
 
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
@@ -1128,7 +1308,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-
 
 #[cfg(test)]
 mod tests {

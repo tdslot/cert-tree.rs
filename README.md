@@ -42,6 +42,213 @@ The binary will be available at `target/release/cert_tree`.
 cargo install --git <repository-url> cert_tree
 ```
 
+## Justfile - Development Workflow
+
+This project includes a comprehensive `Justfile` that provides a complete set of recipes for development workflows, testing, building, and project management. The Justfile ensures consistent execution of all critical tasks while preserving important paths, variables, and configuration details.
+
+### What is Justfile?
+
+[Just](https://github.com/casey/just) is a command runner that allows you to save and run project-specific commands. It's an alternative to Makefiles and shell scripts for task automation, providing:
+
+- **Simple syntax** with clear, human-readable recipes
+- **Cross-platform compatibility** (Linux, macOS, Windows)
+- **Variable support** for reusable configuration
+- **Dependency management** between tasks
+- **Shell integration** with automatic environment sourcing
+
+### Installation
+
+```bash
+# macOS
+brew install just
+
+# Linux (Ubuntu/Debian)
+sudo apt install just
+
+# Or from source
+curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | sh -s --to ~/.local/bin
+```
+
+### Quick Start
+
+```bash
+# Show all available recipes
+just --list
+
+# Quick development check (format + lint + build)
+just dev-check
+
+# Full quality assurance (format + lint + test + build)
+just quality
+
+# Run with test certificate
+just run-test-cert-text
+
+# Get project information
+just info
+```
+
+### Development Workflow Recipes
+
+#### Quality Assurance
+```bash
+just quality          # Full quality check (format + lint + test + build)
+just quality-release  # Quality check for release build
+just dev-check        # Quick development validation (format + lint + build)
+```
+
+#### Building
+```bash
+just check            # Check code compilation
+just build            # Build debug version
+just build-release    # Build optimized release version
+```
+
+#### Testing
+```bash
+just test             # Run all tests
+just test-verbose     # Run tests with verbose output
+```
+
+#### Code Quality
+```bash
+just fmt              # Format code
+just clippy           # Run linter
+```
+
+#### Application Execution
+```bash
+just run                      # Run debug version
+just run-release             # Run release version
+just run-test-cert           # Run with test certificate (debug)
+just run-test-cert-release   # Run with test certificate (release)
+just run-test-cert-text      # Text mode with test certificate
+just run-test-cert-tui       # Interactive TUI with test certificate
+```
+
+### Advanced Recipes
+
+#### Dependency Management
+```bash
+just update-deps      # Update Cargo dependencies
+just outdated         # Check for outdated dependencies
+just audit            # Security audit of dependencies
+just tree             # Generate dependency tree
+```
+
+#### Documentation
+```bash
+just doc              # Generate and open documentation
+just doc-build        # Generate documentation
+just doc-check        # Check documentation
+```
+
+#### Project Information
+```bash
+just info             # Display project configuration
+just version          # Show application version
+just help             # Show application help
+```
+
+#### File System
+```bash
+just list-src         # List source files
+just list-tests       # List test files
+just loc              # Count lines of code
+just tree-project     # Show project structure
+```
+
+#### Git Workflow
+```bash
+just status           # Show git status
+just log              # Show recent commits
+just commit "message" # Create commit with message
+just push             # Push to remote
+just pull             # Pull from remote
+just tag v1.0.0 "Release notes"  # Create and push tag
+```
+
+#### Release Management
+```bash
+just prepare-release  # Full release preparation
+just release-archive  # Create release archive
+just release          # Complete release workflow
+```
+
+#### Cross-Platform Building
+```bash
+just build-linux      # Build for Linux x86_64
+just build-macos      # Build for macOS x86_64
+just build-windows    # Build for Windows x86_64
+just build-all        # Build for all platforms
+```
+
+#### Development Environment
+```bash
+just setup            # Setup development environment
+just install-tools    # Install development tools
+just backup           # Backup important files
+just emergency-clean  # Complete cleanup
+```
+
+### Justfile Configuration
+
+The Justfile includes important project variables:
+
+```justfile
+project_name := "cert-tree"
+src_dir := "src"
+test_dir := "test"
+target_dir := "target"
+binary_path := target_dir + "/release/" + project_name
+test_cert := test_dir + "/cacert.pem"
+```
+
+### Recipe Categories
+
+| Category | Purpose | Key Recipes |
+|----------|---------|-------------|
+| **Quality** | Code quality assurance | `quality`, `dev-check`, `fmt`, `clippy` |
+| **Build** | Compilation and building | `check`, `build`, `build-release` |
+| **Test** | Testing and validation | `test`, `test-verbose` |
+| **Run** | Application execution | `run`, `run-test-cert*` variants |
+| **Deps** | Dependency management | `update-deps`, `outdated`, `audit` |
+| **Docs** | Documentation | `doc`, `doc-build`, `doc-check` |
+| **Info** | Project information | `info`, `version`, `help` |
+| **Git** | Version control | `status`, `commit`, `push`, `tag` |
+| **Release** | Release management | `prepare-release`, `release` |
+| **Cross** | Cross-platform | `build-*` variants |
+| **Util** | Utilities | `backup`, `clean`, `setup` |
+
+### Best Practices
+
+1. **Use `just --list`** to see all available recipes
+2. **Run `just quality`** before committing changes
+3. **Use `just dev-check`** for quick validation during development
+4. **Run `just prepare-release`** before creating releases
+5. **Use `just info`** to verify project configuration
+
+### Integration with Development Workflow
+
+The Justfile integrates seamlessly with typical Rust development workflows:
+
+```bash
+# Daily development cycle
+just dev-check        # Quick validation
+just test            # Run tests
+just build           # Build project
+
+# Before commit
+just quality         # Full quality check
+just commit "feat: add new feature"
+
+# Release preparation
+just prepare-release # Full validation
+just tag v1.0.0 "Stable release"
+```
+
+The Justfile ensures that all team members use consistent commands and configurations, reducing errors and improving development efficiency.
+
 ## Usage
 
 ### Basic Usage
@@ -55,9 +262,6 @@ cert_tree --url https://example.com
 
 # Inspect a certificate from a direct URL
 cert_tree --url https://example.com/certificate.pem
-
-# Inspect certificate data from command line
-cert_tree --data "-----BEGIN CERTIFICATE-----...-----END CERTIFICATE-----"
 ```
 
 ### Output Formats
@@ -71,9 +275,6 @@ cert_tree --file cert.pem
 
 # Text mode for certificate chains (non-interactive)
 cert_tree --file cert-chain.pem --text
-
-# Verbose output (use with --text or TUI)
-cert_tree --file cert.pem --verbose
 ```
 
 ### Certificate Chain Examples
@@ -88,31 +289,30 @@ cert_tree --file ca_list.pem --text
 
 Output:
 ```
-━ CorpRoot                                              [1] [VALID until: 2040-05-05 18:19]
-     └ ServerCA                                         [2] [VALID until: 2025-05-29 19:51]
-         ├ example_cert                                  [3] [VALID until: 2025-06-15 00:07]
-         └ example_2                                     [4] [VALID until: 2025-06-04 14:56]
-━ RootCert                                              [5] [VALID until: 2029-04-28 14:53]
-     └ example_cert3                                     [6] [EXPIRED until: 2019-06-03 13:26]
-         ├ other                                         [7] [EXPIRED until: 2022-09-05 21:32]
-         ├ other1                                        [8] [EXPIRED until: 2017-06-16 21:12]
-         └ AnotherOne                                    [9] [VALID until: 2023-10-06 15:30]
+━ Entrust Root Certification Authority                                                     [1] [VALID until: 2026-11-27 20:53:42]
+━ QuoVadis Root CA 2                                                                       [2] [VALID until: 2031-11-24 18:23:33]
+━ QuoVadis Root CA 3                                                                       [3] [VALID until: 2031-11-24 19:06:44]
+━ DigiCert Assured ID Root CA                                                              [4] [VALID until: 2031-11-10 00:00:00]
+━ DigiCert Global Root CA                                                                  [5] [VALID until: 2031-11-10 00:00:00]
+━ DigiCert High Assurance EV Root CA                                                       [6] [VALID until: 2031-11-10 00:00:00]
+━ SwissSign Gold CA - G2                                                                   [7] [VALID until: 2036-10-25 08:30:35]
+━ SecureTrust CA                                                                           [8] [VALID until: 2029-12-31 19:40:55]
+━ Secure Global CA                                                                         [9] [VALID until: 2029-12-31 19:52:06]
+━ COMODO Certification Authority                                                           [10] [VALID until: 2029-12-31 23:59:59]
 ```
 
 ```bash
-# Interactive TUI for certificate chains
-cert_tree --file ca_list.pem --format tui
+# Interactive TUI for certificate chains (default)
+cert_tree --file ca_list.pem
 ```
 *TUI mode provides color-coded display with interactive navigation*
 
 ### Options
 
-- `-f, --file <FILE>`: Path to certificate file (PEM or DER)
-- `-U, --url <URL>`: URL to fetch certificate from
-- `-d, --data <DATA>`: Certificate data as string
+- `-f, --file <FILE>`: Certificate file path (PEM or DER)
+- `-U, --url <URL>`: Certificate URL
 - `-i, --interactive`: Interactive TUI mode (default: true)
-- `-t, --text`: Text output mode (non-interactive, for certificate chains)
-- `-v, --verbose`: Enable verbose output
+- `-t, --text`: Force text output mode (non-interactive)
 - `-h, --help`: Print help information
 - `-V, --version`: Print version information
 
@@ -121,7 +321,7 @@ cert_tree --file ca_list.pem --format tui
 The TUI (Terminal User Interface) mode provides a beautiful, color-coded display of certificate information with advanced navigation features:
 
 ```bash
-cert_tree --file cert.pem --format tui
+cert_tree --file cert.pem
 ```
 
 ### Color Coding
@@ -151,26 +351,39 @@ cert_tree --file cert.pem --format tui
 
 ## Examples
 
-### Inspect a self-signed certificate
+### Inspect a single certificate (verbose output)
 
 ```bash
-cert_tree --file selfsigned.pem
+cert_tree --file certificate.pem --text
 ```
 
 Output:
 ```
-C=NO, ST=Some Test Certificate, L=Oslo, O=Internet Widgits Pty Ltd, OU=Home, CN=some.local.host
-├── Issuer: C=NO, ST=Some Test Certificate, L=Oslo, O=Internet Widgits Pty Ltd, OU=Home, CN=some.local.host
-├── Serial: 3e 82 32 19 0b 3a 2f 41 7f 5d e2 75 5d c6 03 fc 51 52 08 0
-├── Valid: Thu, 18 Sep 2025 16:59:59 +0000 to Fri, 18 Sep 2026 16:59:59 +0000
-├── Public Key: RSA (2056 bits)
-├── Signature: OID(1.2.840.113549.1.1.11)
-├── Version: 2
-├── Is CA: true
-└── Extensions:
-    ├── 2.5.29.14 (non-critical)
-    ├── 2.5.29.35 (non-critical)
-    └── 2.5.29.19 (critical)
+Certificate Information:
+======================
+CN: example.com
+Issuer: CN=DigiCert Global Root CA, OU=www.digicert.com, O=DigiCert Inc, C=US
+Serial Number: 01 63 6d 8f 54 22 46 0e 8e 84 47 4d 23 05 12 57
+Validity:
+  Not Before: Mon, 10 Nov 2014 00:00:00 +0000
+  Not After: Mon, 10 Nov 2024 12:00:00 +0000
+Public Key Algorithm: RSA (2048 bits)
+Signature Algorithm: OID(1.2.840.113549.1.1.11)
+Version: 3
+Is CA: false
+Subject Alternative Names:
+  example.com
+  www.example.com
+Extensions:
+  2.5.29.14 (non-critical)
+  2.5.29.35 (non-critical)
+  2.5.29.19 (non-critical)
+  2.5.29.31 (non-critical)
+  2.5.29.32 (non-critical)
+  2.5.29.37 (non-critical)
+  2.5.29.15 (non-critical)
+  2.5.29.17 (non-critical)
+  2.5.29.23 (non-critical)
 ```
 
 

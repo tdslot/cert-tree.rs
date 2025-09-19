@@ -4,6 +4,7 @@
 - **Project Status**: Complete and fully functional
 - **Last Major Update**: Certificate chain support with TUI interface
 - **Current Phase**: Production ready with advanced features
+- **Documentation Status**: README.md updated to match actual CLI implementation
 
 ## Recent Changes
 - ✅ **Completed**: Enhanced TUI navigation system with Tab-based details pane activation
@@ -94,6 +95,9 @@
 - ✅ **Completed**: Removed confusing --format option and replaced with clean --interactive/--text logic
 - ✅ **Completed**: Cleaned up unused functions (display_tui_text, display_certificate_tree_tui_text)
 - ✅ **Completed**: Updated help text to reflect new simplified option structure
+- ✅ **Completed**: Updated README.md to match actual CLI options (removed --data, --verbose, --format references)
+- ✅ **Completed**: Cleaned up README.md examples to use only existing CLI options
+- ✅ **Completed**: Verified CLI options match implementation using just help recipe
 
 ## Next Steps
 - **Potential Enhancements**:
