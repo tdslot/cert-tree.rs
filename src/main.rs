@@ -828,7 +828,7 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
                     // Create formatted strings for each column
                     let name_part = format!("{:<width$}", display_name, width = available_name_width);
                     let safe_date_width = date_width.max(formatted_date.len());
-                    let date_part = format!("{:>width$}", formatted_date, width = safe_date_width);
+                    let date_part = format!("{:>width$}", formatted_date, width = safe_date_width.saturating_sub(4));
 
                     let line = Line::from(vec![
                         Span::styled(name_part, Style::default().fg(Color::White)),

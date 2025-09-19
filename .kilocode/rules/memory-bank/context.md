@@ -49,6 +49,7 @@
 - ✅ **Completed**: Reduced minimum spacing requirements for better date display in moderately narrow terminals
 - ✅ **Completed**: Added safeguards for extremely narrow terminals to prevent formatting panics
 - ✅ **Completed**: Ensured minimum column widths are maintained for proper display
+- ✅ **Completed**: Shifted date column in TUI to the left by 4 characters for better visual alignment
 - ✅ **Completed**: Verified time format fix works correctly in both TUI and text modes
 
 ## Next Steps
