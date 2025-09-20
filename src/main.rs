@@ -524,7 +524,8 @@ fn extract_cert_info(cert: &X509Certificate) -> Result<CertificateInfo, CertErro
     };
 
     let sig_alg_oid = cert.signature_algorithm.algorithm.to_string();
-    let signature_algorithm = signature_alg_to_name(&sig_alg_oid).unwrap_or_else(|| format!("{:?}", cert.signature_algorithm.algorithm));
+    let signature_algorithm = signature_alg_to_name(&sig_alg_oid)
+        .unwrap_or_else(|| format!("{:?}", cert.signature_algorithm.algorithm));
 
     let mut extensions = Vec::new();
     let key_usage = None;
@@ -941,13 +942,11 @@ fn display_tui(cert: &CertificateInfo) -> Result<(), Box<dyn std::error::Error>>
                 ]));
             }
 
-            let cert_paragraph = Paragraph::new(cert_info)
-                .wrap(Wrap { trim: true })
-                .block(
-                    Block::default()
-                        .borders(Borders::ALL)
-                        .title("Certificate Details"),
-                );
+            let cert_paragraph = Paragraph::new(cert_info).wrap(Wrap { trim: true }).block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title("Certificate Details"),
+            );
             f.render_widget(cert_paragraph, chunks[1]);
 
             // Footer with instructions
