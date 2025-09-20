@@ -15,6 +15,15 @@ This document outlines the comprehensive workflow guidelines for the cert-tree.r
 - Update `CHANGELOG.md` with detailed release notes
 - Use conventional commit messages with semver impact indicators
 
+### 3. Commit Message Generation
+- Use the [commit message generator](commit-message-generator-with-gitmojis.md) for all commits
+- Generate conventional commit messages with gitmojis based on staged changes
+- Follow the gitmoji ↔ conventional commits mapping for appropriate emoji and type selection
+- Include scope when applicable (api, ui, auth, db, config, deps, docs)
+- Keep descriptions imperative, concise, and under 50 characters
+- Add body for complex changes explaining what and why
+- Include breaking change footers when applicable
+
 ### 3. Justfile Automation
 - Use justfile recipes for all repetitive development tasks
 - Prefer justfile commands over manual CLI invocations
@@ -48,7 +57,8 @@ This document outlines the comprehensive workflow guidelines for the cert-tree.r
 4. **End of Day**
    ```bash
    just status         # Review changes
-   just commit "feat: add new feature"  # Commit with conventional message
+   # Generate commit message using commit-message-generator-with-gitmojis.md
+   just commit "<generated-message>"  # Commit with generated conventional message
    just push           # Push changes
    ```
 
@@ -157,7 +167,9 @@ just run-test-cert-tui   # Test TUI mode
    - Use descriptive branch names
 
 2. **Commit Standards**
-   - Use conventional commits
+   - Use the [commit message generator](commit-message-generator-with-gitmojis.md) to create conventional commits with gitmojis
+   - Follow gitmoji ↔ conventional commits mapping for appropriate emoji and type selection
+   - Include scope when applicable and keep descriptions imperative and concise
    - Reference issue numbers when applicable
    - Keep commits focused and atomic
 
@@ -171,7 +183,8 @@ just run-test-cert-tui   # Test TUI mode
 ```bash
 just status          # Check git status
 just log            # View recent commits
-just commit "message"  # Create commit
+# Use commit message generator for proper conventional commits with gitmojis
+just commit "<generated-message>"  # Create commit with generated message
 just push           # Push changes
 just pull           # Pull changes
 ```
