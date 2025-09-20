@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.1] - 2025-09-20
+
+### Fixed
+- **Text Overflow in TUI Details Panel**: Fixed long text (especially Signature Algorithm explanations) overflowing beyond panel boundaries by enabling automatic text wrapping
+- **Improved Readability**: Long certificate details now wrap to new lines instead of being truncated, ensuring full content visibility
+- **Cross-Platform Compatibility**: Text wrapping works consistently across different terminal sizes and screen resolutions
+
+### Technical
+- **Added Wrap Import**: Imported `Wrap` from ratatui widgets for text wrapping functionality
+- **Enhanced Paragraph Widgets**: Added `.wrap(Wrap { trim: true })` to both single certificate and certificate chain TUI details panels
+- **Maintained Scrolling**: Text wrapping works seamlessly with existing scroll functionality
+
 ## [0.11.0] - 2025-09-20
 
 ### Added

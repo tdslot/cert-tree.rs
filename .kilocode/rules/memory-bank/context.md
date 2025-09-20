@@ -7,6 +7,10 @@
 - **Documentation Status**: README.md updated to match actual CLI implementation
 
 ## Recent Changes
+- ✅ **Completed**: Fixed text overflow in Certificate Details panel by enabling automatic text wrapping for long content (especially Signature Algorithm explanations)
+- ✅ **Completed**: Enhanced TUI readability by ensuring full content visibility across different screen sizes
+- ✅ **Completed**: Version updated to 0.11.1 according to semver methodology (PATCH version for display improvement)
+- ✅ **Completed**: CHANGELOG.md updated with release notes for v0.11.1
 - ✅ **Completed**: Enhanced certificate details panel with human-readable signature algorithm explanations
 - ✅ **Completed**: Added signature algorithm OID to name mapping and explanatory text functions
 - ✅ **Completed**: Updated TUI details pane to show simple explanations instead of technical algorithm names

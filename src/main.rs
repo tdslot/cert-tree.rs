@@ -10,7 +10,7 @@ use ratatui::{
     layout::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, Paragraph},
+    widgets::{Block, Borders, List, ListItem, Paragraph, Wrap},
     Terminal,
 };
 use rustls::{ClientConfig, RootCertStore};
@@ -887,11 +887,13 @@ fn display_tui(cert: &CertificateInfo) -> Result<(), Box<dyn std::error::Error>>
                 ]));
             }
 
-            let cert_paragraph = Paragraph::new(cert_info).block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title("Certificate Details"),
-            );
+            let cert_paragraph = Paragraph::new(cert_info)
+                .wrap(Wrap { trim: true })
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .title("Certificate Details"),
+                );
             f.render_widget(cert_paragraph, chunks[1]);
 
             // Footer with instructions
@@ -1238,6 +1240,7 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
             };
 
             let details_paragraph = Paragraph::new(details_lines)
+                .wrap(Wrap { trim: true })
                 .block(details_block)
                 .scroll((details_scroll, 0));
             f.render_widget(details_paragraph, chunks[2]);
