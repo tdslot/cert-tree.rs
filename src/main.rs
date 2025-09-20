@@ -139,6 +139,7 @@ pub struct CertificateNode {
     pub index: usize,
     pub children: Vec<CertificateNode>,
     pub validity_status: ValidityStatus,
+    pub validation_status: ValidationStatus,
 }
 
 #[derive(Debug, Clone)]
@@ -373,7 +374,9 @@ pub fn build_certificate_tree(certificates: Vec<CertificateInfo>) -> Certificate
         }
     }
 
-    CertificateTree { roots }
+    let mut tree = CertificateTree { roots };
+    validate_certificate_chain(&mut tree);
+    tree
 }
 
 #[derive(Clone)]
@@ -381,6 +384,7 @@ struct CertificateDisplayItem {
     display_name: String,
     valid_until: String,
     validity_status: ValidityStatus,
+    validation_status: ValidationStatus,
     certificate_info: CertificateInfo,
 }
 
@@ -413,6 +417,7 @@ fn flatten_node(
         display_name,
         valid_until,
         validity_status: node.validity_status.clone(),
+        validation_status: node.validation_status.clone(),
         certificate_info: node.cert.clone(),
     });
 
@@ -451,6 +456,33 @@ fn build_tree_node(
         index,
         children,
         validity_status,
+        validation_status: ValidationStatus::Valid,
+    }
+}
+
+fn validate_certificate_chain(tree: &mut CertificateTree) {
+    for root in &mut tree.roots {
+        validate_node(root, None);
+    }
+}
+
+fn validate_node(node: &mut CertificateNode, parent_cert: Option<&CertificateInfo>) {
+    if let Some(parent) = parent_cert {
+        if parent.subject == node.cert.issuer {
+            node.validation_status = ValidationStatus::Valid;
+        } else {
+            node.validation_status = ValidationStatus::InvalidChain;
+        }
+    } else {
+        if node.cert.subject == node.cert.issuer {
+            node.validation_status = ValidationStatus::Valid;
+        } else {
+            node.validation_status = ValidationStatus::InvalidChain;
+        }
+    }
+
+    for child in &mut node.children {
+        validate_node(child, Some(&node.cert));
     }
 }
 
@@ -757,6 +789,28 @@ impl ValidityStatus {
             ValidityStatus::Valid => "✓ Valid",
             ValidityStatus::ExpiringSoon => "⚠ Expiring Soon",
             ValidityStatus::Expired => "✗ Expired",
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum ValidationStatus {
+    Valid,
+    InvalidChain,
+}
+
+impl ValidationStatus {
+    fn text(&self) -> &'static str {
+        match self {
+            ValidationStatus::Valid => "✓ Valid Chain",
+            ValidationStatus::InvalidChain => "✗ Invalid Chain",
+        }
+    }
+
+    fn color(&self) -> Color {
+        match self {
+            ValidationStatus::Valid => Color::Green,
+            ValidationStatus::InvalidChain => Color::Red,
         }
     }
 }
@@ -1172,6 +1226,10 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
                 Line::from(vec![
                     Span::styled("Status: ", Style::default().fg(Color::Blue)),
                     Span::styled(selected_cert.validity_status.text(), Style::default().fg(selected_cert.validity_status.color())),
+                ]),
+                Line::from(vec![
+                    Span::styled("Chain Validation: ", Style::default().fg(Color::Blue)),
+                    Span::styled(selected_cert.validation_status.text(), Style::default().fg(selected_cert.validation_status.color())),
                 ]),
                 Line::from(vec![
                     Span::styled("Version: ", Style::default().fg(Color::Blue)),

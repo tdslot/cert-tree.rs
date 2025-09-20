@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] - 2025-09-20
+
+### Added
+- **Certificate Chain Validation**: Implemented basic certificate chain validation that verifies issuer relationships in certificate chains
+- **Chain Validation Status**: Added validation status display showing whether certificate chains are properly formed
+- **Validation Status Enum**: New `ValidationStatus` enum with "Valid Chain" and "Invalid Chain" states
+- **TUI Chain Validation Display**: Enhanced TUI details panel to show chain validation status alongside expiry status
+
+### Changed
+- **Certificate Tree Building**: Modified tree construction to include validation checks during processing
+- **Certificate Node Structure**: Extended `CertificateNode` and `CertificateDisplayItem` to include validation status
+- **User Experience**: Certificate inspection now provides feedback on chain integrity
+
+### Technical
+- **Validation Functions**: Added `validate_certificate_chain()` and `validate_node()` functions for recursive chain validation
+- **Data Structures**: Updated certificate data structures to support validation status tracking
+- **Display Integration**: Integrated validation status into TUI certificate details display
+
 ## [0.11.1] - 2025-09-20
 
 ### Fixed
