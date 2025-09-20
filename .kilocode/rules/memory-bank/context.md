@@ -7,6 +7,11 @@
 - **Documentation Status**: README.md updated to match actual CLI implementation
 
 ## Recent Changes
+- ✅ **Completed**: Enhanced certificate details panel with human-readable signature algorithm explanations
+- ✅ **Completed**: Added signature algorithm OID to name mapping and explanatory text functions
+- ✅ **Completed**: Updated TUI details pane to show simple explanations instead of technical algorithm names
+- ✅ **Completed**: Version updated to 0.11.0 according to semver methodology (MINOR version for new user-friendly feature)
+- ✅ **Completed**: CHANGELOG.md updated with release notes for v0.11.0
 - ✅ **Completed**: Enhanced certificate extension display with human-readable names instead of OIDs
 - ✅ **Completed**: Added OID to human-readable name mapping function supporting common X.509 extensions
 - ✅ **Completed**: Updated all display modes (verbose, tree, TUI) to show human-readable extension names

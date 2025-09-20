@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2025-09-20
+
+### Added
+- **Human-Readable Signature Algorithm Explanations**: Enhanced certificate details panel with simple, understandable explanations of signature algorithms
+- **Signature Algorithm Mapping**: Added comprehensive mapping from OIDs to human-readable algorithm names (SHA256 with RSA, ECDSA, etc.)
+- **User-Friendly Explanations**: Replaced technical algorithm names with clear explanations that describe:
+  - What the algorithm is (digital signature method)
+  - How it works (mathematical techniques, hashing, encryption)
+  - Why it's important (verifies authenticity, prevents tampering, ensures secure communications)
+
+### Changed
+- **TUI Details Panel**: Signature Algorithm field now shows explanatory text instead of technical names
+- **Improved Accessibility**: Certificate inspection is now accessible to users without cryptography knowledge
+- **Enhanced User Experience**: Clear, simple language explains complex cryptographic concepts
+
+### Technical
+- **New Functions**: Added `signature_alg_to_name()` and `explain_signature_algorithm()` functions
+- **Updated Display Logic**: Modified TUI rendering to use human-readable explanations
+- **Certificate Parsing**: Enhanced `extract_cert_info()` to map OIDs to readable algorithm names
+
 ## [0.10.0] - 2025-09-19
 
 ### Added

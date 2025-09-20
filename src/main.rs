@@ -63,6 +63,38 @@ fn oid_to_name(oid: &str) -> Option<String> {
     }
 }
 
+// Function to map signature algorithm OID to human-readable name
+fn signature_alg_to_name(oid_str: &str) -> Option<String> {
+    match oid_str {
+        "1.2.840.113549.1.1.1" => Some("RSA with MD5".to_string()),
+        "1.2.840.113549.1.1.4" => Some("RSA with MD5".to_string()),
+        "1.2.840.113549.1.1.5" => Some("SHA1 with RSA".to_string()),
+        "1.2.840.113549.1.1.11" => Some("SHA256 with RSA".to_string()),
+        "1.2.840.113549.1.1.12" => Some("SHA384 with RSA".to_string()),
+        "1.2.840.113549.1.1.13" => Some("SHA512 with RSA".to_string()),
+        "1.3.14.3.2.29" => Some("SHA1 with RSA".to_string()),
+        "1.2.840.10045.4.1" => Some("SHA1 with ECDSA".to_string()),
+        "1.2.840.10045.4.3.2" => Some("SHA256 with ECDSA".to_string()),
+        "1.2.840.10045.4.3.3" => Some("SHA384 with ECDSA".to_string()),
+        "1.2.840.10045.4.3.4" => Some("SHA512 with ECDSA".to_string()),
+        "1.2.840.10040.4.3" => Some("SHA1 with DSA".to_string()),
+        _ => None,
+    }
+}
+
+// Function to explain signature algorithm in simple terms
+fn explain_signature_algorithm(alg: &str) -> String {
+    if alg.contains("RSA") {
+        "This certificate uses RSA encryption with hashing. RSA is like a digital lock that only the certificate issuer has the key to open. The hashing creates a unique fingerprint of the certificate data. Together, they create a digital signature that proves the certificate is genuine and hasn't been tampered with. This is essential for secure websites and encrypted communications.".to_string()
+    } else if alg.contains("ECDSA") {
+        "This certificate uses Elliptic Curve Digital Signature Algorithm (ECDSA). It's a modern, efficient way to create digital signatures using advanced mathematics with elliptic curves. Like RSA, it creates a unique signature that proves the certificate's authenticity, but it's faster and uses smaller keys. This helps keep internet communications secure and private.".to_string()
+    } else if alg.contains("DSA") {
+        "This certificate uses Digital Signature Algorithm (DSA). It's a method for creating digital signatures that verify the authenticity of the certificate. Using mathematical techniques, it creates a unique code that only the legitimate issuer can produce. This prevents fake certificates and ensures trust in online communications.".to_string()
+    } else {
+        "This is a cryptographic signature method that verifies the certificate's authenticity. It uses mathematical algorithms to create a unique digital signature that proves the certificate is legitimate and hasn't been altered. This is crucial for establishing secure and trustworthy connections on the internet.".to_string()
+    }
+}
+
 impl From<rustls::Error> for CertError {
     fn from(err: rustls::Error) -> Self {
         CertError::Tls(err.to_string())
@@ -459,7 +491,8 @@ fn extract_cert_info(cert: &X509Certificate) -> Result<CertificateInfo, CertErro
         Err(_) => "Unknown".to_string(),
     };
 
-    let signature_alg = format!("{:?}", cert.signature_algorithm.algorithm);
+    let sig_alg_oid = cert.signature_algorithm.algorithm.to_string();
+    let signature_algorithm = signature_alg_to_name(&sig_alg_oid).unwrap_or_else(|| format!("{:?}", cert.signature_algorithm.algorithm));
 
     let mut extensions = Vec::new();
     let key_usage = None;
@@ -487,7 +520,7 @@ fn extract_cert_info(cert: &X509Certificate) -> Result<CertificateInfo, CertErro
         not_before,
         not_after,
         public_key_algorithm: public_key_alg,
-        signature_algorithm: signature_alg,
+        signature_algorithm,
         version: cert.version.0,
         extensions,
         is_ca,
@@ -768,6 +801,7 @@ fn display_tui(cert: &CertificateInfo) -> Result<(), Box<dyn std::error::Error>>
 
             // Certificate information
             let cn = extract_cn(&cert.subject);
+            let sig_explanation = explain_signature_algorithm(&cert.signature_algorithm);
             let mut cert_info = vec![
                 Line::from(vec![
                     Span::styled("CN: ", Style::default().fg(Color::Blue)),
@@ -816,8 +850,8 @@ fn display_tui(cert: &CertificateInfo) -> Result<(), Box<dyn std::error::Error>>
                     ),
                 ]),
                 Line::from(vec![
-                    Span::styled("Signature: ", Style::default().fg(Color::Blue)),
-                    Span::styled(&cert.signature_algorithm, Style::default().fg(Color::Green)),
+                    Span::styled("Signature Algorithm: ", Style::default().fg(Color::Blue)),
+                    Span::styled(sig_explanation.as_str(), Style::default().fg(Color::Green)),
                 ]),
                 Line::from(vec![
                     Span::styled("Version: ", Style::default().fg(Color::Blue)),
@@ -1098,6 +1132,7 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
             let selected_index = list_state.selected().unwrap_or(0);
             let selected_cert = &certificates[selected_index];
             let cert = &selected_cert.certificate_info;
+            let sig_explanation = explain_signature_algorithm(&cert.signature_algorithm);
 
             let mut details_lines = vec![
                 Line::from(vec![
@@ -1146,7 +1181,7 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
                 ]),
                 Line::from(vec![
                     Span::styled("Signature Algorithm: ", Style::default().fg(Color::Blue)),
-                    Span::styled(&cert.signature_algorithm, Style::default().fg(Color::Green)),
+                    Span::styled(sig_explanation.as_str(), Style::default().fg(Color::Green)),
                 ]),
                 Line::from(vec![
                     Span::styled("Is CA: ", Style::default().fg(Color::Blue)),
