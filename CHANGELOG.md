@@ -5,6 +5,85 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.2] - 2025-09-20
+
+### Fixed
+- **Certificate Tree Color Coding**: Fixed text mode display to show certificate names in white while maintaining colored validity status indicators
+- **Consistent Color Scheme**: All certificate names (including tree connectors) now display in white for better readability
+- **Status Color Preservation**: Validity status indicators (green/yellow/red) remain properly colored based on certificate expiry
+
+### Technical
+- **ANSI Color Reset**: Added proper ANSI color reset sequences to prevent color bleeding between display elements
+- **Display Logic Update**: Modified `display_tree_node_text()` function to apply white color to certificate names and connectors
+- **Cross-Platform Compatibility**: Maintained ANSI color support across different terminal environments
+
+## [0.14.1] - 2025-09-20
+
+### Changed
+- **TUI Date Column Spacing**: Added padding (3 spaces) after the date column in certificate list to move timestamps away from the right edge
+- **Improved Visual Layout**: Enhanced readability by preventing dates from appearing to touch the terminal border
+- **Responsive Layout**: Maintained adaptive date formatting while improving visual spacing
+
+### Technical
+- **Column Width Calculation**: Updated available name width calculation to account for date padding
+- **Layout Consistency**: Ensured proper spacing in both narrow and wide terminals
+
+## [0.14.0] - 2025-09-20
+
+### Removed
+- **CRL (Certificate Revocation List) Support**: Removed incomplete CRL checking functionality that always returned "Unknown"
+- **Revocation Status Display**: Removed misleading revocation status indicators from all display modes
+- **CLI Option for Revocation Checking**: Removed `--check-revocation` flag that provided no actual value
+- **RevocationStatus Enum**: Removed unused enum and related code structures
+- **Enhanced Certificate Information**: Cleaned up CertificateInfo struct by removing revocation status field
+
+### Technical
+- **Code Cleanup**: Removed placeholder CRL functions, helper functions, and related infrastructure
+- **Simplified Display Logic**: Streamlined display functions by removing revocation status handling
+- **Dependency Cleanup**: Removed unused hex crate dependency
+- **Error Handling**: Cleaned up CRL-related error types from CertError enum
+
+### Rationale
+- The previous CRL implementation was incomplete and always returned "Unknown" status
+- Having non-functional features creates confusion and reduces code quality
+- Removed to maintain clean, functional codebase focused on core certificate inspection features
+- Users can now see clean output without misleading status indicators
+
+## [0.13.1] - 2025-09-20
+
+### Fixed
+- **TUI Date Display**: Fixed certificate list dates to show full time including seconds (HH:MM:SS format)
+- **Date Width Calculation**: Corrected TUI column width calculation that was truncating seconds from expiry dates
+- **Display Consistency**: Ensured both text mode and TUI mode show consistent date formatting with seconds
+
+### Technical
+- **Date Formatting**: Removed unnecessary date width subtraction that was cutting off seconds display
+- **Column Alignment**: Maintained proper column alignment while preserving full date information
+
+## [0.13.0] - 2025-09-20
+
+### Added
+- **CRL (Certificate Revocation List) Support**: Added infrastructure for certificate revocation checking
+- **Revocation Status Display**: New revocation status field showing certificate revocation state
+- **CLI Option for Revocation Checking**: Added `--check-revocation` flag to enable CRL validation
+- **RevocationStatus Enum**: New enum with Valid, Revoked, Unknown, and Error states
+- **Enhanced Certificate Information**: Extended CertificateInfo struct to include revocation status
+- **TUI Revocation Display**: Updated both single certificate and certificate chain TUI modes to show revocation status
+- **Text Mode Revocation Display**: Added revocation status to verbose text output
+
+### Technical
+- **CRL Parsing Infrastructure**: Added placeholder functions for CRL fetching and parsing (ready for full implementation)
+- **Certificate Extension Processing**: Enhanced to support CRL Distribution Points extraction
+- **Error Handling**: Added CRL-related error types to CertError enum
+- **Display Integration**: Integrated revocation status into all display modes (text, verbose, TUI)
+- **CLI Integration**: Added revocation checking to main application flow
+
+### Future Enhancements
+- Full CRL parsing implementation using x509-parser
+- CRL signature verification
+- Automatic CRL distribution point discovery
+- OCSP fallback support
+
 ## [0.12.0] - 2025-09-20
 
 ### Added

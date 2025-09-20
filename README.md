@@ -21,6 +21,7 @@ A command-line utility for inspecting X.509 certificates in a tree-like structur
 - **Color-coded validity status**: Green (valid), Yellow (expiring soon), Red (expired)
 - **Sequence numbering**: Bracketed sequence numbers [1], [2] for certificate identification
 - **Enhanced TUI**: Interactive navigation with Tab-based pane switching, scrollable certificate list and details, automatic text wrapping for long content, version display, responsive layout, ISO 8601 date-time format
+- **CRL Support**: Certificate revocation checking infrastructure with revocation status display
 - Comprehensive error handling for invalid certificates
 - Efficient parsing using the `x509-parser` crate
 
@@ -313,6 +314,7 @@ cert_tree --file ca_list.pem --interactive
 - `-U, --url <URL>`: Certificate URL
 - `-i, --interactive`: Interactive TUI mode (default: false)
 - `-t, --text`: Force text output mode (non-interactive, default: true)
+- `--check-revocation`: Check certificate revocation status using CRL
 - `-h, --help`: Print help information
 - `-V, --version`: Print version information
 

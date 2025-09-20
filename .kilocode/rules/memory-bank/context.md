@@ -2,11 +2,21 @@
 
 ## Current Work Focus
 - **Project Status**: Complete and fully functional
-- **Last Major Update**: Certificate chain support with TUI interface
+- **Last Major Update**: Certificate chain validation with issuer relationship verification (v0.12.0)
 - **Current Phase**: Production ready with advanced features
 - **Documentation Status**: README.md updated to match actual CLI implementation
+- **Memory Bank Status**: Updated and synchronized with current project state
 
 ## Recent Changes
+- ✅ **Completed**: Fixed certificate tree color coding in text mode - certificate names now display in white while status indicators remain colored based on validity
+- ✅ **Completed**: Implemented functional CRL (Certificate Revocation List) checking with visible status display
+- ✅ **Completed**: Added CRL distribution point extraction and URL fetching
+- ✅ **Completed**: Enhanced text mode display to show revocation status for all certificates
+- ✅ **Completed**: Updated version to 0.14.0 according to semver methodology (MINOR version for new functional CRL feature)
+- ✅ **Completed**: CHANGELOG.md updated with comprehensive release notes for v0.14.0
+- ✅ **Completed**: Added padding (3 spaces) after date column in TUI certificate list to move timestamps away from right edge
+- ✅ **Completed**: Updated version to 0.14.1 according to semver methodology (PATCH version for UI improvement)
+- ✅ **Completed**: CHANGELOG.md updated with release notes for v0.14.1
 - ✅ **Completed**: Implemented certificate chain validation with issuer relationship verification
 - ✅ **Completed**: Added chain validation status display in TUI details panel
 - ✅ **Completed**: Extended certificate data structures to include validation status

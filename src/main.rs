@@ -23,6 +23,8 @@ use std::sync::Arc;
 use thiserror::Error;
 use webpki_roots::TLS_SERVER_ROOTS;
 use x509_parser::prelude::*;
+use std::str;
+// CRL parsing will be implemented later
 
 // Function to extract CN from certificate subject
 fn extract_cn(subject: &str) -> String {
@@ -43,6 +45,7 @@ fn extract_cn(subject: &str) -> String {
 // Function to map OID to human-readable extension name
 fn oid_to_name(oid: &str) -> Option<String> {
     match oid {
+        // Standard X.509 extensions
         "2.5.29.14" => Some("Subject Key Identifier".to_string()),
         "2.5.29.15" => Some("Key Usage".to_string()),
         "2.5.29.16" => Some("Private Key Usage Period".to_string()),
@@ -57,11 +60,28 @@ fn oid_to_name(oid: &str) -> Option<String> {
         "2.5.29.36" => Some("Policy Constraints".to_string()),
         "2.5.29.37" => Some("Extended Key Usage".to_string()),
         "2.5.29.46" => Some("Freshest CRL".to_string()),
+
+        // Microsoft extensions
+        "1.3.6.1.4.1.311.20.2" => Some("Microsoft Smart Card Login".to_string()),
+        "1.3.6.1.4.1.311.21.1" => Some("Microsoft Individual Code Signing".to_string()),
+
+        // Entrust extensions
+        "1.2.840.113533.7.65.0" => Some("Entrust Version Information".to_string()),
+
+        // Netscape extensions
+        "2.16.840.1.113730.1.1" => Some("Netscape Certificate Type".to_string()),
+
+        // VeriSign extensions
+        "2.23.42.7.0" => Some("VeriSign Individual SHA1 Hash".to_string()),
+
+        // Other common extensions
         "1.3.6.1.5.5.7.1.1" => Some("Authority Information Access".to_string()),
         "1.3.6.1.4.1.11129.2.4.2" => Some("Signed Certificate Timestamp".to_string()),
         _ => None,
     }
 }
+
+
 
 // Function to map signature algorithm OID to human-readable name
 fn signature_alg_to_name(oid_str: &str) -> Option<String> {
@@ -111,6 +131,8 @@ pub enum CertError {
     Tls(String),
     #[error("X.509 parsing error: {0}")]
     X509Parse(String),
+    #[error("CRL parsing error: {0}")]
+    CrlParse(String),
     #[error("Invalid certificate format")]
     InvalidFormat,
     #[error("Certificate not found")]
@@ -175,6 +197,7 @@ pub struct Args {
     /// Force text output mode (non-interactive)
     #[arg(short = 't', long, default_value = "true")]
     pub text: bool,
+
 }
 
 pub fn load_certificate_from_file(path: &str) -> Result<Vec<u8>, CertError> {
@@ -406,12 +429,8 @@ fn flatten_node(
     let cn = extract_cn(&node.cert.subject);
     let display_name = format!("{}{}", indent, cn);
 
-    // Format validity date
-    let valid_until = if let Ok(expiry) = DateTime::parse_from_rfc2822(&node.cert.not_after) {
-        expiry.format("%Y-%m-%d %H:%M:%S").to_string()
-    } else {
-        "Invalid Date".to_string()
-    };
+    // Date is already in the correct format (YYYY-MM-DD HH:MM:SS)
+    let valid_until = node.cert.not_after.clone();
 
     certificates.push(CertificateDisplayItem {
         display_name,
@@ -495,16 +514,21 @@ fn extract_cert_info(cert: &X509Certificate) -> Result<CertificateInfo, CertErro
         .map(|chunk| std::str::from_utf8(chunk).unwrap_or("??"))
         .collect::<Vec<_>>()
         .join(" ");
-    let not_before = cert
-        .validity()
-        .not_before
-        .to_rfc2822()
-        .unwrap_or_else(|_| "Invalid date".to_string());
-    let not_after = cert
-        .validity()
-        .not_after
-        .to_rfc2822()
-        .unwrap_or_else(|_| "Invalid date".to_string());
+    // Store dates in RFC 2822 format initially, then convert to display format
+    let not_before_rfc = cert.validity().not_before.to_rfc2822().unwrap_or_else(|_| "Invalid date".to_string());
+    let not_after_rfc = cert.validity().not_after.to_rfc2822().unwrap_or_else(|_| "Invalid date".to_string());
+
+    // Convert to display format
+    let not_before = if let Ok(dt) = DateTime::parse_from_rfc2822(&not_before_rfc) {
+        dt.format("%Y-%m-%d %H:%M:%S").to_string()
+    } else {
+        not_before_rfc
+    };
+    let not_after = if let Ok(dt) = DateTime::parse_from_rfc2822(&not_after_rfc) {
+        dt.format("%Y-%m-%d %H:%M:%S").to_string()
+    } else {
+        not_after_rfc
+    };
 
     let public_key_alg = match cert.public_key().parsed() {
         Ok(pk) => match pk {
@@ -736,6 +760,7 @@ pub fn display_verbose(cert: &CertificateInfo) {
         }
     }
 
+
     println!("Extensions:");
     for ext in &cert.extensions {
         println!(
@@ -760,7 +785,21 @@ pub enum ValidityStatus {
 
 impl ValidityStatus {
     fn from_dates(not_after: &str) -> Self {
-        if let Ok(expiry) = DateTime::parse_from_rfc2822(not_after) {
+        // Try parsing as YYYY-MM-DD HH:MM:SS format first
+        if let Ok(expiry) = DateTime::parse_from_str(not_after, "%Y-%m-%d %H:%M:%S") {
+            let expiry_utc = expiry.with_timezone(&Utc);
+            let now = Utc::now();
+            let days_until_expiry = (expiry_utc - now).num_days();
+
+            if days_until_expiry < 0 {
+                ValidityStatus::Expired
+            } else if days_until_expiry <= 30 {
+                ValidityStatus::ExpiringSoon
+            } else {
+                ValidityStatus::Valid
+            }
+        } else if let Ok(expiry) = DateTime::parse_from_rfc2822(not_after) {
+            // Fallback to RFC 2822 format for backward compatibility
             let expiry_utc = expiry.with_timezone(&Utc);
             let now = Utc::now();
             let days_until_expiry = (expiry_utc - now).num_days();
@@ -799,6 +838,7 @@ pub enum ValidationStatus {
     Valid,
     InvalidChain,
 }
+
 
 impl ValidationStatus {
     fn text(&self) -> &'static str {
@@ -872,23 +912,9 @@ fn display_tui(cert: &CertificateInfo) -> Result<(), Box<dyn std::error::Error>>
                 ]),
                 Line::from(vec![
                     Span::styled("Validity: ", Style::default().fg(Color::Blue)),
-                    Span::styled(
-                        if let Ok(dt) = DateTime::parse_from_rfc2822(&cert.not_before) {
-                            dt.to_utc().format("%Y-%m-%dT%H:%M:%SZ").to_string()
-                        } else {
-                            cert.not_before.clone()
-                        },
-                        Style::default().fg(Color::White),
-                    ),
+                    Span::styled(&cert.not_before, Style::default().fg(Color::White)),
                     Span::raw(" → "),
-                    Span::styled(
-                        if let Ok(dt) = DateTime::parse_from_rfc2822(&cert.not_after) {
-                            dt.to_utc().format("%Y-%m-%dT%H:%M:%SZ").to_string()
-                        } else {
-                            cert.not_after.clone()
-                        },
-                        Style::default().fg(Color::White),
-                    ),
+                    Span::styled(&cert.not_after, Style::default().fg(Color::White)),
                 ]),
                 Line::from(vec![
                     Span::styled("Status: ", Style::default().fg(Color::Blue)),
@@ -1020,12 +1046,8 @@ fn display_tree_node_text(
         cn.clone()
     };
 
-    // Format validity date with time
-    let date_str = if let Ok(expiry) = DateTime::parse_from_rfc2822(&node.cert.not_after) {
-        expiry.format("%Y-%m-%d %H:%M:%S").to_string()
-    } else {
-        "Invalid".to_string()
-    };
+    // Date is already in the correct format
+    let date_str = node.cert.not_after.clone();
 
     // Calculate exact padding to align date column
     let name_end_pos = prefix.len() + display_name.len();
@@ -1043,9 +1065,9 @@ fn display_tree_node_text(
         ValidityStatus::Valid => ("VALID", "\x1b[32m"),     // Green
     };
 
-    // Print the line with sequence number and status/date in separate square brackets
+    // Use white for certificate names, color only the status/date part
     println!(
-        "{}{}{}{}[{}] [{} until: {}]\x1b[0m",
+        "\x1b[37m{}{}{}\x1b[0m{}[{}] [{} until: {}]\x1b[0m",
         prefix, display_name, padding, color_code, sequence_num, status_text, date_str
     );
 
@@ -1113,11 +1135,20 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
             let min_gap = 2; // Minimum gap between columns
             let min_name_width = 8; // Minimum width for certificate names
 
-            // Always show seconds for better precision - force full format
-            let (date_width, date_format) = (19, "%Y-%m-%d %H:%M:%S");
+            // Adaptive date formatting based on terminal width
+            let (date_format, date_width) = if terminal_width < 80 {
+                ("%m-%d %H:%M", 11)
+            } else if terminal_width < 100 {
+                ("%Y-%m-%d %H:%M", 16)
+            } else {
+                ("%Y-%m-%d %H:%M:%S", 19)
+            };
 
-            let available_name_width = terminal_width.saturating_sub(date_width + min_gap).max(min_name_width);
+            let padding_after_date = 3;
 
+            let list_area = chunks[1];
+            let effective_width = (list_area.width as usize).saturating_sub(2); // Subtract border width (1 left + 1 right)
+            let available_name_width = effective_width.saturating_sub(date_width + min_gap + padding_after_date).max(min_name_width);
 
             // Create list items
             let items: Vec<ListItem> = certificates
@@ -1135,9 +1166,9 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
                         item.display_name.clone()
                     };
 
-                    // Format date according to available space
-                    let formatted_date = if let Ok(expiry) = DateTime::parse_from_rfc2822(&item.valid_until) {
-                        expiry.format(date_format).to_string()
+                    // Reformat date using adaptive format
+                    let formatted_date = if let Ok(dt) = DateTime::parse_from_str(&item.valid_until, "%Y-%m-%d %H:%M:%S") {
+                        dt.format(date_format).to_string()
                     } else {
                         item.valid_until.clone()
                     };
@@ -1145,11 +1176,12 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
                     // Create formatted strings for each column
                     let name_part = format!("{:<width$}", display_name, width = available_name_width);
                     let safe_date_width = date_width.max(formatted_date.len());
-                    let date_part = format!("{:>width$}", formatted_date, width = safe_date_width.saturating_sub(12));
+                    let date_part = format!("{:>width$}", formatted_date, width = safe_date_width);
 
                     let line = Line::from(vec![
                         Span::styled(name_part, Style::default().fg(Color::White)),
                         Span::styled(date_part, Style::default().fg(item.validity_status.color())),
+                        Span::raw("   "), // Add 3 spaces padding after date
                     ]);
 
                     ListItem::new(line)
@@ -1179,8 +1211,6 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
                 .highlight_style(Style::default().add_modifier(Modifier::BOLD))
                 .highlight_symbol(">> ");
 
-            // Render list with scrolling state
-            let list_area = chunks[1];
             f.render_stateful_widget(list, list_area, &mut list_state);
 
             // Certificate details section
@@ -1204,23 +1234,9 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
                 ]),
                 Line::from(vec![
                     Span::styled("Validity Period: ", Style::default().fg(Color::Blue)),
-                    Span::styled(
-                        if let Ok(dt) = DateTime::parse_from_rfc2822(&cert.not_before) {
-                            dt.to_utc().format("%Y-%m-%dT%H:%M:%SZ").to_string()
-                        } else {
-                            cert.not_before.clone()
-                        },
-                        Style::default().fg(Color::White),
-                    ),
+                    Span::styled(&cert.not_before, Style::default().fg(Color::White)),
                     Span::raw(" → "),
-                    Span::styled(
-                        if let Ok(dt) = DateTime::parse_from_rfc2822(&cert.not_after) {
-                            dt.to_utc().format("%Y-%m-%dT%H:%M:%SZ").to_string()
-                        } else {
-                            cert.not_after.clone()
-                        },
-                        Style::default().fg(Color::White),
-                    ),
+                    Span::styled(&cert.not_after, Style::default().fg(Color::White)),
                 ]),
                 Line::from(vec![
                     Span::styled("Status: ", Style::default().fg(Color::Blue)),
@@ -1430,6 +1446,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::process::exit(1);
     };
 
+
     if certificates.len() == 1 {
         // Single certificate - use existing logic
         let cert_info = &certificates[0];
@@ -1530,4 +1547,5 @@ mod tests {
         assert_eq!(cert.is_ca, true);
         assert_eq!(cert.version, 3);
     }
+
 }
