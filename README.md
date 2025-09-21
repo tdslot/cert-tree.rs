@@ -1,5 +1,7 @@
 # cert-tree
 
+[![Version](https://img.shields.io/badge/version-0.14.3-blue.svg)](https://github.com/tadas/cert-tree.rs/releases)
+
 A command-line utility for inspecting X.509 certificates in a tree-like structure, inspired by [cert_tree](https://github.com/jkolezyn/cert_tree).
 
 ## Features
@@ -30,7 +32,7 @@ A command-line utility for inspecting X.509 certificates in a tree-like structur
 ### From Source
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/tadas/cert-tree.rs
 cd cert-tree.rs
 cargo build --release
 ```
@@ -40,8 +42,14 @@ The binary will be available at `target/release/cert_tree`.
 ### Using Cargo
 
 ```bash
-cargo install --git <repository-url> cert_tree
+cargo install --git https://github.com/tadas/cert-tree.rs cert_tree
 ```
+
+### From GitHub Releases
+
+Download pre-built binaries for your platform from the [GitHub Releases](https://github.com/tadas/cert-tree.rs/releases) page.
+
+Releases are automatically built and published via GitHub Actions when version tags are pushed.
 
 ## Justfile - Development Workflow
 

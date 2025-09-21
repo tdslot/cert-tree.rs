@@ -8,6 +8,9 @@
 - **Memory Bank Status**: Updated and synchronized with current project state
 
 ## Recent Changes
+- ✅ **Completed**: Set up automated GitHub Actions workflow for release automation
+- ✅ **Completed**: Added Justfile recipe for streamlined release process
+- ✅ **Completed**: Successfully created and published release v0.14.3 with automated workflows
 - ✅ **Completed**: Modified display_name format in flatten_node function to show sequence number in brackets first, followed by indentation and certificate name (CN). Changed from "CN [1]" to "[1] indentation CN" format for proper TUI display
 - ✅ **Completed**: Updated version to 0.14.3 according to semver methodology (PATCH version for display format improvement)
 - ✅ **Completed**: CHANGELOG.md updated with release notes for v0.14.3

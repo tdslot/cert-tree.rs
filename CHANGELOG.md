@@ -7,11 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.14.3] - 2025-09-21
 
+### Added
+- **Automated Release System**: Set up GitHub Actions workflow for automated release creation and publishing
+- **Justfile Release Recipe**: Added streamlined release process using Justfile for consistent and efficient releases
+- **Release Automation**: Successfully implemented automated workflows for version tagging, changelog generation, and binary distribution
+
 ### Changed
 - **TUI Certificate Display Format**: Modified certificate list display format to show sequence numbers in brackets first, followed by indentation and certificate name (CN) for improved readability and proper TUI display
+- **Release Process**: Transitioned from manual release process to automated CI/CD pipeline for improved reliability and speed
 
 ### Technical
+- **GitHub Actions Workflow**: Created `.github/workflows/release.yml` for automated release management
+- **Justfile Integration**: Added release recipes to Justfile for streamlined development workflow
 - **flatten_node() Function**: Updated display_name formatting from "CN [1]" to "[1] indentation CN" format
+- **CI/CD Pipeline**: Implemented automated testing, building, and publishing for multiple platforms
+
+### Infrastructure
+- **Release Automation**: Enabled automatic creation of GitHub releases with pre-built binaries
+- **Workflow Optimization**: Streamlined development-to-release pipeline reducing manual overhead
+- **Cross-Platform Distribution**: Enhanced release process to support multiple target platforms through automation
 
 ## [0.14.2] - 2025-09-20
 
