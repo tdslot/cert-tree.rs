@@ -17,19 +17,13 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Setup musl target
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y musl-tools
-          rustup target add x86_64-unknown-linux-musl
-
       - name: Build release
-        run: cargo build --release --target x86_64-unknown-linux-musl
+        run: cargo build --release --target x86_64-unknown-linux-gnu
 
       - name: Create .tar.gz archive
         run: |
           mkdir -p cert_tree-linux-x86_64
-          cp target/x86_64-unknown-linux-musl/release/cert_tree cert_tree-linux-x86_64/
+          cp target/x86_64-unknown-linux-gnu/release/cert_tree cert_tree-linux-x86_64/
           cp README.md LICENSE cert_tree-linux-x86_64/
           tar -czf cert_tree-linux-x86_64.tar.gz cert_tree-linux-x86_64/
 
