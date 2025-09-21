@@ -9,6 +9,8 @@
 - **Memory Bank Status**: Updated and synchronized with current project state
 
 ## Recent Changes
+- ✅ **Completed**: Added binary stripping steps to GitHub Actions release workflow for all platforms (Linux, macOS, RPM, DEB builds) to reduce distributed binary sizes
+- ✅ **Completed**: Implemented binary size optimizations including codegen-units = 1, panic = "abort" in release profile, and optimized reqwest dependency with rustls-tls feature
 - ✅ **Completed**: Reverted Linux build job back to x86_64-unknown-linux-gnu target due to OpenSSL compatibility issues with reqwest
 - ✅ **Completed**: Changed Linux build job to use x86_64-unknown-linux-musl target for better portability and distribution independence
 - ✅ **Completed**: Fixed mv command source filename for DEB packages to include the -1 suffix in the source path
