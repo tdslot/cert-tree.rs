@@ -33,8 +33,8 @@ fn extract_cn(subject: &str) -> String {
 
     for part in parts {
         let trimmed = part.trim();
-        if trimmed.starts_with("CN=") {
-            return trimmed[3..].to_string(); // Remove "CN=" prefix
+        if let Some(stripped) = trimmed.strip_prefix("CN=") {
+            return stripped.to_string(); // Remove "CN=" prefix
         }
     }
 
@@ -368,7 +368,7 @@ pub fn build_certificate_tree(certificates: Vec<CertificateInfo>) -> Certificate
         // Group certificates by issuer
         issuer_map
             .entry(cert.issuer.clone())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(cert.subject.clone());
     }
 
@@ -497,12 +497,10 @@ fn validate_node(node: &mut CertificateNode, parent_cert: Option<&CertificateInf
         } else {
             node.validation_status = ValidationStatus::InvalidChain;
         }
+    } else if node.cert.subject == node.cert.issuer {
+        node.validation_status = ValidationStatus::Valid;
     } else {
-        if node.cert.subject == node.cert.issuer {
-            node.validation_status = ValidationStatus::Valid;
-        } else {
-            node.validation_status = ValidationStatus::InvalidChain;
-        }
+        node.validation_status = ValidationStatus::InvalidChain;
     }
 
     for child in &mut node.children {
@@ -723,7 +721,7 @@ pub fn display_tree(cert: &CertificateInfo, prefix: &str, is_last: bool) {
     }
 
     if !cert.extensions.is_empty() {
-        println!("{}{}Extensions:", new_prefix, "└── ");
+        println!("{}└── Extensions:", new_prefix);
         for (i, ext) in cert.extensions.iter().enumerate() {
             let ext_connector = if i == cert.extensions.len() - 1 {
                 "└── "
@@ -1164,8 +1162,7 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
             // Create list items
             let items: Vec<ListItem> = certificates
                 .iter()
-                .enumerate()
-                .map(|(_i, item)| {
+                .map(|item| {
                     // Truncate long names if necessary
                     let display_name = if item.display_name.len() > available_name_width {
                         if available_name_width > 3 {

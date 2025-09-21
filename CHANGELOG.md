@@ -8,24 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.14.3] - 2025-09-21
 
 ### Added
-- **Automated Release System**: Set up GitHub Actions workflow for automated release creation and publishing
-- **Justfile Release Recipe**: Added streamlined release process using Justfile for consistent and efficient releases
-- **Release Automation**: Successfully implemented automated workflows for version tagging, changelog generation, and binary distribution
+- **Certificate Chain Validation**: Implemented comprehensive certificate chain validation with issuer relationship verification to ensure proper certificate hierarchy integrity
+- **CRL (Certificate Revocation List) Checking**: Added functional CRL checking with visible status display showing certificate revocation state (Valid, Revoked, Unknown, Error)
+- **Enhanced Certificate Extension Display**: Improved certificate extension display with human-readable names instead of raw OIDs for better user understanding
+- **Detailed TUI Certificate Information**: Enhanced interactive TUI with comprehensive certificate details panel showing issuer, subject, validity, serial number, signature algorithm, public key, extensions, and revocation status
+- **Color-Coded Validity Status in Text Mode**: Added color-coded certificate validity status (green/yellow/red) in text output for immediate visual feedback
+- **ISO 8601 Date-Time Format in TUI**: Standardized validity period display in TUI using ISO 8601 format (YYYY-MM-DDTHH:MM:SSZ) for consistency and readability
 
 ### Changed
-- **TUI Certificate Display Format**: Modified certificate list display format to show sequence numbers in brackets first, followed by indentation and certificate name (CN) for improved readability and proper TUI display
-- **Release Process**: Transitioned from manual release process to automated CI/CD pipeline for improved reliability and speed
+- **Simplified CLI Default Behavior**: Changed default output mode from interactive TUI to text mode for better usability in non-interactive environments (scripts, automation, CI/CD)
+- **TUI Certificate Display Format**: Improved certificate list display format with sequence numbers in brackets first, followed by indentation and certificate name for enhanced readability
+- **Human-Readable Signature Algorithm Explanations**: Enhanced TUI details panel with user-friendly explanations of signature algorithms instead of technical names
+- **Improved TUI Navigation**: Redesigned navigation system with Tab-based details pane activation and context-aware arrow key navigation
+- **Enhanced Text Overflow Handling**: Fixed text overflow in TUI details panel with automatic text wrapping for better content visibility across different screen sizes
 
-### Technical
-- **GitHub Actions Workflow**: Created `.github/workflows/release.yml` for automated release management
-- **Justfile Integration**: Added release recipes to Justfile for streamlined development workflow
-- **flatten_node() Function**: Updated display_name formatting from "CN [1]" to "[1] indentation CN" format
-- **CI/CD Pipeline**: Implemented automated testing, building, and publishing for multiple platforms
-
-### Infrastructure
-- **Release Automation**: Enabled automatic creation of GitHub releases with pre-built binaries
-- **Workflow Optimization**: Streamlined development-to-release pipeline reducing manual overhead
-- **Cross-Platform Distribution**: Enhanced release process to support multiple target platforms through automation
+### Fixed
+- **TUI Date Column Spacing**: Added padding after date column to prevent timestamps from touching the right edge
+- **Certificate Tree Color Coding**: Fixed text mode display to show certificate names in white while maintaining colored validity status indicators
+- **TUI Certificate List Display**: Corrected certificate list to properly show names with indentation and bracketed sequence numbers
+- **Date Display Consistency**: Ensured full time display including seconds (HH:MM:SS) in both TUI and text modes
 
 ## [0.14.2] - 2025-09-20
 
