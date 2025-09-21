@@ -101,7 +101,7 @@ jobs:
   build-rpm-centos:
     name: Build RPM for CentOS
     runs-on: ubuntu-latest
-    container: centos:8
+    container: centos:stream9
     steps:
       - name: Install dependencies
         run: |
@@ -129,7 +129,7 @@ jobs:
   build-rpm-rocky:
     name: Build RPM for Rocky Linux
     runs-on: ubuntu-latest
-    container: rockylinux:8
+    container: rockylinux:9
     steps:
       - name: Install dependencies
         run: |
@@ -157,7 +157,7 @@ jobs:
   build-rpm-alma:
     name: Build RPM for Alma Linux
     runs-on: ubuntu-latest
-    container: almalinux:8
+    container: almalinux:9
     steps:
       - name: Install dependencies
         run: |
