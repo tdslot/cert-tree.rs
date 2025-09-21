@@ -101,7 +101,9 @@ jobs:
       - name: Build .rpm package
         run: |
           . $HOME/.cargo/env
-          cargo generate-rpm --name cert_tree-centos
+          cargo generate-rpm
+          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          mv target/generate-rpm/cert_tree-${VERSION}-1.x86_64.rpm target/generate-rpm/cert_tree-centos-${VERSION}-1.x86_64.rpm
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
@@ -129,7 +131,9 @@ jobs:
       - name: Build .rpm package
         run: |
           . $HOME/.cargo/env
-          cargo generate-rpm --name cert_tree-rocky
+          cargo generate-rpm
+          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          mv target/generate-rpm/cert_tree-${VERSION}-1.x86_64.rpm target/generate-rpm/cert_tree-rocky-${VERSION}-1.x86_64.rpm
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
@@ -157,7 +161,9 @@ jobs:
       - name: Build .rpm package
         run: |
           . $HOME/.cargo/env
-          cargo generate-rpm --name cert_tree-alma
+          cargo generate-rpm
+          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          mv target/generate-rpm/cert_tree-${VERSION}-1.x86_64.rpm target/generate-rpm/cert_tree-alma-${VERSION}-1.x86_64.rpm
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
