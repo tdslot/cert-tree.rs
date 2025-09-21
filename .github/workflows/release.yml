@@ -106,7 +106,7 @@ jobs:
       - name: Install dependencies
         run: |
           yum update -y
-          yum install -y --allowerasing curl gcc make
+          yum install -y --allowerasing curl gcc make openssl-devel
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           source $HOME/.cargo/env
           cargo install cargo-rpm
@@ -134,7 +134,7 @@ jobs:
       - name: Install dependencies
         run: |
           dnf update -y
-          dnf install -y --allowerasing curl gcc make
+          dnf install -y --allowerasing curl gcc make openssl-devel
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           source $HOME/.cargo/env
           cargo install cargo-rpm
@@ -162,7 +162,7 @@ jobs:
       - name: Install dependencies
         run: |
           dnf update -y
-          dnf install -y --allowerasing curl gcc make
+          dnf install -y --allowerasing curl gcc make openssl-devel
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           source $HOME/.cargo/env
           cargo install cargo-rpm
