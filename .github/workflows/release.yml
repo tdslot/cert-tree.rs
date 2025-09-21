@@ -91,7 +91,7 @@ jobs:
           yum install -y --allowerasing curl gcc make openssl-devel
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           source $HOME/.cargo/env
-          cargo install cargo-rpm
+          cargo install cargo-generate-rpm
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Build release
@@ -101,12 +101,12 @@ jobs:
       - name: Build .rpm package
         run: |
           source $HOME/.cargo/env
-          cargo rpm build
+          cargo generate-rpm
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
           name: cert_tree-centos-x86_64.rpm
-          path: target/release/rpmbuild/RPMS/x86_64/*.rpm
+          path: target/generate-rpm/*.rpm
 
   build-rpm-rocky:
     name: Build RPM for Rocky Linux
@@ -119,7 +119,7 @@ jobs:
           dnf install -y --allowerasing curl gcc make openssl-devel
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           source $HOME/.cargo/env
-          cargo install cargo-rpm
+          cargo install cargo-generate-rpm
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Build release
@@ -129,12 +129,12 @@ jobs:
       - name: Build .rpm package
         run: |
           source $HOME/.cargo/env
-          cargo rpm build
+          cargo generate-rpm
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
           name: cert_tree-rocky-x86_64.rpm
-          path: target/release/rpmbuild/RPMS/x86_64/*.rpm
+          path: target/generate-rpm/*.rpm
 
   build-rpm-alma:
     name: Build RPM for Alma Linux
@@ -147,7 +147,7 @@ jobs:
           dnf install -y --allowerasing curl gcc make openssl-devel
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           source $HOME/.cargo/env
-          cargo install cargo-rpm
+          cargo install cargo-generate-rpm
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Build release
@@ -157,12 +157,12 @@ jobs:
       - name: Build .rpm package
         run: |
           source $HOME/.cargo/env
-          cargo rpm build
+          cargo generate-rpm
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
           name: cert_tree-alma-x86_64.rpm
-          path: target/release/rpmbuild/RPMS/x86_64/*.rpm
+          path: target/generate-rpm/*.rpm
 
   build-deb-debian:
     name: Build DEB for Debian
