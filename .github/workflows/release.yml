@@ -30,7 +30,7 @@ jobs:
         run: cargo deb --target x86_64-unknown-linux-gnu
 
       - name: Build .rpm package
-        run: cargo rpm --target x86_64-unknown-linux-gnu
+        run: cargo rpm
 
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
@@ -98,8 +98,92 @@ jobs:
           name: cert_tree-macos-aarch64.tar.gz
           path: cert_tree-macos-aarch64.tar.gz
 
+  build-rpm-centos:
+    name: Build RPM for CentOS
+    runs-on: ubuntu-latest
+    container: centos:8
+    steps:
+      - name: Install dependencies
+        run: |
+          yum update -y
+          yum install -y curl gcc make
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source $HOME/.cargo/env
+          cargo install cargo-rpm
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Build release
+        run: |
+          source $HOME/.cargo/env
+          cargo build --release
+      - name: Build .rpm package
+        run: |
+          source $HOME/.cargo/env
+          cargo rpm
+      - name: Upload .rpm artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cert_tree-centos-x86_64.rpm
+          path: target/release/rpmbuild/RPMS/x86_64/*.rpm
+
+  build-rpm-rocky:
+    name: Build RPM for Rocky Linux
+    runs-on: ubuntu-latest
+    container: rockylinux:8
+    steps:
+      - name: Install dependencies
+        run: |
+          dnf update -y
+          dnf install -y curl gcc make
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source $HOME/.cargo/env
+          cargo install cargo-rpm
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Build release
+        run: |
+          source $HOME/.cargo/env
+          cargo build --release
+      - name: Build .rpm package
+        run: |
+          source $HOME/.cargo/env
+          cargo rpm
+      - name: Upload .rpm artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cert_tree-rocky-x86_64.rpm
+          path: target/release/rpmbuild/RPMS/x86_64/*.rpm
+
+  build-rpm-alma:
+    name: Build RPM for Alma Linux
+    runs-on: ubuntu-latest
+    container: almalinux:8
+    steps:
+      - name: Install dependencies
+        run: |
+          dnf update -y
+          dnf install -y curl gcc make
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source $HOME/.cargo/env
+          cargo install cargo-rpm
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Build release
+        run: |
+          source $HOME/.cargo/env
+          cargo build --release
+      - name: Build .rpm package
+        run: |
+          source $HOME/.cargo/env
+          cargo rpm
+      - name: Upload .rpm artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cert_tree-alma-x86_64.rpm
+          path: target/release/rpmbuild/RPMS/x86_64/*.rpm
+
   release:
-    needs: [build, build-macos-intel, build-macos-arm]
+    needs: [build, build-macos-intel, build-macos-arm, build-rpm-centos, build-rpm-rocky, build-rpm-alma]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
