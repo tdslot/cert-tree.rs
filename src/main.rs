@@ -19,11 +19,11 @@ use std::collections::HashMap;
 use std::fs;
 use std::io;
 use std::path::Path;
+use std::str;
 use std::sync::Arc;
 use thiserror::Error;
 use webpki_roots::TLS_SERVER_ROOTS;
 use x509_parser::prelude::*;
-use std::str;
 // CRL parsing will be implemented later
 
 // Function to extract CN from certificate subject
@@ -80,8 +80,6 @@ fn oid_to_name(oid: &str) -> Option<String> {
         _ => None,
     }
 }
-
-
 
 // Function to map signature algorithm OID to human-readable name
 fn signature_alg_to_name(oid_str: &str) -> Option<String> {
@@ -197,7 +195,6 @@ pub struct Args {
     /// Force text output mode (non-interactive)
     #[arg(short = 't', long, default_value = "true")]
     pub text: bool,
-
 }
 
 pub fn load_certificate_from_file(path: &str) -> Result<Vec<u8>, CertError> {
@@ -523,8 +520,16 @@ fn extract_cert_info(cert: &X509Certificate) -> Result<CertificateInfo, CertErro
         .collect::<Vec<_>>()
         .join(" ");
     // Store dates in RFC 2822 format initially, then convert to display format
-    let not_before_rfc = cert.validity().not_before.to_rfc2822().unwrap_or_else(|_| "Invalid date".to_string());
-    let not_after_rfc = cert.validity().not_after.to_rfc2822().unwrap_or_else(|_| "Invalid date".to_string());
+    let not_before_rfc = cert
+        .validity()
+        .not_before
+        .to_rfc2822()
+        .unwrap_or_else(|_| "Invalid date".to_string());
+    let not_after_rfc = cert
+        .validity()
+        .not_after
+        .to_rfc2822()
+        .unwrap_or_else(|_| "Invalid date".to_string());
 
     // Convert to display format
     let not_before = if let Ok(dt) = DateTime::parse_from_rfc2822(&not_before_rfc) {
@@ -768,7 +773,6 @@ pub fn display_verbose(cert: &CertificateInfo) {
         }
     }
 
-
     println!("Extensions:");
     for ext in &cert.extensions {
         println!(
@@ -846,7 +850,6 @@ pub enum ValidationStatus {
     Valid,
     InvalidChain,
 }
-
 
 impl ValidationStatus {
     fn text(&self) -> &'static str {
@@ -1454,7 +1457,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::process::exit(1);
     };
 
-
     if certificates.len() == 1 {
         // Single certificate - use existing logic
         let cert_info = &certificates[0];
@@ -1555,5 +1557,4 @@ mod tests {
         assert_eq!(cert.is_ca, true);
         assert_eq!(cert.version, 3);
     }
-
 }

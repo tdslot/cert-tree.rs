@@ -56,5 +56,6 @@ jobs:
           files: artifacts/**/*
           body_path: release_notes.md
           tag_name: ${{ github.ref }}
+          name: cert_tree ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
