@@ -17,17 +17,32 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install cargo-deb
+        run: cargo install cargo-deb
+
+      - name: Install cargo-rpm
+        run: cargo install cargo-rpm
+
       - name: Build release
         run: cargo build --release --target x86_64-unknown-linux-gnu
 
-      - name: Rename binary
-        run: mv target/x86_64-unknown-linux-gnu/release/cert_tree target/x86_64-unknown-linux-gnu/release/cert_tree-linux-x86_64
+      - name: Build .deb package
+        run: cargo deb --target x86_64-unknown-linux-gnu
 
-      - name: Upload artifact
+      - name: Build .rpm package
+        run: cargo rpm --target x86_64-unknown-linux-gnu
+
+      - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert_tree-linux-x86_64
-          path: target/x86_64-unknown-linux-gnu/release/cert_tree-linux-x86_64
+          name: cert_tree-linux-x86_64.deb
+          path: target/x86_64-unknown-linux-gnu/debian/*.deb
+
+      - name: Upload .rpm artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cert_tree-linux-x86_64.rpm
+          path: target/x86_64-unknown-linux-gnu/generate-rpm/*.rpm
 
   build-macos-intel:
     name: Build for macOS Intel
@@ -43,14 +58,18 @@ jobs:
       - name: Build release
         run: cargo build --release
 
-      - name: Rename binary
-        run: mv target/release/cert_tree target/release/cert_tree-macos-x86_64
+      - name: Create .tar.gz archive
+        run: |
+          mkdir -p cert_tree-macos-x86_64
+          cp target/release/cert_tree cert_tree-macos-x86_64/
+          cp README.md LICENSE cert_tree-macos-x86_64/
+          tar -czf cert_tree-macos-x86_64.tar.gz cert_tree-macos-x86_64/
 
-      - name: Upload artifact
+      - name: Upload .tar.gz artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert_tree-macos-x86_64
-          path: target/release/cert_tree-macos-x86_64
+          name: cert_tree-macos-x86_64.tar.gz
+          path: cert_tree-macos-x86_64.tar.gz
 
   build-macos-arm:
     name: Build for macOS ARM
@@ -66,14 +85,18 @@ jobs:
       - name: Build release
         run: cargo build --release
 
-      - name: Rename binary
-        run: mv target/release/cert_tree target/release/cert_tree-macos-aarch64
+      - name: Create .tar.gz archive
+        run: |
+          mkdir -p cert_tree-macos-aarch64
+          cp target/release/cert_tree cert_tree-macos-aarch64/
+          cp README.md LICENSE cert_tree-macos-aarch64/
+          tar -czf cert_tree-macos-aarch64.tar.gz cert_tree-macos-aarch64/
 
-      - name: Upload artifact
+      - name: Upload .tar.gz artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert_tree-macos-aarch64
-          path: target/release/cert_tree-macos-aarch64
+          name: cert_tree-macos-aarch64.tar.gz
+          path: cert_tree-macos-aarch64.tar.gz
 
   release:
     needs: [build, build-macos-intel, build-macos-arm]
