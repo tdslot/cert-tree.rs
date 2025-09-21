@@ -101,7 +101,7 @@ jobs:
       - name: Build .rpm package
         run: |
           . $HOME/.cargo/env
-          cargo generate-rpm
+          cargo generate-rpm --name cert_tree-centos
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
@@ -129,7 +129,7 @@ jobs:
       - name: Build .rpm package
         run: |
           . $HOME/.cargo/env
-          cargo generate-rpm
+          cargo generate-rpm --name cert_tree-rocky
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
@@ -157,7 +157,7 @@ jobs:
       - name: Build .rpm package
         run: |
           . $HOME/.cargo/env
-          cargo generate-rpm
+          cargo generate-rpm --name cert_tree-alma
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
@@ -185,7 +185,7 @@ jobs:
       - name: Build .deb package
         run: |
           . $HOME/.cargo/env
-          cargo deb
+          cargo deb --package cert_tree-debian
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
         with:
@@ -213,7 +213,7 @@ jobs:
       - name: Build .deb package
         run: |
           . $HOME/.cargo/env
-          cargo deb
+          cargo deb --package cert_tree-ubuntu
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
         with:
