@@ -280,7 +280,7 @@ release: prepare-release release-archive
 # GitHub release workflow (creates tag and lets GitHub Actions handle release)
 release-github:
     @echo "📝 Committing workflow and Justfile changes..."
-    git add .github/workflows/release.yml Justfile
+    git add .github/workflows/release.yml Justfile Cargo.toml
     git commit -m "chore: update release workflow and Justfile for v{{version}}"
     git push
     @echo "🏷️ Deleting existing tags if they exist..."
