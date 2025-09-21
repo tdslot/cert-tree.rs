@@ -41,16 +41,16 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Build release
-        run: cargo build --release --target x86_64-apple-darwin
+        run: cargo build --release
 
       - name: Rename binary
-        run: mv target/x86_64-apple-darwin/release/cert_tree target/x86_64-apple-darwin/release/cert_tree-macos-x86_64
+        run: mv target/release/cert_tree target/release/cert_tree-macos-x86_64
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: cert_tree-macos-x86_64
-          path: target/x86_64-apple-darwin/release/cert_tree-macos-x86_64
+          path: target/release/cert_tree-macos-x86_64
 
   build-macos-arm:
     name: Build for macOS ARM
@@ -64,16 +64,16 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Build release
-        run: cargo build --release --target aarch64-apple-darwin
+        run: cargo build --release
 
       - name: Rename binary
-        run: mv target/aarch64-apple-darwin/release/cert_tree target/aarch64-apple-darwin/release/cert_tree-macos-aarch64
+        run: mv target/release/cert_tree target/release/cert_tree-macos-aarch64
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: cert_tree-macos-aarch64
-          path: target/aarch64-apple-darwin/release/cert_tree-macos-aarch64
+          path: target/release/cert_tree-macos-aarch64
 
   release:
     needs: [build, build-macos-intel, build-macos-arm]
