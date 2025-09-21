@@ -322,7 +322,6 @@ cert_tree --file ca_list.pem --interactive
 - `-U, --url <URL>`: Certificate URL
 - `-i, --interactive`: Interactive TUI mode (default: false)
 - `-t, --text`: Force text output mode (non-interactive, default: true)
-- `--check-revocation`: Check certificate revocation status using CRL
 - `-h, --help`: Print help information
 - `-V, --version`: Print version information
 
@@ -331,7 +330,7 @@ cert_tree --file ca_list.pem --interactive
 The TUI (Terminal User Interface) mode provides a beautiful, color-coded display of certificate information with advanced navigation features:
 
 ```bash
-cert_tree --file cert.pem
+cert_tree --file cert.pem --interactive
 ```
 
 ### Color Coding
