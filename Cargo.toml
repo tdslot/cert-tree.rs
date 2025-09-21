@@ -20,7 +20,9 @@ source = "https://github.com/tadas/cert-tree.rs/archive/v%{version}.tar.gz"
 docs = "https://github.com/tadas/cert-tree.rs"
 changelog = "https://github.com/tadas/cert-tree.rs/blob/main/CHANGELOG.md"
 buildarch = "x86_64"
-targets = { "cert_tree" = "target/release/cert_tree" }
+targets = [
+  { path = "target/release/cert_tree", dest = "/usr/bin/cert_tree" }
+]
 
 [dependencies]
 clap = { version = "4.0", features = ["derive"] }
