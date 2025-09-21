@@ -90,17 +90,17 @@ jobs:
           yum update -y
           yum install -y --allowerasing curl gcc make openssl-devel
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          source $HOME/.cargo/env
+          . $HOME/.cargo/env
           cargo install cargo-generate-rpm
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Build release
         run: |
-          source $HOME/.cargo/env
+          . $HOME/.cargo/env
           cargo build --release
       - name: Build .rpm package
         run: |
-          source $HOME/.cargo/env
+          . $HOME/.cargo/env
           cargo generate-rpm
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
@@ -118,17 +118,17 @@ jobs:
           dnf update -y
           dnf install -y --allowerasing curl gcc make openssl-devel
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          source $HOME/.cargo/env
+          . $HOME/.cargo/env
           cargo install cargo-generate-rpm
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Build release
         run: |
-          source $HOME/.cargo/env
+          . $HOME/.cargo/env
           cargo build --release
       - name: Build .rpm package
         run: |
-          source $HOME/.cargo/env
+          . $HOME/.cargo/env
           cargo generate-rpm
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
@@ -146,17 +146,17 @@ jobs:
           dnf update -y
           dnf install -y --allowerasing curl gcc make openssl-devel
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          source $HOME/.cargo/env
+          . $HOME/.cargo/env
           cargo install cargo-generate-rpm
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Build release
         run: |
-          source $HOME/.cargo/env
+          . $HOME/.cargo/env
           cargo build --release
       - name: Build .rpm package
         run: |
-          source $HOME/.cargo/env
+          . $HOME/.cargo/env
           cargo generate-rpm
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
@@ -174,17 +174,17 @@ jobs:
           apt update -y
           apt install -y curl build-essential libssl-dev
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          source $HOME/.cargo/env
+          . $HOME/.cargo/env
           cargo install cargo-deb
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Build release
         run: |
-          source $HOME/.cargo/env
+          . $HOME/.cargo/env
           cargo build --release
       - name: Build .deb package
         run: |
-          source $HOME/.cargo/env
+          . $HOME/.cargo/env
           cargo deb
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
@@ -202,17 +202,17 @@ jobs:
           apt update -y
           apt install -y curl build-essential libssl-dev
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          source $HOME/.cargo/env
+          . $HOME/.cargo/env
           cargo install cargo-deb
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Build release
         run: |
-          source $HOME/.cargo/env
+          . $HOME/.cargo/env
           cargo build --release
       - name: Build .deb package
         run: |
-          source $HOME/.cargo/env
+          . $HOME/.cargo/env
           cargo deb
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
