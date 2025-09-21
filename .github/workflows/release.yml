@@ -193,7 +193,7 @@ jobs:
           . $HOME/.cargo/env
           cargo deb
           VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          mv target/debian/cert-tree_${VERSION}_amd64.deb target/debian/cert_tree-debian-${VERSION}-1_amd64.deb
+          mv target/debian/cert-tree_${VERSION}-1_amd64.deb target/debian/cert_tree-debian-${VERSION}-1_amd64.deb
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
         with:
@@ -223,7 +223,7 @@ jobs:
           . $HOME/.cargo/env
           cargo deb
           VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          mv target/debian/cert-tree_${VERSION}_amd64.deb target/debian/cert_tree-ubuntu-${VERSION}-1_amd64.deb
+          mv target/debian/cert-tree_${VERSION}-1_amd64.deb target/debian/cert_tree-ubuntu-${VERSION}-1_amd64.deb
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
         with:
