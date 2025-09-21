@@ -101,7 +101,7 @@ jobs:
   build-rpm-centos:
     name: Build RPM for CentOS
     runs-on: ubuntu-latest
-    container: centos:stream9
+    container: quay.io/centos/centos:stream9
     steps:
       - name: Install dependencies
         run: |
