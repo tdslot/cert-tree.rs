@@ -22,6 +22,9 @@ test_cert := test_dir + "/cacert.pem"
 cargo_toml := "Cargo.toml"
 cargo_lock := "Cargo.lock"
 
+# Version extraction
+version := `grep '^version' Cargo.toml | head -1 | cut -d'"' -f2`
+
 # Documentation
 readme := "README.md"
 changelog := "CHANGELOG.md"
@@ -273,6 +276,19 @@ release-archive: build-release
 # Full release workflow
 release: prepare-release release-archive
     @echo "🎊 Full release workflow completed!"
+
+# GitHub release workflow (creates tag and lets GitHub Actions handle release)
+release-github:
+    @echo "📝 Committing workflow and Justfile changes..."
+    git add .github/workflows/release.yml Justfile
+    git commit -m "chore: update release workflow and Justfile for v{{version}}"
+    git push
+    prepare-release
+    @echo "🏷️ Creating and pushing version tag v{{version}}..."
+    git tag -a v{{version}} -m "Release v{{version}}"
+    git push origin v{{version}}
+    @echo "✅ Tag v{{version}} created and pushed."
+    @echo "🚀 GitHub Actions will now automatically create the release with binaries and changelog notes."
 
 # Development environment recipes
 # ===============================
