@@ -283,7 +283,9 @@ release-github:
     git add .github/workflows/release.yml Justfile
     git commit -m "chore: update release workflow and Justfile for v{{version}}"
     git push
-    just prepare-release
+    @echo "🏷️ Deleting existing tags if they exist..."
+    git tag -d v{{version}} || true
+    git push origin --delete v{{version}} || true
     @echo "🏷️ Creating and pushing version tag v{{version}}..."
     git tag -a v{{version}} -m "Release v{{version}}"
     git push origin v{{version}}
