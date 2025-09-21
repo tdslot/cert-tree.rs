@@ -7,17 +7,8 @@ on:
 
 jobs:
   build:
-    name: Build for ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            name: linux-x86_64
-          - os: macos-latest
-            name: macos-x86_64
-          - os: windows-latest
-            name: windows-x86_64
+    name: Build for Linux
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -29,19 +20,14 @@ jobs:
       - name: Build release
         run: cargo build --release
 
-      - name: Rename binary (Windows)
-        if: matrix.os == 'windows-latest'
-        run: mv target/release/cert-tree.exe target/release/cert-tree-${{ matrix.name }}.exe
-
-      - name: Rename binary (Unix)
-        if: matrix.os != 'windows-latest'
-        run: mv target/release/cert-tree target/release/cert-tree-${{ matrix.name }}
+      - name: Rename binary
+        run: mv target/release/cert-tree target/release/cert-tree-linux-x86_64
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-${{ matrix.name }}
-          path: target/release/cert-tree-${{ matrix.name }}${{ matrix.os == 'windows-latest' && '.exe' || '' }}
+          name: cert-tree-linux-x86_64
+          path: target/release/cert-tree-linux-x86_64
 
   release:
     needs: build
