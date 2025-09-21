@@ -8,6 +8,12 @@
 - **Memory Bank Status**: Updated and synchronized with current project state
 
 ## Recent Changes
+- ✅ **Completed**: Modified display_name format in flatten_node function to show sequence number in brackets first, followed by indentation and certificate name (CN). Changed from "CN [1]" to "[1] indentation CN" format for proper TUI display
+- ✅ **Completed**: Updated version to 0.14.3 according to semver methodology (PATCH version for display format improvement)
+- ✅ **Completed**: CHANGELOG.md updated with release notes for v0.14.3
+- ✅ **Completed**: Fixed TUI certificate list display to show certificate names with indentation and bracketed sequence numbers instead of only showing bracketed numbers
+- ✅ **Completed**: Updated version to 0.14.2 according to semver methodology (PATCH version for TUI display fix)
+- ✅ **Completed**: CHANGELOG.md updated with release notes for v0.14.2
 - ✅ **Completed**: Fixed certificate tree color coding in text mode - certificate names now display in white while status indicators remain colored based on validity
 - ✅ **Completed**: Implemented functional CRL (Certificate Revocation List) checking with visible status display
 - ✅ **Completed**: Added CRL distribution point extraction and URL fetching

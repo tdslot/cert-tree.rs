@@ -5,14 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.3] - 2025-09-21
+
+### Changed
+- **TUI Certificate Display Format**: Modified certificate list display format to show sequence numbers in brackets first, followed by indentation and certificate name (CN) for improved readability and proper TUI display
+
+### Technical
+- **flatten_node() Function**: Updated display_name formatting from "CN [1]" to "[1] indentation CN" format
+
 ## [0.14.2] - 2025-09-20
 
 ### Fixed
+- **TUI Certificate List Display**: Fixed certificate list to show certificate names with indentation and bracketed sequence numbers instead of only showing bracketed numbers
+- **Certificate Name Display**: Certificate names (CN) now properly display in TUI certificate list with hierarchical indentation
+- **Sequence Number Integration**: Bracketed sequence numbers [1], [2], etc. now appear alongside certificate names
 - **Certificate Tree Color Coding**: Fixed text mode display to show certificate names in white while maintaining colored validity status indicators
 - **Consistent Color Scheme**: All certificate names (including tree connectors) now display in white for better readability
 - **Status Color Preservation**: Validity status indicators (green/yellow/red) remain properly colored based on certificate expiry
 
 ### Technical
+- **flatten_node() Function**: Modified to include indentation, CN extraction, and bracketed sequence numbers in display_name field
+- **Certificate Display Logic**: Updated CertificateDisplayItem structure to properly show certificate names in TUI
 - **ANSI Color Reset**: Added proper ANSI color reset sequences to prevent color bleeding between display elements
 - **Display Logic Update**: Modified `display_tree_node_text()` function to apply white color to certificate names and connectors
 - **Cross-Platform Compatibility**: Maintained ANSI color support across different terminal environments

@@ -413,8 +413,9 @@ struct CertificateDisplayItem {
 
 fn flatten_certificate_tree(tree: &CertificateTree) -> Vec<CertificateDisplayItem> {
     let mut certificates = Vec::new();
+    let mut line_number = 1;
     for root in &tree.roots {
-        flatten_node(root, &mut certificates, 0);
+        flatten_node(root, &mut certificates, 0, &mut line_number);
     }
     certificates
 }
@@ -423,11 +424,16 @@ fn flatten_node(
     node: &CertificateNode,
     certificates: &mut Vec<CertificateDisplayItem>,
     depth: usize,
+    line_number: &mut usize,
 ) {
-    // Format certificate name with indentation - use only CN
-    let indent = "  ".repeat(depth);
+    // Get certificate name (CN only)
     let cn = extract_cn(&node.cert.subject);
-    let display_name = format!("{}{}", indent, cn);
+
+    // Create indentation based on depth
+    let indentation = "  ".repeat(depth);
+
+    // Format display name with bracketed sequence number, indentation, and certificate name
+    let display_name = format!("[{}] {}{}", line_number, indentation, cn);
 
     // Date is already in the correct format (YYYY-MM-DD HH:MM:SS)
     let valid_until = node.cert.not_after.clone();
@@ -440,9 +446,11 @@ fn flatten_node(
         certificate_info: node.cert.clone(),
     });
 
+    *line_number += 1;
+
     // Add children
     for child in &node.children {
-        flatten_node(child, certificates, depth + 1);
+        flatten_node(child, certificates, depth + 1, line_number);
     }
 }
 
@@ -1067,8 +1075,8 @@ fn display_tree_node_text(
 
     // Use white for certificate names, color only the status/date part
     println!(
-        "\x1b[37m{}{}{}\x1b[0m{}[{}] [{} until: {}]\x1b[0m",
-        prefix, display_name, padding, color_code, sequence_num, status_text, date_str
+        "\x1b[37m[{}] {}{}{}\x1b[0m{}[{}] [until: {}]\x1b[0m",
+        sequence_num, prefix, display_name, padding, color_code, status_text, date_str
     );
 
     // Display children with cascading tree structure
@@ -1148,7 +1156,7 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
 
             let list_area = chunks[1];
             let effective_width = (list_area.width as usize).saturating_sub(2); // Subtract border width (1 left + 1 right)
-            let available_name_width = effective_width.saturating_sub(date_width + min_gap + padding_after_date).max(min_name_width);
+            let available_name_width = effective_width.saturating_sub(date_width + min_gap + padding_after_date + 4).max(min_name_width);
 
             // Create list items
             let items: Vec<ListItem> = certificates
