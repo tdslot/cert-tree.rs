@@ -30,7 +30,7 @@ jobs:
         run: cargo deb --target x86_64-unknown-linux-gnu
 
       - name: Build .rpm package
-        run: cargo rpm
+        run: cargo rpm build
 
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
@@ -119,7 +119,7 @@ jobs:
       - name: Build .rpm package
         run: |
           source $HOME/.cargo/env
-          cargo rpm
+          cargo rpm build
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
@@ -147,7 +147,7 @@ jobs:
       - name: Build .rpm package
         run: |
           source $HOME/.cargo/env
-          cargo rpm
+          cargo rpm build
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
@@ -175,7 +175,7 @@ jobs:
       - name: Build .rpm package
         run: |
           source $HOME/.cargo/env
-          cargo rpm
+          cargo rpm build
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
