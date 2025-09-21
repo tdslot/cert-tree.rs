@@ -1,3 +1,4 @@
+---
 name: Release
 
 on:
@@ -20,10 +21,14 @@ jobs:
       - name: Build release
         run: cargo build --release --target x86_64-unknown-linux-gnu
 
+      - name: Strip binary
+        run: strip target/x86_64-unknown-linux-gnu/release/cert_tree
+
       - name: Create .tar.gz archive
         run: |
           mkdir -p cert_tree-linux-x86_64
-          cp target/x86_64-unknown-linux-gnu/release/cert_tree cert_tree-linux-x86_64/
+          cp target/x86_64-unknown-linux-gnu/release/cert_tree \
+            cert_tree-linux-x86_64/
           cp README.md LICENSE cert_tree-linux-x86_64/
           tar -czf cert_tree-linux-x86_64.tar.gz cert_tree-linux-x86_64/
 
@@ -46,6 +51,9 @@ jobs:
 
       - name: Build release
         run: cargo build --release
+
+      - name: Strip binary
+        run: strip target/release/cert_tree
 
       - name: Create .tar.gz archive
         run: |
@@ -74,6 +82,9 @@ jobs:
       - name: Build release
         run: cargo build --release
 
+      - name: Strip binary
+        run: strip target/release/cert_tree
+
       - name: Create .tar.gz archive
         run: |
           mkdir -p cert_tree-macos-aarch64
@@ -95,7 +106,8 @@ jobs:
       - name: Install dependencies
         run: |
           yum update -y
-          yum install -y --allowerasing curl gcc make openssl-devel
+          yum install -y --allowerasing \
+            curl gcc make openssl-devel
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           . $HOME/.cargo/env
           cargo install cargo-generate-rpm
@@ -105,12 +117,15 @@ jobs:
         run: |
           . $HOME/.cargo/env
           cargo build --release
+      - name: Strip binary
+        run: strip target/release/cert_tree
       - name: Build .rpm package
         run: |
           . $HOME/.cargo/env
           cargo generate-rpm
           VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          mv target/generate-rpm/cert_tree-${VERSION}-1.x86_64.rpm target/generate-rpm/cert_tree-centos-${VERSION}-1.x86_64.rpm
+          mv target/generate-rpm/cert_tree-${VERSION}-1.x86_64.rpm \
+            target/generate-rpm/cert_tree-centos-${VERSION}-1.x86_64.rpm
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
@@ -125,7 +140,8 @@ jobs:
       - name: Install dependencies
         run: |
           dnf update -y
-          dnf install -y --allowerasing curl gcc make openssl-devel
+          dnf install -y --allowerasing \
+            curl gcc make openssl-devel
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           . $HOME/.cargo/env
           cargo install cargo-generate-rpm
@@ -135,12 +151,15 @@ jobs:
         run: |
           . $HOME/.cargo/env
           cargo build --release
+      - name: Strip binary
+        run: strip target/release/cert_tree
       - name: Build .rpm package
         run: |
           . $HOME/.cargo/env
           cargo generate-rpm
           VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          mv target/generate-rpm/cert_tree-${VERSION}-1.x86_64.rpm target/generate-rpm/cert_tree-rocky-${VERSION}-1.x86_64.rpm
+          mv target/generate-rpm/cert_tree-${VERSION}-1.x86_64.rpm \
+            target/generate-rpm/cert_tree-rocky-${VERSION}-1.x86_64.rpm
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
@@ -155,7 +174,8 @@ jobs:
       - name: Install dependencies
         run: |
           dnf update -y
-          dnf install -y --allowerasing curl gcc make openssl-devel
+          dnf install -y --allowerasing \
+            curl gcc make openssl-devel
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           . $HOME/.cargo/env
           cargo install cargo-generate-rpm
@@ -165,12 +185,15 @@ jobs:
         run: |
           . $HOME/.cargo/env
           cargo build --release
+      - name: Strip binary
+        run: strip target/release/cert_tree
       - name: Build .rpm package
         run: |
           . $HOME/.cargo/env
           cargo generate-rpm
           VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          mv target/generate-rpm/cert_tree-${VERSION}-1.x86_64.rpm target/generate-rpm/cert_tree-alma-${VERSION}-1.x86_64.rpm
+          mv target/generate-rpm/cert_tree-${VERSION}-1.x86_64.rpm \
+            target/generate-rpm/cert_tree-alma-${VERSION}-1.x86_64.rpm
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
@@ -185,7 +208,8 @@ jobs:
       - name: Install dependencies
         run: |
           apt update -y
-          apt install -y curl build-essential libssl-dev pkg-config
+          apt install -y curl build-essential \
+            libssl-dev pkg-config
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           . $HOME/.cargo/env
           cargo install cargo-deb
@@ -195,12 +219,15 @@ jobs:
         run: |
           . $HOME/.cargo/env
           cargo build --release
+      - name: Strip binary
+        run: strip target/release/cert_tree
       - name: Build .deb package
         run: |
           . $HOME/.cargo/env
           cargo deb
           VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          mv target/debian/cert-tree_${VERSION}-1_amd64.deb target/debian/cert_tree-debian-${VERSION}-1_amd64.deb
+          mv target/debian/cert-tree_${VERSION}-1_amd64.deb \
+            target/debian/cert_tree-debian-${VERSION}-1_amd64.deb
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
         with:
@@ -215,7 +242,8 @@ jobs:
       - name: Install dependencies
         run: |
           apt update -y
-          apt install -y curl build-essential libssl-dev pkg-config
+          apt install -y curl build-essential \
+            libssl-dev pkg-config
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           . $HOME/.cargo/env
           cargo install cargo-deb
@@ -225,12 +253,15 @@ jobs:
         run: |
           . $HOME/.cargo/env
           cargo build --release
+      - name: Strip binary
+        run: strip target/release/cert_tree
       - name: Build .deb package
         run: |
           . $HOME/.cargo/env
           cargo deb
           VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          mv target/debian/cert-tree_${VERSION}-1_amd64.deb target/debian/cert_tree-ubuntu-${VERSION}-1_amd64.deb
+          mv target/debian/cert-tree_${VERSION}-1_amd64.deb \
+            target/debian/cert_tree-ubuntu-${VERSION}-1_amd64.deb
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
         with:
@@ -238,7 +269,15 @@ jobs:
           path: target/debian/*.deb
 
   release:
-    needs: [build, build-macos-intel, build-macos-arm, build-rpm-centos, build-rpm-rocky, build-rpm-alma, build-deb-debian, build-deb-ubuntu]
+    needs:
+      - build
+      - build-macos-intel
+      - build-macos-arm
+      - build-rpm-centos
+      - build-rpm-rocky
+      - build-rpm-alma
+      - build-deb-debian
+      - build-deb-ubuntu
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -256,7 +295,8 @@ jobs:
       - name: Extract release notes
         run: |
           VERSION="${{ steps.get_version.outputs.version }}"
-          awk "/^## \\[${VERSION}\\]/{flag=1; next} /^## \\[/{flag=0} flag" CHANGELOG.md > release_notes.md
+          awk "/^## \\[${VERSION}\\]/{flag=1; next} /^## \\[/{flag=0} flag" \
+            CHANGELOG.md > release_notes.md
 
       - name: Create release
         uses: softprops/action-gh-release@v1
