@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Detailed TUI Certificate Information**: Enhanced interactive TUI with comprehensive certificate details panel showing issuer, subject, validity, serial number, signature algorithm, public key, extensions, and revocation status
 - **Color-Coded Validity Status in Text Mode**: Added color-coded certificate validity status (green/yellow/red) in text output for immediate visual feedback
 - **ISO 8601 Date-Time Format in TUI**: Standardized validity period display in TUI using ISO 8601 format (YYYY-MM-DDTHH:MM:SSZ) for consistency and readability
+- **Multi-Distribution Package Support**: Added automated build and release support for multiple Linux distributions including .deb packages for Debian/Ubuntu, .rpm packages for CentOS/Rocky/Alma, and .tar.gz archives for Linux/macOS binaries
 
 ### Changed
 - **Simplified CLI Default Behavior**: Changed default output mode from interactive TUI to text mode for better usability in non-interactive environments (scripts, automation, CI/CD)

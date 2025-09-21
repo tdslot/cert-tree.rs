@@ -9,9 +9,21 @@
 - **Memory Bank Status**: Updated and synchronized with current project state
 
 ## Recent Changes
+- ✅ **Completed**: Reverted Linux build job back to x86_64-unknown-linux-gnu target due to OpenSSL compatibility issues with reqwest
+- ✅ **Completed**: Changed Linux build job to use x86_64-unknown-linux-musl target for better portability and distribution independence
+- ✅ **Completed**: Fixed mv command source filename for DEB packages to include the -1 suffix in the source path
+- ✅ **Completed**: Fixed mv commands for DEB packages to include -1 suffix in filename format
+- ✅ **Completed**: Removed --package flags from cargo deb commands and added mv commands to rename DEB packages with distribution prefixes (debian- and ubuntu-) after building
+- ✅ **Completed**: Modified release workflow to prefix package filenames with distribution names (e.g., cert_tree-centos-0.14.3-1.x86_64.rpm) to avoid conflicts in GitHub releases
+- ✅ **Completed**: Added 'pkg-config' to the apt install commands in the DEB build jobs for Debian and Ubuntu to satisfy the OpenSSL dependency
+- ✅ **Completed**: Changed 'source $HOME/.cargo/env' to '. $HOME/.cargo/env' in RPM build jobs for sh compatibility
+- ✅ **Completed**: Updated RPM build jobs in release.yml to use 'cargo generate-rpm' instead of 'cargo rpm build'
+- ✅ **Completed**: Switched from unmaintained cargo-rpm to cargo-generate-rpm by replacing [package.metadata.rpm] with [package.metadata.generate-rpm] in Cargo.toml
+- ✅ **Completed**: Removed targets field from [package.metadata.rpm] in Cargo.toml as cargo-rpm should automatically include all binaries for simple projects
 - ✅ **Completed**: Set up automated GitHub Actions workflow for release automation
 - ✅ **Completed**: Added Justfile recipe for streamlined release process
 - ✅ **Completed**: Successfully created and published release v0.14.3 with automated workflows
+- ✅ **Completed**: CHANGELOG.md updated with multi-distribution package support features
 - ✅ **Completed**: Modified display_name format in flatten_node function to show sequence number in brackets first, followed by indentation and certificate name (CN). Changed from "CN [1]" to "[1] indentation CN" format for proper TUI display
 - ✅ **Completed**: Updated version to 0.14.3 according to semver methodology (PATCH version for display format improvement)
 - ✅ **Completed**: CHANGELOG.md updated with release notes for v0.14.3
