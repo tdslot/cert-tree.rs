@@ -29,8 +29,54 @@ jobs:
           name: cert_tree-linux-x86_64
           path: target/x86_64-unknown-linux-gnu/release/cert_tree-linux-x86_64
 
+  build-macos-intel:
+    name: Build for macOS Intel
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build release
+        run: cargo build --release --target x86_64-apple-darwin
+
+      - name: Rename binary
+        run: mv target/x86_64-apple-darwin/release/cert_tree target/x86_64-apple-darwin/release/cert_tree-macos-x86_64
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cert_tree-macos-x86_64
+          path: target/x86_64-apple-darwin/release/cert_tree-macos-x86_64
+
+  build-macos-arm:
+    name: Build for macOS ARM
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build release
+        run: cargo build --release --target aarch64-apple-darwin
+
+      - name: Rename binary
+        run: mv target/aarch64-apple-darwin/release/cert_tree target/aarch64-apple-darwin/release/cert_tree-macos-aarch64
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cert_tree-macos-aarch64
+          path: target/aarch64-apple-darwin/release/cert_tree-macos-aarch64
+
   release:
-    needs: build
+    needs: [build, build-macos-intel, build-macos-arm]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
