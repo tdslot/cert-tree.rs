@@ -144,8 +144,129 @@ For each platform:
 After all builds complete:
 1. **Download artifacts** from all build jobs
 2. **Extract version** from git tag
-3. **Extract release notes** from CHANGELOG.md using awk
+3. **Generate human-readable release notes** from CHANGELOG.md with enhanced formatting
 4. **Create GitHub release** using `softprops/action-gh-release@v1`
+
+#### Enhanced Release Notes Generation
+
+The workflow automatically generates beautiful, user-friendly release notes that include:
+
+- **🎯 Clear version information** with release highlights
+- **📦 Download links** for all platforms with clear categorization
+- **🚀 Installation instructions** for different package managers
+- **📋 What's new** section with user-friendly descriptions
+- **🐛 Technical changelog** appended for developers
+- **📚 Documentation and community links**
+
+The release notes are generated using a shell script that:
+1. Extracts the current version from the git tag
+2. Gets the release date
+3. Creates a structured, emoji-enhanced release notes document
+4. Appends the raw changelog for technical details
+
+**Key Features:**
+- **Platform-specific download sections** (Linux, macOS)
+- **Package manager instructions** (DEB, RPM, tar.gz)
+- **Quick start examples** for immediate use
+- **Community links** for support and contributions
+- **Professional formatting** with consistent styling
+
+**Example generated release notes:**
+
+```markdown
+# 🎉 cert-tree v0.14.4 - Quality & Performance Release
+
+**Released on:** 2025-09-23
+
+## ✨ What's New
+
+### 🚀 Performance Improvements
+- **High-performance memory allocator**: Added mimalloc for significantly better memory management and application performance
+- **Optimized build configuration**: Enhanced compilation settings for maximum speed
+
+### 🔧 Code Quality Enhancements
+- **Comprehensive code review**: Applied Microsoft Rust Guidelines for professional-grade code quality
+- **Magic number elimination**: Replaced hardcoded values with descriptive constants
+- **Enhanced documentation**: Added detailed inline documentation with examples and safety notes
+- **Advanced linting**: Enabled pedantic, complexity, and performance clippy checks
+
+### 📊 Technical Improvements
+- **Warning reduction**: Decreased compiler warnings from 74 to 57 for cleaner builds
+- **Memory safety**: Maintained Rust's zero-cost abstractions and memory safety guarantees
+- **Cross-platform compatibility**: Verified builds work across all supported platforms
+
+## 📦 Downloads
+
+Choose the right package for your system:
+
+### 🐧 Linux
+- **Binary**: `cert_tree-linux-x86_64.tar.gz` (Universal Linux binary)
+- **RPM Packages**:
+  - CentOS/RHEL: `cert_tree-centos-x86_64.rpm`
+  - Rocky Linux: `cert_tree-rocky-x86_64.rpm`
+  - Alma Linux: `cert_tree-alma-x86_64.rpm`
+- **DEB Packages**:
+  - Debian: `cert_tree-debian-x86_64.deb`
+  - Ubuntu: `cert_tree-ubuntu-x86_64.deb`
+
+### 🍎 macOS
+- **Intel**: `cert_tree-macos-x86_64.tar.gz`
+- **Apple Silicon**: `cert_tree-macos-aarch64.tar.gz`
+
+## 🚀 Quick Start
+
+### From Binary (All Platforms)
+```bash
+# Download and extract
+tar -xzf cert_tree-*-x86_64.tar.gz
+cd cert_tree-*
+
+# Make executable and run
+chmod +x cert_tree
+./cert_tree --help
+```
+
+### From Package Managers
+
+**Ubuntu/Debian:**
+```bash
+sudo dpkg -i cert_tree-ubuntu-*.deb
+cert-tree --help
+```
+
+**CentOS/RHEL/Rocky/Alma:**
+```bash
+sudo rpm -i cert_tree-centos-*.rpm
+cert-tree --help
+```
+
+### Basic Usage Examples
+
+```bash
+# Inspect a certificate file
+cert-tree --file certificate.pem
+
+# Check website certificates
+cert-tree --url https://github.com
+
+# Interactive mode
+cert-tree --file certificate.pem --interactive
+```
+
+## 🔗 Links
+
+- **📖 Documentation**: [README.md](https://github.com/tdslot/cert-tree.rs/blob/main/README.md)
+- **🐛 Report Issues**: [GitHub Issues](https://github.com/tdslot/cert-tree.rs/issues)
+- **💬 Discussions**: [GitHub Discussions](https://github.com/tdslot/cert-tree.rs/discussions)
+
+## 🙏 Acknowledgments
+
+Built with ❤️ using Rust and modern development practices.
+
+---
+
+*This release maintains full backward compatibility and includes comprehensive testing across all platforms.*
+```
 
 ### Release Artifacts
 

@@ -1,3 +1,33 @@
+//! # cert-tree.rs - X.509 Certificate Inspection Utility
+//!
+//! This crate provides a command-line tool for inspecting and displaying X.509 certificates
+//! in a human-readable tree format. It supports multiple input sources (files, URLs) and
+//! output formats (tree view, verbose text, interactive TUI).
+//!
+//! ## Features
+//!
+//! - Parse certificates from PEM/DER files or HTTPS URLs
+//! - Display certificate chains with hierarchical tree structure
+//! - Interactive TUI with color-coded validity status
+//! - Text mode for non-interactive environments
+//! - Comprehensive certificate information including extensions
+//!
+//! ## Usage
+//!
+//! ```bash
+//! # Inspect a certificate file
+//! cert-tree --file certificate.pem
+//!
+//! # Inspect certificates from a website
+//! cert-tree --url https://example.com
+//!
+//! # Interactive mode
+//! cert-tree --file certificate.pem --interactive
+use mimalloc::MiMalloc;
+
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
+
 use chrono::{DateTime, Utc};
 use clap::{CommandFactory, Parser};
 use crossterm::{
@@ -24,9 +54,44 @@ use std::sync::Arc;
 use thiserror::Error;
 use webpki_roots::TLS_SERVER_ROOTS;
 use x509_parser::prelude::*;
+/// Buffer size for reading certificate data from network
+const BUFFER_SIZE: usize = 1024;
+
+/// Standard HTTPS port number
+const HTTPS_PORT: u16 = 443;
+
+/// Connection timeout in seconds for network operations
+const CONNECTION_TIMEOUT_SECS: u64 = 10;
+
+/// Maximum scroll limit for TUI details pane
+const MAX_SCROLL_LIMIT: u16 = 50;
+
+/// Page size for navigation (items per page)
+const PAGE_SIZE: usize = 10;
+
+/// Sleep duration in milliseconds for TUI initialization
+const SLEEP_MS: u64 = 50;
+
+/// Starting position for date column in text display
+const DATE_COLUMN_START: usize = 93;
 // CRL parsing will be implemented later
 
-// Function to extract CN from certificate subject
+/// Extracts the Common Name (CN) from an X.509 certificate subject string.
+///
+/// Parses the DN format and returns the CN value if found, otherwise returns
+/// the entire subject string as fallback.
+///
+/// # Arguments
+/// * `subject` - The certificate subject string in DN format
+///
+/// # Returns
+/// The CN value or the full subject if no CN is found
+///
+/// # Examples
+/// ```
+/// let cn = extract_cn("CN=example.com, O=Example Inc");
+/// assert_eq!(cn, "example.com");
+/// ```
 fn extract_cn(subject: &str) -> String {
     // Parse the DN format: C=US, ST=New Jersey, L=Jersey City, O=The USERTRUST Network, CN=USERTrust RSA Cer...
     let parts: Vec<&str> = subject.split(',').collect();
@@ -260,9 +325,13 @@ fn fetch_certificate_chain_via_tls(hostname: &str) -> Result<Vec<CertificateInfo
         .with_no_client_auth();
 
     // Create a TCP connection
-    let mut socket = std::net::TcpStream::connect((hostname, 443))?;
-    socket.set_read_timeout(Some(std::time::Duration::from_secs(10)))?;
-    socket.set_write_timeout(Some(std::time::Duration::from_secs(10)))?;
+    let mut socket = std::net::TcpStream::connect((hostname, HTTPS_PORT))?;
+    socket.set_read_timeout(Some(std::time::Duration::from_secs(
+        CONNECTION_TIMEOUT_SECS,
+    )))?;
+    socket.set_write_timeout(Some(std::time::Duration::from_secs(
+        CONNECTION_TIMEOUT_SECS,
+    )))?;
 
     let server_name =
         rustls::ServerName::try_from(hostname).map_err(|_| CertError::InvalidFormat)?;
@@ -277,7 +346,7 @@ fn fetch_certificate_chain_via_tls(hostname: &str) -> Result<Vec<CertificateInfo
     tls_stream.write_all(request.as_bytes())?;
 
     // Read response to complete handshake
-    let mut buffer = [0u8; 1024];
+    let mut buffer = [0u8; BUFFER_SIZE];
     let _ = tls_stream.read(&mut buffer);
 
     // Extract certificate chain from the connection
@@ -877,7 +946,10 @@ fn display_tui(cert: &CertificateInfo) -> Result<(), Box<dyn std::error::Error>>
 
     // Force initial clear and small delay to ensure proper layout on startup
     terminal.clear()?;
-    std::thread::sleep(std::time::Duration::from_millis(50));
+    std::thread::sleep(std::time::Duration::from_millis(SLEEP_MS));
+
+    // Scroll state for certificate details pane
+    let _details_scroll: u16 = 0;
 
     loop {
         terminal.draw(|f| {
@@ -1039,7 +1111,7 @@ fn display_tree_node_text(
     *sequence_num += 1;
 
     // Fixed column positions - dates should align regardless of tree depth
-    let date_column_start: usize = 93; // Fixed position for date column (adjusted for seconds in time format)
+    let date_column_start: usize = DATE_COLUMN_START; // Fixed position for date column (adjusted for seconds in time format)
 
     // Get certificate name (without sequence number) - use only CN
     let cn = extract_cn(&node.cert.subject);
@@ -1115,7 +1187,7 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
 
     // Force initial clear and small delay to ensure proper layout on startup
     terminal.clear()?;
-    std::thread::sleep(std::time::Duration::from_millis(50));
+    std::thread::sleep(std::time::Duration::from_millis(SLEEP_MS));
 
     loop {
         terminal.draw(|f| {
@@ -1373,8 +1445,7 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
                     KeyCode::Down => {
                         if details_pane_active {
                             // Scroll details down when details pane is active
-                            if details_scroll < 50 {
-                                // Arbitrary max scroll limit
+                            if details_scroll < MAX_SCROLL_LIMIT {
                                 details_scroll += 1;
                             }
                         } else {
@@ -1390,16 +1461,14 @@ fn display_certificate_tree_tui(tree: &CertificateTree) -> Result<(), Box<dyn st
                     KeyCode::PageUp => {
                         if !details_pane_active {
                             let i = list_state.selected().unwrap_or(0);
-                            let page_size = 10; // Scroll by 10 items
-                            let new_index = i.saturating_sub(page_size);
+                            let new_index = i.saturating_sub(PAGE_SIZE);
                             list_state.select(Some(new_index));
                         }
                     }
                     KeyCode::PageDown => {
                         if !details_pane_active {
                             let i = list_state.selected().unwrap_or(0);
-                            let page_size = 10; // Scroll by 10 items
-                            let new_index = (i + page_size).min(certificates.len() - 1);
+                            let new_index = (i + PAGE_SIZE).min(certificates.len() - 1);
                             list_state.select(Some(new_index));
                         }
                     }

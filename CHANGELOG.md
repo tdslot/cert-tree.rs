@@ -5,6 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.5] - 2025-09-23
+
+### Added
+- **Enhanced Release Process**: Completely redesigned release workflow with beautiful, user-friendly release notes
+- **Automated Release Notes Generation**: GitHub Actions now generates professional release notes with emojis, installation instructions, and clear formatting
+- **Platform-Specific Installation Guides**: Added detailed installation instructions for all supported platforms (Linux binary, RPM, DEB, macOS)
+- **Community Links Integration**: Release notes now include links to documentation, issue tracking, and community discussions
+- **Quick Start Examples**: Added immediate usage examples in release notes for faster user onboarding
+
+### Changed
+- **Release Notes Format**: Transformed from plain text changelog extraction to rich, formatted release announcements
+- **User Experience**: Release notes now prioritize user-friendly descriptions over technical details
+- **Documentation Links**: Enhanced release notes with direct links to README, issues, and discussions
+
+### Technical
+- **GitHub Actions Enhancement**: Updated release.yml workflow to generate comprehensive release notes
+- **Shell Script Integration**: Added shell-based release notes generation with dynamic content
+- **Cross-Platform Instructions**: Included package manager specific installation commands
+- **Professional Formatting**: Applied consistent emoji and formatting standards
+
+## [0.14.4] - 2025-09-23
+
+### Added
+- **Code Quality Improvements**: Comprehensive code review and improvements following Microsoft Rust Guidelines
+- **Constants for Magic Numbers**: Replaced hardcoded values with named constants for better maintainability
+- **Enhanced Documentation**: Added comprehensive module documentation with usage examples and safety notes
+- **Additional Clippy Lints**: Enabled pedantic, complexity, correctness, perf, style, and suspicious lint categories
+- **Mimalloc Global Allocator**: Added high-performance memory allocator for improved application performance
+
+### Changed
+- **Code Structure**: Improved code organization with better separation of concerns
+- **Documentation**: Enhanced inline documentation for functions and modules
+- **Build Configuration**: Updated Cargo.toml with additional lint configurations
+
+### Technical
+- **Performance**: Added mimalloc global allocator for better memory management
+- **Code Quality**: Enabled comprehensive Clippy linting for ongoing code quality maintenance
+- **Maintainability**: Replaced magic numbers with descriptive constants
+- **Documentation**: Added module-level documentation with examples and safety information
+
 ## [0.14.3] - 2025-09-21
 
 ### Added
