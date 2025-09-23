@@ -1,6 +1,6 @@
 # cert-tree
 
-[![Version](https://img.shields.io/badge/version-0.14.6-blue.svg)](https://github.com/tdslot/cert-tree.rs/releases)
+[![Version](https://img.shields.io/badge/version-0.14.7-blue.svg)](https://github.com/tdslot/cert-tree.rs/releases)
 
 A command-line utility for inspecting X.509 certificates in a tree-like structure, inspired by [cert_tree](https://github.com/jkolezyn/cert_tree).
 
