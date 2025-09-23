@@ -1,9 +1,8 @@
 [package]
 name = "cert_tree"
-version = "0.14.3"
+version = "0.14.4"
 edition = "2021"
 license = "MIT"
-license-file = "LICENSE"
 description = "A command-line utility written in Rust for inspecting and displaying X.509 certificates in a human-readable tree format"
 authors = ["Tadas"]
 homepage = "https://github.com/tadas/cert-tree.rs"
@@ -29,6 +28,22 @@ chrono = "0.4"
 rustls = "0.21"
 webpki-roots = "0.25"
 url = "2.4"
+mimalloc = { version = "0.1", default-features = false }
+[lints.clippy]
+# Enable additional Clippy lints for better code quality
+pedantic = { level = "warn", priority = -1 }
+complexity = { level = "warn", priority = -1 }
+correctness = { level = "warn", priority = -1 }
+perf = { level = "warn", priority = -1 }
+style = { level = "warn", priority = -1 }
+suspicious = { level = "warn", priority = -1 }
+
+# Specific lints to enable
+missing_docs_in_private_items = "warn"
+unnecessary_unwrap = "warn"
+unused_self = "warn"
+implicit_clone = "warn"
+
 
 [profile.release]
 opt-level = 3
