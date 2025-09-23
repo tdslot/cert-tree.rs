@@ -13,7 +13,7 @@ This file documents repetitive tasks and their workflows for the cert-tree.rs pr
 
 **Steps:**
 1. Add test certificate to `test/` directory
-2. Run `./target/release/cert_tree --file test/cert.pem`
+2. Run `./target/release/cert-tree --file test/cert.pem`
 3. Verify output format and correctness
 4. Add unit test if needed
 5. Update documentation if new features discovered

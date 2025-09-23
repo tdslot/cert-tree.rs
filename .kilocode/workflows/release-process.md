@@ -267,43 +267,43 @@ The release notes are generated using a shell script that:
 Choose the right package for your system:
 
 ### 🐧 Linux
-- **Binary**: `cert_tree-linux-x86_64.tar.gz` (Universal Linux binary)
+- **Binary**: `cert-tree-linux-x86_64.tar.gz` (Universal Linux binary)
 - **RPM Packages**:
-  - CentOS/RHEL: `cert_tree-centos-x86_64.rpm`
-  - Rocky Linux: `cert_tree-rocky-x86_64.rpm`
-  - Alma Linux: `cert_tree-alma-x86_64.rpm`
+  - CentOS/RHEL: `cert-tree-centos-x86_64.rpm`
+  - Rocky Linux: `cert-tree-rocky-x86_64.rpm`
+  - Alma Linux: `cert-tree-alma-x86_64.rpm`
 - **DEB Packages**:
-  - Debian: `cert_tree-debian-x86_64.deb`
-  - Ubuntu: `cert_tree-ubuntu-x86_64.deb`
+  - Debian: `cert-tree-debian-x86_64.deb`
+  - Ubuntu: `cert-tree-ubuntu-x86_64.deb`
 
 ### 🍎 macOS
-- **Intel**: `cert_tree-macos-x86_64.tar.gz`
-- **Apple Silicon**: `cert_tree-macos-aarch64.tar.gz`
+- **Intel**: `cert-tree-macos-x86_64.tar.gz`
+- **Apple Silicon**: `cert-tree-macos-aarch64.tar.gz`
 
 ## 🚀 Quick Start
 
 ### From Binary (All Platforms)
 ```bash
 # Download and extract
-tar -xzf cert_tree-*-x86_64.tar.gz
-cd cert_tree-*
+tar -xzf cert-tree-*-x86_64.tar.gz
+cd cert-tree-*
 
 # Make executable and run
-chmod +x cert_tree
-./cert_tree --help
+chmod +x cert-tree
+./cert-tree --help
 ```
 
 ### From Package Managers
 
 **Ubuntu/Debian:**
 ```bash
-sudo dpkg -i cert_tree-ubuntu-*.deb
+sudo dpkg -i cert-tree-ubuntu-*.deb
 cert-tree --help
 ```
 
 **CentOS/RHEL/Rocky/Alma:**
 ```bash
-sudo rpm -i cert_tree-centos-*.rpm
+sudo rpm -i cert-tree-centos-*.rpm
 cert-tree --help
 ```
 

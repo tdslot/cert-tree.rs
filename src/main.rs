@@ -244,6 +244,7 @@ pub struct ExtensionInfo {
 #[command(name = "cert-tree")]
 #[command(about = "X.509 certificate inspection utility")]
 #[command(version)]
+#[command(after_help = "Github: https://github.com/tdslot/cert-tree.rs")]
 pub struct Args {
     /// Certificate file path (PEM or DER)
     #[arg(short, long)]

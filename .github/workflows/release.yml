@@ -22,21 +22,21 @@ jobs:
         run: cargo build --release --target x86_64-unknown-linux-gnu
 
       - name: Strip binary
-        run: strip target/x86_64-unknown-linux-gnu/release/cert_tree
+        run: strip target/x86_64-unknown-linux-gnu/release/cert-tree
 
       - name: Create .tar.gz archive
         run: |
-          mkdir -p cert_tree-linux-x86_64
-          cp target/x86_64-unknown-linux-gnu/release/cert_tree \
-            cert_tree-linux-x86_64/
-          cp README.md LICENSE cert_tree-linux-x86_64/
-          tar -czf cert_tree-linux-x86_64.tar.gz cert_tree-linux-x86_64/
+          mkdir -p cert-tree-linux-x86_64
+          cp target/x86_64-unknown-linux-gnu/release/cert-tree \
+            cert-tree-linux-x86_64/
+          cp README.md LICENSE cert-tree-linux-x86_64/
+          tar -czf cert-tree-linux-x86_64.tar.gz cert-tree-linux-x86_64/
 
       - name: Upload .tar.gz artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert_tree-linux-x86_64.tar.gz
-          path: cert_tree-linux-x86_64.tar.gz
+          name: cert-tree-linux-x86_64.tar.gz
+          path: cert-tree-linux-x86_64.tar.gz
 
   build-macos-intel:
     name: Build for macOS Intel
@@ -53,20 +53,20 @@ jobs:
         run: cargo build --release
 
       - name: Strip binary
-        run: strip target/release/cert_tree
+        run: strip target/release/cert-tree
 
       - name: Create .tar.gz archive
         run: |
-          mkdir -p cert_tree-macos-x86_64
-          cp target/release/cert_tree cert_tree-macos-x86_64/
-          cp README.md LICENSE cert_tree-macos-x86_64/
-          tar -czf cert_tree-macos-x86_64.tar.gz cert_tree-macos-x86_64/
+          mkdir -p cert-tree-macos-x86_64
+          cp target/release/cert-tree cert-tree-macos-x86_64/
+          cp README.md LICENSE cert-tree-macos-x86_64/
+          tar -czf cert-tree-macos-x86_64.tar.gz cert-tree-macos-x86_64/
 
       - name: Upload .tar.gz artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert_tree-macos-x86_64.tar.gz
-          path: cert_tree-macos-x86_64.tar.gz
+          name: cert-tree-macos-x86_64.tar.gz
+          path: cert-tree-macos-x86_64.tar.gz
 
   build-macos-arm:
     name: Build for macOS ARM
@@ -83,20 +83,20 @@ jobs:
         run: cargo build --release
 
       - name: Strip binary
-        run: strip target/release/cert_tree
+        run: strip target/release/cert-tree
 
       - name: Create .tar.gz archive
         run: |
-          mkdir -p cert_tree-macos-aarch64
-          cp target/release/cert_tree cert_tree-macos-aarch64/
-          cp README.md LICENSE cert_tree-macos-aarch64/
-          tar -czf cert_tree-macos-aarch64.tar.gz cert_tree-macos-aarch64/
+          mkdir -p cert-tree-macos-aarch64
+          cp target/release/cert-tree cert-tree-macos-aarch64/
+          cp README.md LICENSE cert-tree-macos-aarch64/
+          tar -czf cert-tree-macos-aarch64.tar.gz cert-tree-macos-aarch64/
 
       - name: Upload .tar.gz artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert_tree-macos-aarch64.tar.gz
-          path: cert_tree-macos-aarch64.tar.gz
+          name: cert-tree-macos-aarch64.tar.gz
+          path: cert-tree-macos-aarch64.tar.gz
 
   build-rpm-centos:
     name: Build RPM for CentOS
@@ -118,18 +118,18 @@ jobs:
           . $HOME/.cargo/env
           cargo build --release
       - name: Strip binary
-        run: strip target/release/cert_tree
+        run: strip target/release/cert-tree
       - name: Build .rpm package
         run: |
           . $HOME/.cargo/env
           cargo generate-rpm
           VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          mv target/generate-rpm/cert_tree-${VERSION}-1.x86_64.rpm \
-            target/generate-rpm/cert_tree-centos-${VERSION}-1.x86_64.rpm
+          mv target/generate-rpm/cert-tree-${VERSION}-1.x86_64.rpm \
+            target/generate-rpm/cert-tree-centos-${VERSION}-1.x86_64.rpm
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert_tree-centos-x86_64.rpm
+          name: cert-tree-centos-x86_64.rpm
           path: target/generate-rpm/*.rpm
 
   build-rpm-rocky:
@@ -152,18 +152,18 @@ jobs:
           . $HOME/.cargo/env
           cargo build --release
       - name: Strip binary
-        run: strip target/release/cert_tree
+        run: strip target/release/cert-tree
       - name: Build .rpm package
         run: |
           . $HOME/.cargo/env
           cargo generate-rpm
           VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          mv target/generate-rpm/cert_tree-${VERSION}-1.x86_64.rpm \
-            target/generate-rpm/cert_tree-rocky-${VERSION}-1.x86_64.rpm
+          mv target/generate-rpm/cert-tree-${VERSION}-1.x86_64.rpm \
+            target/generate-rpm/cert-tree-rocky-${VERSION}-1.x86_64.rpm
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert_tree-rocky-x86_64.rpm
+          name: cert-tree-rocky-x86_64.rpm
           path: target/generate-rpm/*.rpm
 
   build-rpm-alma:
@@ -186,18 +186,18 @@ jobs:
           . $HOME/.cargo/env
           cargo build --release
       - name: Strip binary
-        run: strip target/release/cert_tree
+        run: strip target/release/cert-tree
       - name: Build .rpm package
         run: |
           . $HOME/.cargo/env
           cargo generate-rpm
           VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          mv target/generate-rpm/cert_tree-${VERSION}-1.x86_64.rpm \
-            target/generate-rpm/cert_tree-alma-${VERSION}-1.x86_64.rpm
+          mv target/generate-rpm/cert-tree-${VERSION}-1.x86_64.rpm \
+            target/generate-rpm/cert-tree-alma-${VERSION}-1.x86_64.rpm
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert_tree-alma-x86_64.rpm
+          name: cert-tree-alma-x86_64.rpm
           path: target/generate-rpm/*.rpm
 
   build-deb-debian:
@@ -220,18 +220,18 @@ jobs:
           . $HOME/.cargo/env
           cargo build --release
       - name: Strip binary
-        run: strip target/release/cert_tree
+        run: strip target/release/cert-tree
       - name: Build .deb package
         run: |
           . $HOME/.cargo/env
           cargo deb
           VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
           mv target/debian/cert-tree_${VERSION}-1_amd64.deb \
-            target/debian/cert_tree-debian-${VERSION}-1_amd64.deb
+            target/debian/cert-tree-debian-${VERSION}-1_amd64.deb
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert_tree-debian-x86_64.deb
+          name: cert-tree-debian-x86_64.deb
           path: target/debian/*.deb
 
   build-deb-ubuntu:
@@ -254,18 +254,18 @@ jobs:
           . $HOME/.cargo/env
           cargo build --release
       - name: Strip binary
-        run: strip target/release/cert_tree
+        run: strip target/release/cert-tree
       - name: Build .deb package
         run: |
           . $HOME/.cargo/env
           cargo deb
           VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
           mv target/debian/cert-tree_${VERSION}-1_amd64.deb \
-            target/debian/cert_tree-ubuntu-${VERSION}-1_amd64.deb
+            target/debian/cert-tree-ubuntu-${VERSION}-1_amd64.deb
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert_tree-ubuntu-x86_64.deb
+          name: cert-tree-ubuntu-x86_64.deb
           path: target/debian/*.deb
 
   release:
@@ -329,43 +329,43 @@ jobs:
           Choose the right package for your system:
 
           ### 🐧 Linux
-          - **Binary**: \`cert_tree-linux-x86_64.tar.gz\` (Universal Linux binary)
+          - **Binary**: \`cert-tree-linux-x86_64.tar.gz\` (Universal Linux binary)
           - **RPM Packages**:
-            - CentOS/RHEL: \`cert_tree-centos-x86_64.rpm\`
-            - Rocky Linux: \`cert_tree-rocky-x86_64.rpm\`
-            - Alma Linux: \`cert_tree-alma-x86_64.rpm\`
+            - CentOS/RHEL: \`cert-tree-centos-x86_64.rpm\`
+            - Rocky Linux: \`cert-tree-rocky-x86_64.rpm\`
+            - Alma Linux: \`cert-tree-alma-x86_64.rpm\`
           - **DEB Packages**:
-            - Debian: \`cert_tree-debian-x86_64.deb\`
-            - Ubuntu: \`cert_tree-ubuntu-x86_64.deb\`
+            - Debian: \`cert-tree-debian-x86_64.deb\`
+            - Ubuntu: \`cert-tree-ubuntu-x86_64.deb\`
 
           ### 🍎 macOS
-          - **Intel**: \`cert_tree-macos-x86_64.tar.gz\`
-          - **Apple Silicon**: \`cert_tree-macos-aarch64.tar.gz\`
+          - **Intel**: \`cert-tree-macos-x86_64.tar.gz\`
+          - **Apple Silicon**: \`cert-tree-macos-aarch64.tar.gz\`
 
           ## 🚀 Quick Start
 
           ### From Binary (All Platforms)
           \`\`\`bash
           # Download and extract
-          tar -xzf cert_tree-*-x86_64.tar.gz
-          cd cert_tree-*
+          tar -xzf cert-tree-*-x86_64.tar.gz
+          cd cert-tree-*
 
           # Make executable and run
-          chmod +x cert_tree
-          ./cert_tree --help
+          chmod +x cert-tree
+          ./cert-tree --help
           \`\`\`
 
           ### From Package Managers
 
           **Ubuntu/Debian:**
           \`\`\`bash
-          sudo dpkg -i cert_tree-ubuntu-*.deb
+          sudo dpkg -i cert-tree-ubuntu-*.deb
           cert-tree --help
           \`\`\`
 
           **CentOS/RHEL/Rocky/Alma:**
           \`\`\`bash
-          sudo rpm -i cert_tree-centos-*.rpm
+          sudo rpm -i cert-tree-centos-*.rpm
           cert-tree --help
           \`\`\`
 
@@ -408,6 +408,6 @@ jobs:
           files: artifacts/**/*
           body_path: release_notes.md
           tag_name: ${{ github.ref }}
-          name: cert_tree ${{ github.ref_name }}
+          name: cert-tree ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

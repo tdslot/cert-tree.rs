@@ -204,8 +204,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "cert_tree"
-version = "0.14.6"
+name = "cert-tree"
+version = "0.14.7"
 dependencies = [
  "anyhow",
  "chrono",

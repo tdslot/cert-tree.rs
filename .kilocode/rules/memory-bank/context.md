@@ -2,13 +2,20 @@
 
 ## Current Work Focus
 - **Project Status**: Complete and fully functional with automated release process
-- **Last Major Update**: Enhanced release process with beautiful, user-friendly release notes (v0.14.6)
+- **Last Major Update**: Project standardization and metadata corrections (v0.14.7)
 - **Current Phase**: Production ready with professional release automation
 - **Code Quality**: Comprehensive code review applied with Microsoft Rust Guidelines
 - **Documentation Status**: README.md and release process documentation fully updated
 - **Memory Bank Status**: Updated and synchronized with current project state
 
 ## Recent Changes
+- ✅ **Completed**: Project Standardization: Corrected binary name from `cert_tree` to `cert-tree` for consistency
+- ✅ **Completed**: Repository URL Corrections: Updated all repository URLs from `tadas` to `tdslot` across all files and documentation
+- ✅ **Completed**: Author Information Update: Updated author name to "Tadas Lotužas" and email to "tdslot@gmail.com"
+- ✅ **Completed**: Help Output Enhancement: Added repository URL to `--help` output for better user discoverability
+- ✅ **Completed**: Version updated to 0.14.7 according to semver methodology (PATCH version for standardization fixes)
+- ✅ **Completed**: CHANGELOG.md updated with release notes for v0.14.7
+- ✅ **Completed**: Memory bank synchronized with latest project state
 - ✅ **Completed**: Enhanced Release Process: Completely redesigned release workflow with beautiful, user-friendly release notes
 - ✅ **Completed**: Automated Release Notes Generation: GitHub Actions now generates professional release notes with emojis, installation instructions, and clear formatting
 - ✅ **Completed**: Platform-Specific Installation Guides: Added detailed installation instructions for all supported platforms (Linux binary, RPM, DEB, macOS)

@@ -11,7 +11,7 @@ release_dir := target_dir + "/release"
 debug_dir := target_dir + "/debug"
 
 # Binary names
-binary_name := "cert_tree"
+binary_name := "cert-tree"
 binary_path := release_dir + "/" + binary_name
 binary_path_debug := debug_dir + "/" + binary_name
 

@@ -1,18 +1,18 @@
 [package]
-name = "cert_tree"
-version = "0.14.6"
+name = "cert-tree"
+version = "0.14.7"
 edition = "2021"
 license = "MIT"
 description = "A command-line utility written in Rust for inspecting and displaying X.509 certificates in a human-readable tree format"
-authors = ["Tadas"]
-homepage = "https://github.com/tadas/cert-tree.rs"
-repository = "https://github.com/tadas/cert-tree.rs"
+authors = ["Tadas Lotužas <tdslot@gmail.com>"]
+homepage = "https://github.com/tdslot/cert-tree.rs"
+repository = "https://github.com/tdslot/cert-tree.rs"
 readme = "README.md"
 keywords = ["certificate", "x509", "cli", "security", "tls"]
 categories = ["command-line-utilities", "development-tools"]
 [package.metadata.generate-rpm]
 assets = [
-  { source = "target/release/cert_tree", dest = "/usr/bin/cert_tree", mode = "755" },
+  { source = "target/release/cert-tree", dest = "/usr/bin/cert-tree", mode = "755" },
 ]
 
 [dependencies]

@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.7] - 2025-09-23
+
+### Fixed
+- **Project Naming Standardization**: Corrected binary name from `cert_tree` to `cert-tree` (with hyphens) for consistency
+- **Repository URL Corrections**: Updated all repository URLs from `tadas` to `tdslot` across all files and documentation
+- **Author Information**: Updated author name to "Tadas Lotužas" and email to "tdslot@gmail.com"
+- **Help Output Enhancement**: Added repository URL to `--help` output for better user discoverability
+
+### Changed
+- **Cargo.toml**: Updated package name, author information, and repository URLs
+- **README.md**: Corrected all repository links and installation instructions
+- **LICENSE**: Updated copyright holder name
+- **CLI Help**: Enhanced help output with repository information
+
+### Technical
+- **Binary Naming**: Standardized binary name to use hyphens instead of underscores
+- **URL Consistency**: Ensured all repository references point to correct GitHub URL
+- **Author Metadata**: Proper author attribution in package metadata
+
+## [0.14.6] - 2025-09-23
+
+### Fixed
+- **Repository URL Corrections**: Updated repository URLs from `tadas` to `tdslot` across documentation
+- **Original Project Reference**: Corrected URL for original cert_tree project to use underscores
+
 ## [0.14.5] - 2025-09-23
 
 ### Added

@@ -32,22 +32,22 @@ A command-line utility for inspecting X.509 certificates in a tree-like structur
 ### From Source
 
 ```bash
-git clone https://github.com/tadas/cert-tree.rs
+git clone https://github.com/tdslot/cert-tree.rs
 cd cert-tree.rs
 cargo build --release
 ```
 
-The binary will be available at `target/release/cert_tree`.
+The binary will be available at `target/release/cert-tree`.
 
 ### Using Cargo
 
 ```bash
-cargo install --git https://github.com/tadas/cert-tree.rs cert_tree
+cargo install --git https://github.com/tdslot/cert-tree.rs cert-tree
 ```
 
 ### From GitHub Releases
 
-Download pre-built binaries for your platform from the [GitHub Releases](https://github.com/tadas/cert-tree.rs/releases) page.
+Download pre-built binaries for your platform from the [GitHub Releases](https://github.com/tdslot/cert-tree.rs/releases) page.
 
 Releases are automatically built and published via GitHub Actions when version tags are pushed.
 
@@ -264,36 +264,36 @@ The Justfile ensures that all team members use consistent commands and configura
 
 ```bash
 # Inspect a certificate file
-cert_tree --file certificate.pem
+cert-tree --file certificate.pem
 
 # Inspect certificate chain from HTTPS website (TLS handshake)
-cert_tree --url https://example.com
+cert-tree --url https://example.com
 
 # Inspect a certificate from a direct URL
-cert_tree --url https://example.com/certificate.pem
+cert-tree --url https://example.com/certificate.pem
 ```
 
 ### Output Formats
 
 ```bash
 # Text mode (default - non-interactive)
-cert_tree --file cert.pem
+cert-tree --file cert.pem
 
 # Interactive TUI with colors
-cert_tree --file cert.pem --interactive
+cert-tree --file cert.pem --interactive
 
 # Text mode for certificate chains (explicit)
-cert_tree --file cert-chain.pem --text
+cert-tree --file cert-chain.pem --text
 ```
 
 ### Certificate Chain Examples
 
 ```bash
 # Display certificate chain from HTTPS website
-cert_tree --url https://github.com --text
+cert-tree --url https://github.com --text
 
 # Display certificate chain in text format
-cert_tree --file ca_list.pem --text
+cert-tree --file ca_list.pem --text
 ```
 
 Output:
@@ -312,7 +312,7 @@ Output:
 
 ```bash
 # Interactive TUI for certificate chains
-cert_tree --file ca_list.pem --interactive
+cert-tree --file ca_list.pem --interactive
 ```
 *TUI mode provides color-coded display with interactive navigation*
 
@@ -330,7 +330,7 @@ cert_tree --file ca_list.pem --interactive
 The TUI (Terminal User Interface) mode provides a beautiful, color-coded display of certificate information with advanced navigation features:
 
 ```bash
-cert_tree --file cert.pem --interactive
+cert-tree --file cert.pem --interactive
 ```
 
 ### Color Coding
@@ -366,7 +366,7 @@ cert_tree --file cert.pem --interactive
 ### Inspect a single certificate (text mode)
 
 ```bash
-cert_tree --file certificate.pem --text
+cert-tree --file certificate.pem --text
 ```
 
 Output:
