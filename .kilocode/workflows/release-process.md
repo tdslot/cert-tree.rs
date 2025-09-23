@@ -69,18 +69,85 @@ just run-test-cert-release  # Test release binary with sample certificates
 just version  # Verify version is correctly updated
 ```
 
-### 5. Update Memory Bank
+### 5. Update Documentation
 
-Update `context.md` in the memory bank with the new version and completed changes:
+**Critical Step**: Ensure all documentation accurately reflects the current functionality and options.
 
-```markdown
-## Recent Changes
-- ✅ **Completed**: [Description of changes]
-- ✅ **Completed**: Updated version to 0.15.0 according to semver methodology
-- ✅ **Completed**: CHANGELOG.md updated with release notes for v0.15.0
+#### Documentation Checklist
+- [ ] **README.md**: Update version badge and feature descriptions
+- [ ] **CLI Options**: Verify all command-line options match implementation
+- [ ] **Usage Examples**: Test all examples work with current version
+- [ ] **Installation Instructions**: Confirm all installation methods work
+- [ ] **Feature Descriptions**: Ensure all advertised features are implemented
+- [ ] **Platform Support**: Verify documented platforms match build matrix
+- [ ] **Dependencies**: Update dependency list if changed
+- [ ] **Screenshots/Demos**: Update if UI has changed
+
+#### Key Documentation Files to Update
+- `README.md` - Main user documentation
+- `CHANGELOG.md` - Already updated in step 3
+- `.kilocode/workflows/release-process.md` - This file (if process changed)
+- Any API documentation or man pages
+
+#### Documentation Verification Commands
+```bash
+# Test CLI help output matches documentation
+just run-release --help
+
+# Verify version information
+just version
+
+# Test documented examples
+just run-test-cert-text
+just run-test-cert-tui
+
+# Check for broken links (if applicable)
+# Verify installation instructions work
 ```
 
-### 6. Commit Version Changes
+**Important**: Never release with outdated or incorrect documentation. Users rely on documentation to understand how to use the software correctly.
+
+### 6. Update Memory Bank
+
+**Critical Step**: Update the memory bank to maintain project continuity and context.
+
+#### Memory Bank Files to Update
+- `.kilocode/rules/memory-bank/context.md` - Current work focus and recent changes
+- `.kilocode/rules/memory-bank/product.md` - If product description changed
+- `.kilocode/rules/memory-bank/architecture.md` - If architecture changed
+- `.kilocode/rules/memory-bank/tech.md` - If technology stack changed
+
+#### Context.md Update Template
+```markdown
+## Current Work Focus
+- **Project Status**: [Current status]
+- **Last Major Update**: [Latest significant change] (v[new_version])
+- **Current Phase**: [Development/Production/Maintenance phase]
+- **Code Quality**: [Current quality metrics]
+- **Documentation Status**: [Documentation state]
+- **Memory Bank Status**: Updated and synchronized
+
+## Recent Changes
+- ✅ **Completed**: [Major change 1 description]
+- ✅ **Completed**: [Major change 2 description]
+- ✅ **Completed**: Updated version to [new_version] according to semver methodology
+- ✅ **Completed**: CHANGELOG.md updated with release notes for v[new_version]
+- ✅ **Completed**: Documentation updated to match current functionality
+- ✅ **Completed**: Memory bank synchronized with latest project state
+```
+
+#### Memory Bank Verification
+```bash
+# Check memory bank files exist and are current
+ls -la .kilocode/rules/memory-bank/
+
+# Verify context.md reflects current state
+cat .kilocode/rules/memory-bank/context.md
+```
+
+**Important**: The memory bank is the source of truth for project context. Never release without updating it to maintain continuity for future development sessions.
+
+### 7. Commit Version Changes
 
 Create a commit for the version update:
 
@@ -339,17 +406,72 @@ The automated workflow handles:
 
 **No manual intervention required** after pushing the tag - the entire distribution process is automated.
 
+## Documentation Maintenance
+
+### Documentation Accuracy Principles
+
+**Documentation must always reflect the actual functionality** to prevent user confusion and support issues.
+
+#### Key Documentation Areas
+- **CLI Interface**: Command-line options, flags, and behavior
+- **Features**: What the software actually does vs. what documentation claims
+- **Installation**: All supported installation methods and platforms
+- **Examples**: Working code examples that users can copy-paste
+- **Version Information**: Current version numbers and compatibility
+- **Dependencies**: Required and optional dependencies
+
+#### Documentation Update Triggers
+- [ ] New features implemented
+- [ ] CLI options changed or added
+- [ ] Installation methods modified
+- [ ] Dependencies updated
+- [ ] Platform support changed
+- [ ] Bug fixes that affect user behavior
+- [ ] Security changes
+- [ ] Breaking changes
+
+#### Documentation Quality Checks
+```bash
+# Verify CLI matches documentation
+just run-release --help | grep -E "(file|url|interactive|text)"
+
+# Test documented examples
+just run-test-cert-text  # Should work as documented
+just run-test-cert-tui   # Should work as documented
+
+# Check version consistency
+just version  # Should match README badge
+```
+
+### Documentation as Code
+
+Treat documentation as code with the same quality standards:
+- **Version control**: Documentation changes committed with code
+- **Review process**: Documentation reviewed during code review
+- **Testing**: Examples tested as part of CI/CD
+- **Accuracy**: Documentation verified before releases
+
 ## Quality Assurance
 
 ### Pre-Release Checklist
 
 - [ ] Version updated in `Cargo.toml`
 - [ ] CHANGELOG.md updated with release notes
+- [ ] **Documentation updated and verified**:
+  - [ ] README.md version badge updated
+  - [ ] CLI options match implementation (`just run-release --help`)
+  - [ ] Usage examples tested and working
+  - [ ] Installation instructions verified
+  - [ ] Feature descriptions accurate
+  - [ ] Platform support matches build matrix
 - [ ] All tests pass (`just test`)
 - [ ] Code formatting correct (`just fmt`)
 - [ ] No clippy warnings (`just clippy`)
 - [ ] Release binary tested (`just run-test-cert-release`)
-- [ ] Memory bank updated
+- [ ] **Memory bank updated**:
+  - [ ] context.md updated with current work focus and recent changes
+  - [ ] All relevant memory bank files synchronized
+  - [ ] Project state accurately reflected
 - [ ] Version changes committed
 
 ### Post-Release Checklist
@@ -358,7 +480,12 @@ The automated workflow handles:
 - [ ] Release created in GitHub Releases
 - [ ] All artifacts present and downloadable
 - [ ] Release notes display correctly
-- [ ] Version badges updated (if applicable)
+- [ ] **Documentation verification**:
+  - [ ] Version badges updated in README.md
+  - [ ] GitHub release links work correctly
+  - [ ] Installation instructions are current
+  - [ ] No broken links in documentation
+  - [ ] Community links (issues, discussions) are accessible
 
 ## Troubleshooting
 
