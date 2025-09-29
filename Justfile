@@ -281,7 +281,7 @@ release: prepare-release release-archive
 release-github:
     @echo "📝 Staging and committing release workflow updates..."
     git add .github/workflows/release.yml Justfile Cargo.toml
-    git commit -m "chore: update release workflow and Justfile for v{{version}}"
+    git commit -m "chore: update release workflow and Justfile for v{{version}}" || true
     git push
     @echo "🏷️ Cleaning up any existing release tags to avoid conflicts..."
     git tag -d v{{version}} || true

@@ -58,8 +58,7 @@ fn build_tree_node(
         for subject in issued_certs.iter() {
             if let Some(child_cert) = cert_map.get(subject) {
                 if !processed.contains(subject) {
-                    let child_node =
-                        build_tree_node(child_cert, cert_map, issuer_map, processed);
+                    let child_node = build_tree_node(child_cert, cert_map, issuer_map, processed);
                     children.push(child_node);
                 }
             }

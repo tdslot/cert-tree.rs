@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.8] - 2025-09-29
+
+### Changed
+- **Code Reorganization**: Restructured codebase into separate modules (cli, display, error, io, models, parser, tree) for better organization and maintainability
+- **Code Cleanup**: Removed unused imports, variables, functions, and dependencies to improve code quality and reduce compilation time
+- **Fixed Compilation Errors**: Resolved module import issues and parsing method calls after reorganization
+- **Improved Code Structure**: Enhanced separation of concerns with dedicated modules for different functionality areas
+- **Dependency Management**: Added 'pem' crate for PEM parsing and removed unused dependencies
+
+### Technical
+- **Module Structure**: Created dedicated modules for CLI parsing, display logic, error handling, I/O operations, data models, certificate parsing, and tree building
+- **Import Cleanup**: Removed unused imports from all modules (CertError, ValidationStatus, Arc, HashMap, etc.)
+- **Function Cleanup**: Removed unused functions (load_certificate_from_url, parse_certificate, display_tree)
+- **Struct Cleanup**: Removed unused fields (index from CertificateNode, CrlParse from CertError)
+- **Code Quality**: Applied comprehensive cleanup following Rust best practices and project guidelines
+
 ## [0.14.7] - 2025-09-23
 
 ### Fixed
