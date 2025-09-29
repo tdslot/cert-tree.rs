@@ -28,6 +28,7 @@ chrono = "0.4"
 rustls = "0.21"
 webpki-roots = "0.25"
 url = "2.4"
+pem = "3.0"
 mimalloc = { version = "0.1", default-features = false }
 [lints.clippy]
 # Enable additional Clippy lints for better code quality
