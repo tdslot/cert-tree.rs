@@ -1,6 +1,6 @@
 [package]
 name = "cert-tree"
-version = "0.14.7"
+version = "0.14.8"
 edition = "2021"
 license = "MIT"
 description = "A command-line utility written in Rust for inspecting and displaying X.509 certificates in a human-readable tree format"
