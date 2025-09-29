@@ -1,6 +1,9 @@
 # Software Development Workflow Rules
 
-This document outlines the comprehensive workflow guidelines for the cert-tree.rs project, incorporating industry best practices for Rust development, version control, testing, and release management.
+This document outlines the comprehensive workflow guidelines for the cert-tree.rs project, incorporating industry best practices for Rust development, version control, testing, and release management. It merges general development processes with detailed Git workflow strategies based on an adapted Git Flow model (from nvie/gitflow) combined with GitHub Flow and Trunk-Based Development elements, suitable for small teams or solo development.
+
+**Version:** 2.0 (Merged Git Workflow v1.0 on 2025-09-29)  
+**Date:** 2025-09-29  
 
 ## Core Principles
 
@@ -24,7 +27,7 @@ This document outlines the comprehensive workflow guidelines for the cert-tree.r
 - Add body for complex changes explaining what and why
 - Include breaking change footers when applicable
 
-### 3. Justfile Automation
+### 4. Justfile Automation
 - Use justfile recipes for all repetitive development tasks
 - Prefer justfile commands over manual CLI invocations
 - Keep justfile updated with new workflows and recipes
@@ -148,7 +151,6 @@ This document outlines the comprehensive workflow guidelines for the cert-tree.r
    - Verify error handling for malformed certificates
 
 ### Test Automation
-
 ```bash
 just test            # Run all tests
 just test-verbose    # Run tests with output
@@ -159,27 +161,256 @@ just run-test-cert-tui   # Test TUI mode
 
 ## Version Control
 
-### Git Workflow
+### Git Workflow Overview
+These guidelines establish a consistent Git workflow using a hybrid approach based on Git Flow (adapted from nvie/gitflow) with elements of GitHub Flow and Trunk-Based Development. This balances structure with simplicity for small teams or solo development.
 
-1. **Branching Strategy**
-   - Use feature branches for new development
-   - Keep main branch stable and releasable
-   - Use descriptive branch names
+- **Main Branch**: Production-ready code (stable releases).
+- **Develop Branch**: Ongoing development integration.
+- **Short-lived Feature/Fix Branches**: For isolated work, merged via PRs.
 
-2. **Commit Standards**
-   - Use the [commit message generator](commit-message-generator-with-gitmojis.md) to create conventional commits with gitmojis
-   - Follow gitmoji ↔ conventional commits mapping for appropriate emoji and type selection
-   - Include scope when applicable and keep descriptions imperative and concise
-   - Reference issue numbers when applicable
-   - Keep commits focused and atomic
+This promotes clean history with conventional commits, peer review via PRs, protected branches, and semantic versioning for releases.
 
-3. **Pull Requests**
-   - Create PRs for significant changes
-   - Include description of changes
-   - Request review from team members
+**Tools Assumed:** GitHub (with Actions for CI/CD), VS Code/Git CLI. Enforce via repository settings: Protect `main` and `develop` (require PRs, no direct pushes).
+
+### Branching Strategy
+
+#### Main Branch
+- **Purpose**: Reserved for stable, production-ready code. Represents the latest release. Only merge completed, tested features/fixes via PRs after QA, reviews, and CI/CD success.
+- **Rules**:
+  - No direct pushes; all changes via PR from `develop` or hotfix branches.
+  - Tagged with semantic versions (e.g., `v0.14.7`).
+  - Never commit unfinished work or experiments here.
+- **When to Use**: Post-release stabilization.
+
+#### Develop Branch
+- **Purpose**: Integration branch for all ongoing work. Acts as the "source of truth" for the latest development state. Daily commits, incremental changes, and non-production code go here.
+- **Rules**:
+  - Branch from `main` for new development cycles.
+  - Merge feature/fix branches via PRs.
+  - Prepare releases by branching from `develop`.
+  - Rebase frequently to keep in sync with `main`.
+- **When to Use**: Daily development; sync with `main` after releases.
+
+#### Feature Branches (feat/*)
+- **Purpose**: Implement new features without disrupting `develop`.
+- **Naming**: `feat/<descriptive-name>` (e.g., `feat/crl-support`, `feat/tui-navigation`).
+- **Workflow**:
+  1. Branch from `develop`: `git checkout -b feat/user-authentication develop`.
+  2. Commit with conventional messages.
+  3. Implement, test locally (`cargo test`, `cargo clippy`).
+  4. Push and create PR to `develop`.
+  5. Merge via squash/rebase after review/CI.
+  6. Delete branch post-merge: `git branch -d feat/user-authentication`.
+- **Rules**: Short-lived (1-3 days); no merges into `main` directly.
+
+#### Fix Branches (fix/*)
+- **Purpose**: Bug fixes or hotfixes.
+- **Naming**: `fix/<descriptive-name>` (e.g., `fix/login-crash`, `fix/memory-leak`).
+- **Workflow**:
+  - For non-urgent fixes: Branch from `develop`, merge to `develop`.
+  - For production hotfixes: Branch from `main`, merge to `main`, then PR `main` → `develop` to sync.
+  1. Branch: `git checkout -b fix/certificate-parsing develop` (or `main` for hotfix).
+  2. Fix, test, commit.
+  3. PR to target branch (`develop` or `main`).
+  4. For hotfixes: After merging to `main`, create PR `main` → `develop`.
+  5. Delete branch.
+- **Rules**: Urgent fixes to `main` only if breaking production; otherwise, to `develop`.
+
+#### Release Branches (release/*)
+- **Purpose**: Stabilize code for release from `develop`.
+- **Naming**: `release/v<major>.<minor>.<patch>` (e.g., `release/v0.14.0`).
+- **Workflow**:
+  1. Branch from `develop`: `git checkout -b release/v0.14.0 develop`.
+  2. Update version in `Cargo.toml`, finalize changelog, fix minor issues.
+  3. Tag and merge to `main`: `git checkout main; git merge --no-ff release/v0.14.0; git tag v0.14.0`.
+  4. Merge back to `develop`: `git checkout develop; git merge --no-ff release/v0.14.0`.
+  5. Delete branch.
+- **Rules**: No new features; only bug fixes and metadata.
+
+#### Other Branches
+- **Hotfix**: Use `fix/*` from `main` for critical production issues.
+- **Experimental**: Use personal forks/branches; never merge to protected branches without PR.
+
+### Commit Standards
+- Use the [commit message generator](commit-message-generator-with-gitmojis.md) to create conventional commits with gitmojis.
+- Follow gitmoji ↔ conventional commits mapping for appropriate emoji and type selection.
+- Include scope when applicable and keep descriptions imperative and concise.
+- Reference issue numbers when applicable.
+- Keep commits focused and atomic.
+
+**Format**: `<type>[optional scope]: <description>`
+- **Types**:
+  - `feat`: New feature (e.g., `feat(tui): add navigation keys` → MINOR version).
+  - `fix`: Bug fix (e.g., `fix(parser): handle malformed PEM` → PATCH).
+  - `docs`: Documentation (no version bump).
+  - `style`: Formatting (no bump).
+  - `refactor`: Code changes without behavior shift (no bump).
+  - `perf`: Performance improvements (PATCH).
+  - `test`: Tests (no bump).
+  - `chore`: Maintenance (e.g., `chore(deps): update x509-parser` → PATCH if breaking).
+  - `BREAKING CHANGE`: In body/footer for major changes.
+- **Examples**:
+  ```
+  feat(crl): implement revocation checking
+
+  Add CRL distribution point extraction and status display.
+  Resolves #42.
+  ```
+- **Tools**: Use `git commit` with templates or Husky/pre-commit hooks (add via Justfile if needed).
+
+### Pull Requests
+- **Mandatory**: All merges to `main`/`develop` via PRs. No direct pushes.
+- **Process**:
+  1. Create PR from feature/fix to target (e.g., `develop`).
+  2. Link to issues: `Closes #123`.
+  3. Include: Description, changes, testing instructions, screenshots if UI.
+  4. Require: At least 1 approval, CI/CD pass (lint, tests, security via GitHub Actions).
+  5. Options: Squash (clean history) or rebase+merge (preserve commits).
+  6. Post-merge: Update `CHANGELOG.md`, delete source branch.
+- **CI/CD Integration**: Use `.github/workflows/ci.yml` for:
+  - `cargo check`, `cargo test`, `cargo clippy`.
+  - Security: `cargo audit`.
+  - Builds: Cross-compile for platforms.
+- **Protected Branches**: In repo settings, enforce PRs, require status checks, dismiss stale approvals.
+
+### Collaboration and Best Practices
+- **Issues**: Use GitHub Issues for tasks/bugs. Label: `feature`, `bug`, `enhancement`.
+- **Linking**: Reference issues in commits/PRs (e.g., `Fixes #42`).
+- **Rebasing**: Regularly `git rebase develop` on feature branches to avoid conflicts.
+- **Daily Workflow**:
+  - `git pull origin develop` before starting.
+  - Commit often, push frequently.
+  - Resolve conflicts locally before PR.
+- **Tools**:
+  - GitHub/GitLab for PRs/issues.
+  - VS Code GitLens for visualization.
+  - `git log --graph` for history.
+- **Team Size Adaptation**: For solo dev, simplify by skipping formal reviews but keep PRs for CI. For teams, require 2+ approvals.
+
+### Examples
+
+#### Basic Commands
+```
+# Start feature
+git checkout develop
+git pull origin develop
+git checkout -b feat/new-extension develop
+
+# Commit
+git add .
+git commit -m "feat(extensions): add OID mapping support"
+
+# Push and PR
+git push origin feat/new-extension
+# Create PR on GitHub to develop
+
+# Merge (after approval)
+git checkout develop
+git pull origin develop
+git merge --no-ff feat/new-extension  # Or use GitHub UI
+
+# Delete
+git branch -d feat/new-extension
+git push origin --delete feat/new-extension
+```
+
+#### Hotfix Example
+```
+# Production bug
+git checkout main
+git pull origin main
+git checkout -b fix/critical-crash main
+
+# Fix and commit
+git commit -m "fix(security): patch buffer overflow"
+
+# PR to main, merge, then:
+git checkout develop
+git pull origin develop
+git merge main  # Or PR main -> develop
+```
+
+#### Branch Diagram (Mermaid)
+```mermaid
+graph TD
+    A[main] -->|release merge| B[develop]
+    B --> C[feat/new-feature]
+    C -->|PR| B
+    B --> D[fix/bug]
+    D -->|PR| B
+    A --> E[hotfix/critical]
+    E -->|PR| A
+    A -->|sync| B
+    B --> F[release/v1.0]
+    F -->|merge| A
+    F -->|merge| B
+```
+
+**ASCII Alternative:**
+```
+main:     *----------------- v1.0 -----------------*
+develop:  *--feat1--fix1--feat2--release/v1.0--*
+feat1:         /--merge--\
+hotfix:    *--fix--\                   /--sync--*
+```
+
+### Troubleshooting
+
+#### Merge Conflicts
+- **Cause**: Divergent changes.
+- **Fix**:
+  1. `git fetch origin`.
+  2. `git rebase develop` (or target branch).
+  3. Edit conflicted files, `git add .`.
+  4. `git rebase --continue`.
+  5. Force-push if needed: `git push --force-with-lease`.
+- **Tip**: Use `git mergetool` or VS Code resolver.
+
+#### Branch Divergence
+- **Issue**: `develop` and `main` out of sync.
+- **Fix**: After hotfix to `main`, PR `main` → `develop` and merge.
+
+#### Large PRs
+- **Avoid**: Break into smaller features.
+- **Tip**: Use `git cherry-pick` for splitting.
+
+#### Forgotten Rebase
+- **Symptom**: Many conflicts in PR.
+- **Fix**: Rebase source branch before final push.
+
+#### Protected Branch Push Rejected
+- **Fix**: Create PR instead of direct push.
+
+### Onboarding and Training
+
+#### For New Contributors
+1. **Read This Doc**: Review branching, commits, PRs.
+2. **Setup**:
+   - Fork/clone repo: `git clone https://github.com/tdslot/cert-tree.rs.git`.
+   - Add upstream: `git remote add upstream https://github.com/tdslot/cert-tree.rs.git`.
+   - Protect local branches: Use `.gitconfig` aliases.
+3. **First Contribution**:
+   - Create issue or comment on existing.
+   - Branch from `develop`, implement small fix.
+   - Submit PR with details.
+4. **Training Exercises**:
+   - **Exercise 1**: Clone, create `feat/hello-world` branch, add a comment to `src/main.rs`, commit with `feat: add example comment`, PR to `develop`.
+   - **Exercise 2**: Resolve a simulated conflict: Edit same line in two branches, merge via rebase.
+   - **Exercise 3**: Tag a mock release: From `develop`, create `release/v0.1.0`, tag, merge to `main`.
+5. **Resources**:
+   - Git Flow Intro: https://nvie.com/posts/a-successful-git-branching-model/
+   - Conventional Commits: https://www.conventionalcommits.org/
+   - Atlassian Guide: https://www.atlassian.com/git/tutorials/comparing-workflows
+   - Project-Specific: Review `CHANGELOG.md` for commit patterns.
+
+#### Updates to Guidelines
+- Version this doc (e.g., v2.1 for changes).
+- Propose updates via PR to this file.
+- Review quarterly or after major project changes.
+
+**Questions?** Open an issue or ask in discussions.
 
 ### Git Automation
-
 ```bash
 just status          # Check git status
 just log            # View recent commits
@@ -229,6 +460,16 @@ just pull           # Pull changes
    - Announce release to community
    - Monitor for issues
 
+**Git-Specific Release Integration**:
+1. Finish features on `develop`.
+2. Create `release/*` branch.
+3. Stabilize: Run full tests, update version/docs.
+4. Merge to `main`, tag: `git tag -a v0.14.0 -m "Release v0.14.0"`.
+5. Merge to `develop`.
+6. Push tags: `git push origin --tags`.
+7. Automate via GitHub Actions (see `.kilocode/workflows/release-process.md` for details).
+- **Versioning**: Follow semver (see `.kilocode/rules/semver.md`): MAJOR for breaks, MINOR for features, PATCH for fixes.
+
 ## Dependency Management
 
 ### Regular Maintenance
@@ -265,7 +506,6 @@ just pull           # Pull changes
    - Architecture documentation
 
 ### Documentation Automation
-
 ```bash
 just doc             # Generate and open documentation
 just doc-build       # Generate documentation
