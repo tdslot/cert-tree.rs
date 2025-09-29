@@ -30,7 +30,6 @@ const SLEEP_MS: u64 = 50;
 /// Starting position for date column in text display
 const DATE_COLUMN_START: usize = 93;
 
-
 pub fn display_verbose(cert: &CertificateInfo) {
     println!("Certificate Information:");
     println!("======================");

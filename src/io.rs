@@ -29,7 +29,6 @@ pub fn load_certificate_from_file(path: &str) -> Result<Vec<u8>, CertError> {
     Ok(data)
 }
 
-
 pub fn fetch_certificate_chain_from_url(url: &str) -> Result<Vec<CertificateInfo>, CertError> {
     // Parse the URL to extract hostname
     let url_parsed = Url::parse(url).map_err(|_| CertError::InvalidFormat)?;

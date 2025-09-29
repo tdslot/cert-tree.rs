@@ -1,8 +1,8 @@
 use crate::error::CertError;
 use crate::models::{CertificateInfo, ExtensionInfo};
 use pem::parse_many;
-use x509_parser::prelude::FromDer;
 use std::str;
+use x509_parser::prelude::FromDer;
 use x509_parser::prelude::X509Certificate;
 
 pub fn extract_cn(subject: &str) -> String {
@@ -90,7 +90,6 @@ pub fn explain_signature_algorithm(alg: &str) -> String {
         "This is a cryptographic signature method that verifies the certificate's authenticity. It uses mathematical algorithms to create a unique digital signature that proves the certificate is legitimate and hasn't been altered. This is crucial for establishing secure and trustworthy connections on the internet.".to_string()
     }
 }
-
 
 pub fn parse_certificate_chain(data: &[u8]) -> Result<Vec<CertificateInfo>, CertError> {
     let mut certificates = Vec::new();

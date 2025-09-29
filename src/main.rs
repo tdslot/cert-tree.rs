@@ -86,12 +86,15 @@ fn main() -> Result<(), Box<dyn Error>> {
 mod tests {
     use super::*;
     use crate::error::CertError;
-    use crate::parser::parse_certificate;
+    use crate::models::{
+        CertificateInfo, CertificateNode, CertificateTree, ValidationStatus, ValidityStatus,
+    };
+    use crate::parser::parse_certificate_chain;
 
     #[test]
-    fn test_parse_certificate_invalid_data() {
+    fn test_parse_certificate_chain_invalid_data() {
         let invalid_data = b"invalid certificate data";
-        let result = parse_certificate(invalid_data);
+        let result = parse_certificate_chain(invalid_data);
         assert!(result.is_err());
     }
 
@@ -133,7 +136,15 @@ mod tests {
 
         // This will print to stdout, but we can't easily test output
         // In a real scenario, we'd capture stdout or use a different approach
-        display::display_tree(&cert, "", true);
+        let tree = CertificateTree {
+            roots: vec![CertificateNode {
+                cert: cert.clone(),
+                children: vec![],
+                validity_status: ValidityStatus::Valid,
+                validation_status: ValidationStatus::Valid,
+            }],
+        };
+        crate::display::display_certificate_tree_text(&tree);
     }
 
     #[test]
