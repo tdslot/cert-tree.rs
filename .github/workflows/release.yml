@@ -26,17 +26,18 @@ jobs:
 
       - name: Create .tar.gz archive
         run: |
-          mkdir -p cert-tree-linux-x86_64
+          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          mkdir -p cert-tree-v${VERSION}-linux-x86_64
           cp target/x86_64-unknown-linux-gnu/release/cert-tree \
-            cert-tree-linux-x86_64/
-          cp README.md LICENSE cert-tree-linux-x86_64/
-          tar -czf cert-tree-linux-x86_64.tar.gz cert-tree-linux-x86_64/
+            cert-tree-v${VERSION}-linux-x86_64/
+          cp README.md LICENSE cert-tree-v${VERSION}-linux-x86_64/
+          tar -czf cert-tree-v${VERSION}-linux-x86_64.tar.gz cert-tree-v${VERSION}-linux-x86_64/
 
       - name: Upload .tar.gz artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-linux-x86_64.tar.gz
-          path: cert-tree-linux-x86_64.tar.gz
+          name: cert-tree-v${{ steps.get_version.outputs.version }}-linux-x86_64.tar.gz
+          path: cert-tree-v${{ steps.get_version.outputs.version }}-linux-x86_64.tar.gz
 
   build-macos-intel:
     name: Build for macOS Intel
@@ -59,16 +60,17 @@ jobs:
 
       - name: Create .tar.gz archive
         run: |
-          mkdir -p cert-tree-macos-x86_64
-          cp target/x86_64-apple-darwin/release/cert-tree cert-tree-macos-x86_64/
-          cp README.md LICENSE cert-tree-macos-x86_64/
-          tar -czf cert-tree-macos-x86_64.tar.gz cert-tree-macos-x86_64/
+          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          mkdir -p cert-tree-v${VERSION}-macos-x86_64
+          cp target/x86_64-apple-darwin/release/cert-tree cert-tree-v${VERSION}-macos-x86_64/
+          cp README.md LICENSE cert-tree-v${VERSION}-macos-x86_64/
+          tar -czf cert-tree-v${VERSION}-macos-x86_64.tar.gz cert-tree-v${VERSION}-macos-x86_64/
 
       - name: Upload .tar.gz artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-macos-x86_64.tar.gz
-          path: cert-tree-macos-x86_64.tar.gz
+          name: cert-tree-v${{ steps.get_version.outputs.version }}-macos-x86_64.tar.gz
+          path: cert-tree-v${{ steps.get_version.outputs.version }}-macos-x86_64.tar.gz
 
   build-macos-arm:
     name: Build for macOS ARM
@@ -91,16 +93,17 @@ jobs:
 
       - name: Create .tar.gz archive
         run: |
-          mkdir -p cert-tree-macos-aarch64
-          cp target/aarch64-apple-darwin/release/cert-tree cert-tree-macos-aarch64/
-          cp README.md LICENSE cert-tree-macos-aarch64/
-          tar -czf cert-tree-macos-aarch64.tar.gz cert-tree-macos-aarch64/
+          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          mkdir -p cert-tree-v${VERSION}-macos-aarch64
+          cp target/aarch64-apple-darwin/release/cert-tree cert-tree-v${VERSION}-macos-aarch64/
+          cp README.md LICENSE cert-tree-v${VERSION}-macos-aarch64/
+          tar -czf cert-tree-v${VERSION}-macos-aarch64.tar.gz cert-tree-v${VERSION}-macos-aarch64/
 
       - name: Upload .tar.gz artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-macos-aarch64.tar.gz
-          path: cert-tree-macos-aarch64.tar.gz
+          name: cert-tree-v${{ steps.get_version.outputs.version }}-macos-aarch64.tar.gz
+          path: cert-tree-v${{ steps.get_version.outputs.version }}-macos-aarch64.tar.gz
 
   build-rpm-centos:
     name: Build RPM for CentOS
