@@ -36,8 +36,8 @@ jobs:
       - name: Upload .tar.gz artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-v${{ steps.get_version.outputs.version }}-linux-x86_64.tar.gz
-          path: cert-tree-v${{ steps.get_version.outputs.version }}-linux-x86_64.tar.gz
+          name: cert-tree-v${VERSION}-linux-x86_64.tar.gz
+          path: cert-tree-v${VERSION}-linux-x86_64.tar.gz
 
   build-macos-intel:
     name: Build for macOS Intel
@@ -69,8 +69,8 @@ jobs:
       - name: Upload .tar.gz artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-v${{ steps.get_version.outputs.version }}-macos-x86_64.tar.gz
-          path: cert-tree-v${{ steps.get_version.outputs.version }}-macos-x86_64.tar.gz
+          name: cert-tree-v${VERSION}-macos-x86_64.tar.gz
+          path: cert-tree-v${VERSION}-macos-x86_64.tar.gz
 
   build-macos-arm:
     name: Build for macOS ARM
@@ -102,8 +102,8 @@ jobs:
       - name: Upload .tar.gz artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-v${{ steps.get_version.outputs.version }}-macos-aarch64.tar.gz
-          path: cert-tree-v${{ steps.get_version.outputs.version }}-macos-aarch64.tar.gz
+          name: cert-tree-v${VERSION}-macos-aarch64.tar.gz
+          path: cert-tree-v${VERSION}-macos-aarch64.tar.gz
 
   build-rpm-centos:
     name: Build RPM for CentOS
@@ -136,7 +136,7 @@ jobs:
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-centos-${{ steps.get_version.outputs.version }}-1.x86_64.rpm
+          name: cert-tree-centos-${VERSION}-1.x86_64.rpm
           path: target/generate-rpm/*.rpm
 
   build-rpm-rocky:
@@ -171,7 +171,7 @@ jobs:
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-rocky-${{ steps.get_version.outputs.version }}-1.x86_64.rpm
+          name: cert-tree-rocky-${VERSION}-1.x86_64.rpm
           path: target/generate-rpm/*.rpm
 
   build-rpm-alma:
@@ -205,7 +205,7 @@ jobs:
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-alma-${{ steps.get_version.outputs.version }}-1.x86_64.rpm
+          name: cert-tree-alma-${VERSION}-1.x86_64.rpm
           path: target/generate-rpm/*.rpm
 
   build-deb-debian:
@@ -239,7 +239,7 @@ jobs:
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-debian-${{ steps.get_version.outputs.version }}-1_amd64.deb
+          name: cert-tree-debian-${VERSION}-1_amd64.deb
           path: target/debian/*.deb
 
   build-deb-ubuntu:
@@ -273,7 +273,7 @@ jobs:
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-ubuntu-${{ steps.get_version.outputs.version }}-1_amd64.deb
+          name: cert-tree-ubuntu-${VERSION}-1_amd64.deb
           path: target/debian/*.deb
 
   release:
@@ -337,7 +337,7 @@ jobs:
           Choose the right package for your system:
 
           ### 🐧 Linux
-          - **Binary**: \`cert-tree-linux-x86_64.tar.gz\` (Universal Linux binary)
+          - **Binary**: \`cert-tree-v${VERSION}-linux-x86_64.tar.gz\` (Universal Linux binary)
           - **RPM Packages**:
             - CentOS/RHEL: \`cert-tree-centos-${VERSION}-1.x86_64.rpm\`
             - Rocky Linux: \`cert-tree-rocky-${VERSION}-1.x86_64.rpm\`
@@ -347,8 +347,8 @@ jobs:
             - Ubuntu: \`cert-tree-ubuntu-${VERSION}-1_amd64.deb\`
 
           ### 🍎 macOS
-          - **Intel**: \`cert-tree-macos-x86_64.tar.gz\`
-          - **Apple Silicon**: \`cert-tree-macos-aarch64.tar.gz\`
+          - **Intel**: \`cert-tree-v${VERSION}-macos-x86_64.tar.gz\`
+          - **Apple Silicon**: \`cert-tree-v${VERSION}-macos-aarch64.tar.gz\`
 
           ## 🚀 Quick Start
 
