@@ -48,17 +48,19 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-apple-darwin
 
       - name: Build release
-        run: cargo build --release
+        run: cargo build --release --target x86_64-apple-darwin
 
       - name: Strip binary
-        run: strip target/release/cert-tree
+        run: strip target/x86_64-apple-darwin/release/cert-tree || true
 
       - name: Create .tar.gz archive
         run: |
           mkdir -p cert-tree-macos-x86_64
-          cp target/release/cert-tree cert-tree-macos-x86_64/
+          cp target/x86_64-apple-darwin/release/cert-tree cert-tree-macos-x86_64/
           cp README.md LICENSE cert-tree-macos-x86_64/
           tar -czf cert-tree-macos-x86_64.tar.gz cert-tree-macos-x86_64/
 
@@ -78,17 +80,19 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
 
       - name: Build release
-        run: cargo build --release
+        run: cargo build --release --target aarch64-apple-darwin
 
       - name: Strip binary
-        run: strip target/release/cert-tree
+        run: strip target/aarch64-apple-darwin/release/cert-tree || true
 
       - name: Create .tar.gz archive
         run: |
           mkdir -p cert-tree-macos-aarch64
-          cp target/release/cert-tree cert-tree-macos-aarch64/
+          cp target/aarch64-apple-darwin/release/cert-tree cert-tree-macos-aarch64/
           cp README.md LICENSE cert-tree-macos-aarch64/
           tar -czf cert-tree-macos-aarch64.tar.gz cert-tree-macos-aarch64/
 
@@ -118,7 +122,7 @@ jobs:
           . $HOME/.cargo/env
           cargo build --release
       - name: Strip binary
-        run: strip target/release/cert-tree
+        run: strip target/release/cert-tree || true
       - name: Build .rpm package
         run: |
           . $HOME/.cargo/env
@@ -139,7 +143,8 @@ jobs:
     steps:
       - name: Install dependencies
         run: |
-          dnf update -y
+          dnf clean all
+          dnf update -y --refresh
           dnf install -y --allowerasing \
             curl gcc make openssl-devel
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
@@ -152,7 +157,7 @@ jobs:
           . $HOME/.cargo/env
           cargo build --release
       - name: Strip binary
-        run: strip target/release/cert-tree
+        run: strip target/release/cert-tree || true
       - name: Build .rpm package
         run: |
           . $HOME/.cargo/env
@@ -186,7 +191,7 @@ jobs:
           . $HOME/.cargo/env
           cargo build --release
       - name: Strip binary
-        run: strip target/release/cert-tree
+        run: strip target/x86_64-apple-darwin/release/cert-tree || true
       - name: Build .rpm package
         run: |
           . $HOME/.cargo/env
@@ -220,7 +225,7 @@ jobs:
           . $HOME/.cargo/env
           cargo build --release
       - name: Strip binary
-        run: strip target/release/cert-tree
+        run: strip target/x86_64-apple-darwin/release/cert-tree || true
       - name: Build .deb package
         run: |
           . $HOME/.cargo/env
@@ -254,7 +259,7 @@ jobs:
           . $HOME/.cargo/env
           cargo build --release
       - name: Strip binary
-        run: strip target/release/cert-tree
+        run: strip target/release/cert-tree || true
       - name: Build .deb package
         run: |
           . $HOME/.cargo/env
