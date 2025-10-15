@@ -9,6 +9,7 @@
 - **Memory Bank Status**: Updated and synchronized with current project state
 
 ## Recent Changes
+- ✅ **Completed**: Added mise version manager support: Added installation instructions for mise with ubi backend in README.md and release notes
 - ✅ **Completed**: Project Standardization: Corrected binary name from `cert_tree` to `cert-tree` for consistency
 - ✅ **Completed**: Repository URL Corrections: Updated all repository URLs from `tadas` to `tdslot` across all files and documentation
 - ✅ **Completed**: Author Information Update: Updated author name to "Tadas Lotužas" and email to "tdslot@gmail.com"
