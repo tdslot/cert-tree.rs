@@ -26,17 +26,18 @@ jobs:
 
       - name: Create .tar.gz archive
         run: |
+          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
           mkdir -p cert-tree-linux-x86_64
           cp target/x86_64-unknown-linux-gnu/release/cert-tree \
             cert-tree-linux-x86_64/
           cp README.md LICENSE cert-tree-linux-x86_64/
-          tar -czf cert-tree-linux-x86_64.tar.gz cert-tree-linux-x86_64/
+          tar -czf cert-tree-${VERSION}-linux-x86_64.tar.gz cert-tree-linux-x86_64/
 
       - name: Upload .tar.gz artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-linux-x86_64.tar.gz
-          path: cert-tree-linux-x86_64.tar.gz
+          name: linux-binary
+          path: cert-tree-*-linux-x86_64.tar.gz
 
   build-macos-intel:
     name: Build for macOS Intel
@@ -59,16 +60,17 @@ jobs:
 
       - name: Create .tar.gz archive
         run: |
+          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
           mkdir -p cert-tree-macos-x86_64
           cp target/x86_64-apple-darwin/release/cert-tree cert-tree-macos-x86_64/
           cp README.md LICENSE cert-tree-macos-x86_64/
-          tar -czf cert-tree-macos-x86_64.tar.gz cert-tree-macos-x86_64/
+          tar -czf cert-tree-${VERSION}-macos-x86_64.tar.gz cert-tree-macos-x86_64/
 
       - name: Upload .tar.gz artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-macos-x86_64.tar.gz
-          path: cert-tree-macos-x86_64.tar.gz
+          name: macos-intel-binary
+          path: cert-tree-*-macos-x86_64.tar.gz
 
   build-macos-arm:
     name: Build for macOS ARM
@@ -91,16 +93,17 @@ jobs:
 
       - name: Create .tar.gz archive
         run: |
+          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
           mkdir -p cert-tree-macos-aarch64
           cp target/aarch64-apple-darwin/release/cert-tree cert-tree-macos-aarch64/
           cp README.md LICENSE cert-tree-macos-aarch64/
-          tar -czf cert-tree-macos-aarch64.tar.gz cert-tree-macos-aarch64/
+          tar -czf cert-tree-${VERSION}-macos-aarch64.tar.gz cert-tree-macos-aarch64/
 
       - name: Upload .tar.gz artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-macos-aarch64.tar.gz
-          path: cert-tree-macos-aarch64.tar.gz
+          name: macos-arm-binary
+          path: cert-tree-*-macos-aarch64.tar.gz
 
   build-rpm-centos:
     name: Build RPM for CentOS
@@ -133,8 +136,8 @@ jobs:
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-centos-x86_64.rpm
-          path: target/generate-rpm/*.rpm
+          name: centos-rpm
+          path: target/generate-rpm/cert-tree-centos-*.rpm
 
   build-rpm-rocky:
     name: Build RPM for Rocky Linux
@@ -168,8 +171,8 @@ jobs:
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-rocky-x86_64.rpm
-          path: target/generate-rpm/*.rpm
+          name: rocky-rpm
+          path: target/generate-rpm/cert-tree-rocky-*.rpm
 
   build-rpm-alma:
     name: Build RPM for Alma Linux
@@ -202,8 +205,8 @@ jobs:
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-alma-x86_64.rpm
-          path: target/generate-rpm/*.rpm
+          name: alma-rpm
+          path: target/generate-rpm/cert-tree-alma-*.rpm
 
   build-deb-debian:
     name: Build DEB for Debian
@@ -236,8 +239,8 @@ jobs:
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-debian-x86_64.deb
-          path: target/debian/*.deb
+          name: debian-deb
+          path: target/debian/cert-tree-debian-*.deb
 
   build-deb-ubuntu:
     name: Build DEB for Ubuntu
@@ -270,8 +273,8 @@ jobs:
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-ubuntu-x86_64.deb
-          path: target/debian/*.deb
+          name: ubuntu-deb
+          path: target/debian/cert-tree-ubuntu-*.deb
 
   release:
     needs:
@@ -334,18 +337,18 @@ jobs:
           Choose the right package for your system:
 
           ### 🐧 Linux
-          - **Binary**: \`cert-tree-linux-x86_64.tar.gz\` (Universal Linux binary)
+          - **Binary**: \`cert-tree-${VERSION}-linux-x86_64.tar.gz\` (Universal Linux binary)
           - **RPM Packages**:
-            - CentOS/RHEL: \`cert-tree-centos-x86_64.rpm\`
-            - Rocky Linux: \`cert-tree-rocky-x86_64.rpm\`
-            - Alma Linux: \`cert-tree-alma-x86_64.rpm\`
+            - CentOS/RHEL: \`cert-tree-centos-${VERSION}-1.x86_64.rpm\`
+            - Rocky Linux: \`cert-tree-rocky-${VERSION}-1.x86_64.rpm\`
+            - Alma Linux: \`cert-tree-alma-${VERSION}-1.x86_64.rpm\`
           - **DEB Packages**:
-            - Debian: \`cert-tree-debian-x86_64.deb\`
-            - Ubuntu: \`cert-tree-ubuntu-x86_64.deb\`
+            - Debian: \`cert-tree-debian-${VERSION}-1_amd64.deb\`
+            - Ubuntu: \`cert-tree-ubuntu-${VERSION}-1_amd64.deb\`
 
           ### 🍎 macOS
-          - **Intel**: \`cert-tree-macos-x86_64.tar.gz\`
-          - **Apple Silicon**: \`cert-tree-macos-aarch64.tar.gz\`
+          - **Intel**: \`cert-tree-${VERSION}-macos-x86_64.tar.gz\`
+          - **Apple Silicon**: \`cert-tree-${VERSION}-macos-aarch64.tar.gz\`
 
           ## 🚀 Quick Start
 
@@ -364,13 +367,13 @@ jobs:
 
           **Ubuntu/Debian:**
           \`\`\`bash
-          sudo dpkg -i cert-tree-ubuntu-*.deb
+          sudo dpkg -i cert-tree-ubuntu-${VERSION}-1_amd64.deb
           cert-tree --help
           \`\`\`
 
           **CentOS/RHEL/Rocky/Alma:**
           \`\`\`bash
-          sudo rpm -i cert-tree-centos-*.rpm
+          sudo rpm -i cert-tree-centos-${VERSION}-1.x86_64.rpm
           cert-tree --help
           \`\`\`
 
