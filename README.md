@@ -51,6 +51,22 @@ Download pre-built binaries for your platform from the [GitHub Releases](https:/
 
 Releases are automatically built and published via GitHub Actions when version tags are pushed.
 
+### Using mise (Version Manager)
+
+[mise](https://mise.jdx.dev/) is a modern version manager that can install tools from various backends including GitHub releases.
+
+```bash
+# Install mise first (if not already installed)
+curl https://mise.run | sh
+
+# Restart your shell or source the mise activation
+# Then install cert-tree globally
+mise use -g ubi:tdslot/cert-tree.rs[exe=cert-tree]
+cert-tree --help
+```
+
+The `ubi` backend automatically downloads and installs the latest release from GitHub.
+
 ## Justfile - Development Workflow
 
 This project includes a comprehensive `Justfile` that provides a complete set of recipes for development workflows, testing, building, and project management. The Justfile ensures consistent execution of all critical tasks while preserving important paths, variables, and configuration details.
