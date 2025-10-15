@@ -374,6 +374,19 @@ jobs:
           cert-tree --help
           \`\`\`
 
+          ### From Version Managers
+
+          **mise (Universal Binary Installer):**
+          \`\`\`bash
+          # Install mise first (if not already installed)
+          curl https://mise.run | sh
+
+          # Restart your shell or source the mise activation
+          # Then install cert-tree globally
+          mise use -g ubi:tdslot/cert-tree.rs[exe=cert-tree]
+          cert-tree --help
+          \`\`\`
+
           ### Basic Usage Examples
 
           \`\`\`bash
