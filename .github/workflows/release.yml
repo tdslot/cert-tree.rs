@@ -55,7 +55,7 @@ jobs:
         run: cargo build --release --target x86_64-apple-darwin
 
       - name: Strip binary
-        run: strip target/release/cert-tree
+        run: strip target/x86_64-apple-darwin/release/cert-tree || true
 
       - name: Create .tar.gz archive
         run: |
