@@ -127,11 +127,14 @@ jobs:
         run: |
           . $HOME/.cargo/env
           cargo generate-rpm
+          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          mv target/generate-rpm/cert-tree-${VERSION}-1.x86_64.rpm \
+            target/generate-rpm/cert-tree-centos-${VERSION}-1.x86_64.rpm
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
           name: centos-rpm
-          path: target/generate-rpm/*.rpm
+          path: target/generate-rpm/cert-tree-centos-*.rpm
 
   build-rpm-rocky:
     name: Build RPM for Rocky Linux
@@ -159,11 +162,14 @@ jobs:
         run: |
           . $HOME/.cargo/env
           cargo generate-rpm
+          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          mv target/generate-rpm/cert-tree-${VERSION}-1.x86_64.rpm \
+            target/generate-rpm/cert-tree-rocky-${VERSION}-1.x86_64.rpm
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
           name: rocky-rpm
-          path: target/generate-rpm/*.rpm
+          path: target/generate-rpm/cert-tree-rocky-*.rpm
 
   build-rpm-alma:
     name: Build RPM for Alma Linux
@@ -190,11 +196,14 @@ jobs:
         run: |
           . $HOME/.cargo/env
           cargo generate-rpm
+          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          mv target/generate-rpm/cert-tree-${VERSION}-1.x86_64.rpm \
+            target/generate-rpm/cert-tree-alma-${VERSION}-1.x86_64.rpm
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
           name: alma-rpm
-          path: target/generate-rpm/*.rpm
+          path: target/generate-rpm/cert-tree-alma-*.rpm
 
   build-deb-debian:
     name: Build DEB for Debian
@@ -221,11 +230,14 @@ jobs:
         run: |
           . $HOME/.cargo/env
           cargo deb
+          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          mv target/debian/cert-tree_${VERSION}-1_amd64.deb \
+            target/debian/cert-tree-debian-${VERSION}-1_amd64.deb
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
         with:
           name: debian-deb
-          path: target/debian/*.deb
+          path: target/debian/cert-tree-debian-*.deb
 
   build-deb-ubuntu:
     name: Build DEB for Ubuntu
@@ -252,11 +264,14 @@ jobs:
         run: |
           . $HOME/.cargo/env
           cargo deb
+          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          mv target/debian/cert-tree_${VERSION}-1_amd64.deb \
+            target/debian/cert-tree-ubuntu-${VERSION}-1_amd64.deb
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
         with:
           name: ubuntu-deb
-          path: target/debian/*.deb
+          path: target/debian/cert-tree-ubuntu-*.deb
 
   release:
     needs:
