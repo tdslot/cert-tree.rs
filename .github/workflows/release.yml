@@ -136,7 +136,7 @@ jobs:
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-centos-x86_64.rpm
+          name: cert-tree-centos-${{ steps.get_version.outputs.version }}-1.x86_64.rpm
           path: target/generate-rpm/*.rpm
 
   build-rpm-rocky:
@@ -171,7 +171,7 @@ jobs:
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-rocky-x86_64.rpm
+          name: cert-tree-rocky-${{ steps.get_version.outputs.version }}-1.x86_64.rpm
           path: target/generate-rpm/*.rpm
 
   build-rpm-alma:
@@ -205,7 +205,7 @@ jobs:
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-alma-x86_64.rpm
+          name: cert-tree-alma-${{ steps.get_version.outputs.version }}-1.x86_64.rpm
           path: target/generate-rpm/*.rpm
 
   build-deb-debian:
@@ -239,7 +239,7 @@ jobs:
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-debian-x86_64.deb
+          name: cert-tree-debian-${{ steps.get_version.outputs.version }}-1_amd64.deb
           path: target/debian/*.deb
 
   build-deb-ubuntu:
@@ -273,7 +273,7 @@ jobs:
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-ubuntu-x86_64.deb
+          name: cert-tree-ubuntu-${{ steps.get_version.outputs.version }}-1_amd64.deb
           path: target/debian/*.deb
 
   release:
@@ -339,12 +339,12 @@ jobs:
           ### 🐧 Linux
           - **Binary**: \`cert-tree-linux-x86_64.tar.gz\` (Universal Linux binary)
           - **RPM Packages**:
-            - CentOS/RHEL: \`cert-tree-centos-x86_64.rpm\`
-            - Rocky Linux: \`cert-tree-rocky-x86_64.rpm\`
-            - Alma Linux: \`cert-tree-alma-x86_64.rpm\`
+            - CentOS/RHEL: \`cert-tree-centos-${VERSION}-1.x86_64.rpm\`
+            - Rocky Linux: \`cert-tree-rocky-${VERSION}-1.x86_64.rpm\`
+            - Alma Linux: \`cert-tree-alma-${VERSION}-1.x86_64.rpm\`
           - **DEB Packages**:
-            - Debian: \`cert-tree-debian-x86_64.deb\`
-            - Ubuntu: \`cert-tree-ubuntu-x86_64.deb\`
+            - Debian: \`cert-tree-debian-${VERSION}-1_amd64.deb\`
+            - Ubuntu: \`cert-tree-ubuntu-${VERSION}-1_amd64.deb\`
 
           ### 🍎 macOS
           - **Intel**: \`cert-tree-macos-x86_64.tar.gz\`
@@ -367,13 +367,13 @@ jobs:
 
           **Ubuntu/Debian:**
           \`\`\`bash
-          sudo dpkg -i cert-tree-ubuntu-*.deb
+          sudo dpkg -i cert-tree-ubuntu-${VERSION}-1_amd64.deb
           cert-tree --help
           \`\`\`
 
           **CentOS/RHEL/Rocky/Alma:**
           \`\`\`bash
-          sudo rpm -i cert-tree-centos-*.rpm
+          sudo rpm -i cert-tree-centos-${VERSION}-1.x86_64.rpm
           cert-tree --help
           \`\`\`
 
