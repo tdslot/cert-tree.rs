@@ -26,18 +26,17 @@ jobs:
 
       - name: Create .tar.gz archive
         run: |
-          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          mkdir -p cert-tree-v${VERSION}-linux-x86_64
+          mkdir -p cert-tree-linux-x86_64
           cp target/x86_64-unknown-linux-gnu/release/cert-tree \
-            cert-tree-v${VERSION}-linux-x86_64/
-          cp README.md LICENSE cert-tree-v${VERSION}-linux-x86_64/
-          tar -czf cert-tree-v${VERSION}-linux-x86_64.tar.gz cert-tree-v${VERSION}-linux-x86_64/
+            cert-tree-linux-x86_64/
+          cp README.md LICENSE cert-tree-linux-x86_64/
+          tar -czf cert-tree-linux-x86_64.tar.gz cert-tree-linux-x86_64/
 
       - name: Upload .tar.gz artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-v${VERSION}-linux-x86_64.tar.gz
-          path: cert-tree-v${VERSION}-linux-x86_64.tar.gz
+          name: linux-binary
+          path: cert-tree-linux-x86_64.tar.gz
 
   build-macos-intel:
     name: Build for macOS Intel
@@ -60,17 +59,16 @@ jobs:
 
       - name: Create .tar.gz archive
         run: |
-          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          mkdir -p cert-tree-v${VERSION}-macos-x86_64
-          cp target/x86_64-apple-darwin/release/cert-tree cert-tree-v${VERSION}-macos-x86_64/
-          cp README.md LICENSE cert-tree-v${VERSION}-macos-x86_64/
-          tar -czf cert-tree-v${VERSION}-macos-x86_64.tar.gz cert-tree-v${VERSION}-macos-x86_64/
+          mkdir -p cert-tree-macos-x86_64
+          cp target/x86_64-apple-darwin/release/cert-tree cert-tree-macos-x86_64/
+          cp README.md LICENSE cert-tree-macos-x86_64/
+          tar -czf cert-tree-macos-x86_64.tar.gz cert-tree-macos-x86_64/
 
       - name: Upload .tar.gz artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-v${VERSION}-macos-x86_64.tar.gz
-          path: cert-tree-v${VERSION}-macos-x86_64.tar.gz
+          name: macos-intel-binary
+          path: cert-tree-macos-x86_64.tar.gz
 
   build-macos-arm:
     name: Build for macOS ARM
@@ -93,17 +91,16 @@ jobs:
 
       - name: Create .tar.gz archive
         run: |
-          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          mkdir -p cert-tree-v${VERSION}-macos-aarch64
-          cp target/aarch64-apple-darwin/release/cert-tree cert-tree-v${VERSION}-macos-aarch64/
-          cp README.md LICENSE cert-tree-v${VERSION}-macos-aarch64/
-          tar -czf cert-tree-v${VERSION}-macos-aarch64.tar.gz cert-tree-v${VERSION}-macos-aarch64/
+          mkdir -p cert-tree-macos-aarch64
+          cp target/aarch64-apple-darwin/release/cert-tree cert-tree-macos-aarch64/
+          cp README.md LICENSE cert-tree-macos-aarch64/
+          tar -czf cert-tree-macos-aarch64.tar.gz cert-tree-macos-aarch64/
 
       - name: Upload .tar.gz artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-v${VERSION}-macos-aarch64.tar.gz
-          path: cert-tree-v${VERSION}-macos-aarch64.tar.gz
+          name: macos-arm-binary
+          path: cert-tree-macos-aarch64.tar.gz
 
   build-rpm-centos:
     name: Build RPM for CentOS
@@ -130,13 +127,10 @@ jobs:
         run: |
           . $HOME/.cargo/env
           cargo generate-rpm
-          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          mv target/generate-rpm/cert-tree-${VERSION}-1.x86_64.rpm \
-            target/generate-rpm/cert-tree-centos-${VERSION}-1.x86_64.rpm
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-centos-${VERSION}-1.x86_64.rpm
+          name: centos-rpm
           path: target/generate-rpm/*.rpm
 
   build-rpm-rocky:
@@ -165,13 +159,10 @@ jobs:
         run: |
           . $HOME/.cargo/env
           cargo generate-rpm
-          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          mv target/generate-rpm/cert-tree-${VERSION}-1.x86_64.rpm \
-            target/generate-rpm/cert-tree-rocky-${VERSION}-1.x86_64.rpm
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-rocky-${VERSION}-1.x86_64.rpm
+          name: rocky-rpm
           path: target/generate-rpm/*.rpm
 
   build-rpm-alma:
@@ -199,13 +190,10 @@ jobs:
         run: |
           . $HOME/.cargo/env
           cargo generate-rpm
-          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          mv target/generate-rpm/cert-tree-${VERSION}-1.x86_64.rpm \
-            target/generate-rpm/cert-tree-alma-${VERSION}-1.x86_64.rpm
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-alma-${VERSION}-1.x86_64.rpm
+          name: alma-rpm
           path: target/generate-rpm/*.rpm
 
   build-deb-debian:
@@ -233,13 +221,10 @@ jobs:
         run: |
           . $HOME/.cargo/env
           cargo deb
-          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          mv target/debian/cert-tree_${VERSION}-1_amd64.deb \
-            target/debian/cert-tree-debian-${VERSION}-1_amd64.deb
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-debian-${VERSION}-1_amd64.deb
+          name: debian-deb
           path: target/debian/*.deb
 
   build-deb-ubuntu:
@@ -267,13 +252,10 @@ jobs:
         run: |
           . $HOME/.cargo/env
           cargo deb
-          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          mv target/debian/cert-tree_${VERSION}-1_amd64.deb \
-            target/debian/cert-tree-ubuntu-${VERSION}-1_amd64.deb
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cert-tree-ubuntu-${VERSION}-1_amd64.deb
+          name: ubuntu-deb
           path: target/debian/*.deb
 
   release:
