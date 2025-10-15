@@ -60,16 +60,17 @@ jobs:
 
       - name: Create .tar.gz archive
         run: |
+          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
           mkdir -p cert-tree-macos-x86_64
           cp target/x86_64-apple-darwin/release/cert-tree cert-tree-macos-x86_64/
           cp README.md LICENSE cert-tree-macos-x86_64/
-          tar -czf cert-tree-macos-x86_64.tar.gz cert-tree-macos-x86_64/
+          tar -czf cert-tree-${VERSION}-macos-x86_64.tar.gz cert-tree-macos-x86_64/
 
       - name: Upload .tar.gz artifact
         uses: actions/upload-artifact@v4
         with:
           name: macos-intel-binary
-          path: cert-tree-macos-x86_64.tar.gz
+          path: cert-tree-*-macos-x86_64.tar.gz
 
   build-macos-arm:
     name: Build for macOS ARM
@@ -92,16 +93,17 @@ jobs:
 
       - name: Create .tar.gz archive
         run: |
+          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
           mkdir -p cert-tree-macos-aarch64
           cp target/aarch64-apple-darwin/release/cert-tree cert-tree-macos-aarch64/
           cp README.md LICENSE cert-tree-macos-aarch64/
-          tar -czf cert-tree-macos-aarch64.tar.gz cert-tree-macos-aarch64/
+          tar -czf cert-tree-${VERSION}-macos-aarch64.tar.gz cert-tree-macos-aarch64/
 
       - name: Upload .tar.gz artifact
         uses: actions/upload-artifact@v4
         with:
           name: macos-arm-binary
-          path: cert-tree-macos-aarch64.tar.gz
+          path: cert-tree-*-macos-aarch64.tar.gz
 
   build-rpm-centos:
     name: Build RPM for CentOS
