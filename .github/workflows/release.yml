@@ -50,7 +50,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Build release
-        run: cargo build --release
+        run: cargo build --release --target x86_64-apple-darwin
 
       - name: Strip binary
         run: strip target/release/cert-tree
@@ -58,7 +58,7 @@ jobs:
       - name: Create .tar.gz archive
         run: |
           mkdir -p cert-tree-macos-x86_64
-          cp target/release/cert-tree cert-tree-macos-x86_64/
+          cp target/x86_64-apple-darwin/release/cert-tree cert-tree-macos-x86_64/
           cp README.md LICENSE cert-tree-macos-x86_64/
           tar -czf cert-tree-macos-x86_64.tar.gz cert-tree-macos-x86_64/
 
@@ -80,15 +80,15 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Build release
-        run: cargo build --release
+        run: cargo build --release --target aarch64-apple-darwin
 
       - name: Strip binary
-        run: strip target/release/cert-tree
+        run: strip target/aarch64-apple-darwin/release/cert-tree
 
       - name: Create .tar.gz archive
         run: |
           mkdir -p cert-tree-macos-aarch64
-          cp target/release/cert-tree cert-tree-macos-aarch64/
+          cp target/aarch64-apple-darwin/release/cert-tree cert-tree-macos-aarch64/
           cp README.md LICENSE cert-tree-macos-aarch64/
           tar -czf cert-tree-macos-aarch64.tar.gz cert-tree-macos-aarch64/
 
@@ -220,7 +220,7 @@ jobs:
           . $HOME/.cargo/env
           cargo build --release
       - name: Strip binary
-        run: strip target/release/cert-tree
+        run: strip target/x86_64-apple-darwin/release/cert-tree
       - name: Build .deb package
         run: |
           . $HOME/.cargo/env
