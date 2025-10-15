@@ -87,7 +87,7 @@ jobs:
         run: cargo build --release --target aarch64-apple-darwin
 
       - name: Strip binary
-        run: strip target/aarch64-apple-darwin/release/cert-tree
+        run: strip target/aarch64-apple-darwin/release/cert-tree || true
 
       - name: Create .tar.gz archive
         run: |
@@ -224,7 +224,7 @@ jobs:
           . $HOME/.cargo/env
           cargo build --release
       - name: Strip binary
-        run: strip target/x86_64-apple-darwin/release/cert-tree
+        run: strip target/x86_64-apple-darwin/release/cert-tree || true
       - name: Build .deb package
         run: |
           . $HOME/.cargo/env
