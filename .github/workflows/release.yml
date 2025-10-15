@@ -122,7 +122,7 @@ jobs:
           . $HOME/.cargo/env
           cargo build --release
       - name: Strip binary
-        run: strip target/release/cert-tree
+        run: strip target/release/cert-tree || true
       - name: Build .rpm package
         run: |
           . $HOME/.cargo/env
@@ -156,7 +156,7 @@ jobs:
           . $HOME/.cargo/env
           cargo build --release
       - name: Strip binary
-        run: strip target/release/cert-tree
+        run: strip target/release/cert-tree || true
       - name: Build .rpm package
         run: |
           . $HOME/.cargo/env
@@ -190,7 +190,7 @@ jobs:
           . $HOME/.cargo/env
           cargo build --release
       - name: Strip binary
-        run: strip target/release/cert-tree
+        run: strip target/x86_64-apple-darwin/release/cert-tree || true
       - name: Build .rpm package
         run: |
           . $HOME/.cargo/env
@@ -258,7 +258,7 @@ jobs:
           . $HOME/.cargo/env
           cargo build --release
       - name: Strip binary
-        run: strip target/release/cert-tree
+        run: strip target/release/cert-tree || true
       - name: Build .deb package
         run: |
           . $HOME/.cargo/env
