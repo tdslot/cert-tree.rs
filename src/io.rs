@@ -36,19 +36,16 @@ pub fn fetch_certificate_chain_from_url(url: &str) -> Result<Vec<CertificateInfo
 
     // First, try to fetch as direct certificate data (for URLs like cacert.pem)
     let client = reqwest::blocking::Client::new();
-    match client.get(url).send() {
-        Ok(response) => {
-            let data = response.bytes()?;
-            let content = String::from_utf8_lossy(&data);
+    if let Ok(response) = client.get(url).send() {
+        let data = response.bytes()?;
+        let content = String::from_utf8_lossy(&data);
 
-            // Check if the URL contains certificate data
-            if content.contains("-----BEGIN CERTIFICATE-----") {
-                return crate::parser::parse_certificate_chain(&data);
-            }
+        // Check if the URL contains certificate data
+        if content.contains("-----BEGIN CERTIFICATE-----") {
+            return crate::parser::parse_certificate_chain(&data);
         }
-        Err(_) => {
-            // If direct fetch fails, try to get certificate chain from HTTPS connection
-        }
+    } else {
+        // If direct fetch fails, try to get certificate chain from HTTPS connection
     }
 
     // For HTTPS URLs, establish a TLS connection and capture the certificate chain
@@ -89,7 +86,7 @@ fn fetch_certificate_chain_via_tls(hostname: &str) -> Result<Vec<CertificateInfo
     let mut tls_stream = rustls::Stream::new(&mut conn, &mut socket);
 
     // Send a minimal HTTP request to trigger the handshake
-    let request = format!("GET / HTTP/1.0\r\nHost: {}\r\n\r\n", hostname);
+    let request = format!("GET / HTTP/1.0\r\nHost: {hostname}\r\n\r\n");
     tls_stream.write_all(request.as_bytes())?;
 
     // Read response to complete handshake
@@ -101,9 +98,9 @@ fn fetch_certificate_chain_via_tls(hostname: &str) -> Result<Vec<CertificateInfo
         let mut certificates = Vec::new();
         for cert_der in certs {
             let (_, cert) = X509Certificate::from_der(cert_der.as_ref())
-                .map_err(|e| CertError::X509Parse(format!("Failed to parse certificate: {}", e)))?;
+                .map_err(|e| CertError::X509Parse(format!("Failed to parse certificate: {e}")))?;
 
-            let cert_info = extract_cert_info(&cert)?;
+            let cert_info = extract_cert_info(&cert);
             certificates.push(cert_info);
         }
         Ok(certificates)

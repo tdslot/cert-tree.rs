@@ -34,7 +34,7 @@ pub fn oid_to_name(oid: &str) -> Option<String> {
         "2.5.29.31" => Some("CRL Distribution Points".to_string()),
         "2.5.29.32" => Some("Certificate Policies".to_string()),
         "2.5.29.33" => Some("Policy Mappings".to_string()),
-        "2.5.29.35" => Some("Authority Information Access".to_string()),
+        "2.5.29.35" | "1.3.6.1.5.5.7.1.1" => Some("Authority Information Access".to_string()),
         "2.5.29.36" => Some("Policy Constraints".to_string()),
         "2.5.29.37" => Some("Extended Key Usage".to_string()),
         "2.5.29.46" => Some("Freshest CRL".to_string()),
@@ -53,7 +53,6 @@ pub fn oid_to_name(oid: &str) -> Option<String> {
         "2.23.42.7.0" => Some("VeriSign Individual SHA1 Hash".to_string()),
 
         // Other common extensions
-        "1.3.6.1.5.5.7.1.1" => Some("Authority Information Access".to_string()),
         "1.3.6.1.4.1.11129.2.4.2" => Some("Signed Certificate Timestamp".to_string()),
         _ => None,
     }
@@ -62,13 +61,11 @@ pub fn oid_to_name(oid: &str) -> Option<String> {
 // Function to map signature algorithm OID to human-readable name
 pub fn signature_alg_to_name(oid_str: &str) -> Option<String> {
     match oid_str {
-        "1.2.840.113549.1.1.1" => Some("RSA with MD5".to_string()),
-        "1.2.840.113549.1.1.4" => Some("RSA with MD5".to_string()),
-        "1.2.840.113549.1.1.5" => Some("SHA1 with RSA".to_string()),
+        "1.2.840.113549.1.1.1" | "1.2.840.113549.1.1.4" => Some("RSA with MD5".to_string()),
+        "1.2.840.113549.1.1.5" | "1.3.14.3.2.29" => Some("SHA1 with RSA".to_string()),
         "1.2.840.113549.1.1.11" => Some("SHA256 with RSA".to_string()),
         "1.2.840.113549.1.1.12" => Some("SHA384 with RSA".to_string()),
         "1.2.840.113549.1.1.13" => Some("SHA512 with RSA".to_string()),
-        "1.3.14.3.2.29" => Some("SHA1 with RSA".to_string()),
         "1.2.840.10045.4.1" => Some("SHA1 with ECDSA".to_string()),
         "1.2.840.10045.4.3.2" => Some("SHA256 with ECDSA".to_string()),
         "1.2.840.10045.4.3.3" => Some("SHA384 with ECDSA".to_string()),
@@ -100,7 +97,7 @@ pub fn parse_certificate_chain(data: &[u8]) -> Result<Vec<CertificateInfo>, Cert
             if pem.tag() == "CERTIFICATE" {
                 let (_, cert) = X509Certificate::from_der(pem.contents())
                     .map_err(|e| CertError::X509Parse(e.to_string()))?;
-                let cert_info = extract_cert_info(&cert)?;
+                let cert_info = extract_cert_info(&cert);
                 certificates.push(cert_info);
             }
         }
@@ -110,14 +107,14 @@ pub fn parse_certificate_chain(data: &[u8]) -> Result<Vec<CertificateInfo>, Cert
     if certificates.is_empty() {
         let (_, cert) =
             X509Certificate::from_der(data).map_err(|e| CertError::X509Parse(e.to_string()))?;
-        let cert_info = extract_cert_info(&cert)?;
+        let cert_info = extract_cert_info(&cert);
         certificates.push(cert_info);
     }
 
     Ok(certificates)
 }
 
-pub fn extract_cert_info(cert: &X509Certificate) -> Result<CertificateInfo, CertError> {
+pub fn extract_cert_info(cert: &X509Certificate) -> CertificateInfo {
     let subject = cert.subject().to_string();
     let issuer = cert.issuer().to_string();
     let serial = format!("{:x}", cert.serial)
@@ -154,7 +151,7 @@ pub fn extract_cert_info(cert: &X509Certificate) -> Result<CertificateInfo, Cert
         Ok(pk) => match pk {
             x509_parser::public_key::PublicKey::RSA(rsa_key) => {
                 let key_size = rsa_key.modulus.len() * 8;
-                format!("RSA ({} bits)", key_size)
+                format!("RSA ({key_size} bits)")
             }
             x509_parser::public_key::PublicKey::EC(_) => "ECDSA".to_string(),
             x509_parser::public_key::PublicKey::DSA(_) => "DSA".to_string(),
@@ -162,7 +159,7 @@ pub fn extract_cert_info(cert: &X509Certificate) -> Result<CertificateInfo, Cert
             x509_parser::public_key::PublicKey::GostR3410_2012(_) => {
                 "GOST R 34.10-2012".to_string()
             }
-            _ => "Unknown".to_string(),
+            x509_parser::public_key::PublicKey::Unknown(_) => "Unknown".to_string(),
         },
         Err(_) => "Unknown".to_string(),
     };
@@ -190,7 +187,7 @@ pub fn extract_cert_info(cert: &X509Certificate) -> Result<CertificateInfo, Cert
 
     let is_ca = cert.is_ca();
 
-    Ok(CertificateInfo {
+    CertificateInfo {
         subject,
         issuer,
         serial_number: serial,
@@ -203,5 +200,5 @@ pub fn extract_cert_info(cert: &X509Certificate) -> Result<CertificateInfo, Cert
         is_ca,
         key_usage,
         subject_alt_names,
-    })
+    }
 }

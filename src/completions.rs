@@ -1,7 +1,7 @@
 //! Shell completion generation module
 //!
 //! This module provides functionality to generate and install shell completion scripts
-//! for various shells (bash, zsh, fish, PowerShell).
+//! for various shells (bash, zsh, fish, `PowerShell`).
 
 use clap::CommandFactory;
 use clap_complete::{generate, Shell};
@@ -75,18 +75,15 @@ pub fn get_completion_path(shell: Shell) -> Option<PathBuf> {
                 Some(PathBuf::from("/usr/local/etc/bash_completion.d/cert-tree"))
             } else {
                 Some(PathBuf::from(format!(
-                    "{}/.local/share/bash-completion/completions/cert-tree",
-                    home
+                    "{home}/.local/share/bash-completion/completions/cert-tree"
                 )))
             }
         }
         Shell::Zsh => Some(PathBuf::from(format!(
-            "{}/.zsh/completion/_cert-tree",
-            home
+            "{home}/.zsh/completion/_cert-tree"
         ))),
         Shell::Fish => Some(PathBuf::from(format!(
-            "{}/.config/fish/completions/cert-tree.fish",
-            home
+            "{home}/.config/fish/completions/cert-tree.fish"
         ))),
         Shell::PowerShell => {
             // PowerShell profile location
@@ -121,7 +118,7 @@ pub fn install_completion(shell: Option<Shell>) -> Result<String, String> {
 
     // Create parent directory if it doesn't exist
     if let Some(parent) = install_path.parent() {
-        fs::create_dir_all(parent).map_err(|e| format!("Failed to create directory: {}", e))?;
+        fs::create_dir_all(parent).map_err(|e| format!("Failed to create directory: {e}"))?;
     }
 
     // Generate completion script
@@ -132,9 +129,9 @@ pub fn install_completion(shell: Option<Shell>) -> Result<String, String> {
 
     // Write to file
     fs::write(&install_path, buffer)
-        .map_err(|e| format!("Failed to write completion file: {}", e))?;
+        .map_err(|e| format!("Failed to write completion file: {e}"))?;
 
-    let shell_name = format!("{:?}", detected_shell).to_lowercase();
+    let shell_name = format!("{detected_shell:?}").to_lowercase();
     let path_str = install_path.display();
 
     // Provide post-install instructions
@@ -157,10 +154,9 @@ pub fn install_completion(shell: Option<Shell>) -> Result<String, String> {
 
     Ok(format!(
         "✓ Shell completion installed successfully!\n\n\
-        Shell: {}\n\
-        Location: {}\n\n\
-        {}\n",
-        shell_name, path_str, instructions
+        Shell: {shell_name}\n\
+        Location: {path_str}\n\n\
+        {instructions}\n"
     ))
 }
 

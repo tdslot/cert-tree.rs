@@ -34,7 +34,7 @@ pub fn display_verbose(cert: &CertificateInfo) {
     println!("Certificate Information:");
     println!("======================");
     let cn = crate::parser::extract_cn(&cert.subject);
-    println!("CN: {}", cn);
+    println!("CN: {cn}");
     println!("Issuer: {}", cert.issuer);
     println!("Serial Number: {}", cert.serial_number);
     println!("Validity:");
@@ -46,13 +46,13 @@ pub fn display_verbose(cert: &CertificateInfo) {
     println!("Is CA: {}", cert.is_ca);
 
     if let Some(ku) = &cert.key_usage {
-        println!("Key Usage: {}", ku);
+        println!("Key Usage: {ku}");
     }
 
     if !cert.subject_alt_names.is_empty() {
         println!("Subject Alternative Names:");
         for san in &cert.subject_alt_names {
-            println!("  {}", san);
+            println!("  {san}");
         }
     }
 
@@ -85,8 +85,9 @@ pub fn display_tui(cert: &CertificateInfo) -> Result<(), Box<dyn std::error::Err
     terminal.clear()?;
     std::thread::sleep(Duration::from_millis(SLEEP_MS));
 
-    // Scroll state for certificate details pane
-    let _details_scroll: u16 = 0;
+    // Scroll state for certificate details pane (unused in single cert view)
+    #[allow(unused_variables)]
+    let details_scroll: u16 = 0;
 
     loop {
         terminal.draw(|f| {
@@ -286,8 +287,7 @@ fn display_tree_node_text(
 
     // Use white for certificate names, color only the status/date part
     println!(
-        "\x1b[37m[{}] {}{}{}\x1b[0m{}[{}] [until: {}]\x1b[0m",
-        sequence_num, prefix, display_name, padding, color_code, status_text, date_str
+        "\x1b[37m[{sequence_num}] {prefix}{display_name}{padding}\x1b[0m{color_code}[{status_text}] [until: {date_str}]\x1b[0m"
     );
 
     // Display children with cascading tree structure
@@ -296,7 +296,7 @@ fn display_tree_node_text(
 
         // Create cascading indentation for child level (4 spaces per level)
         let child_indent = " ".repeat(5 + (depth * 4)); // 5 spaces base + 4 per depth level
-        let child_prefix = format!("{}└ ", child_indent);
+        let child_prefix = format!("{child_indent}└ ");
 
         display_tree_node_text(child, &child_prefix, depth + 1, sequence_num, is_last_child);
     }
@@ -394,9 +394,9 @@ pub fn display_certificate_tree_tui(
                     };
 
                     // Create formatted strings for each column
-                    let name_part = format!("{:<width$}", display_name, width = available_name_width);
+                    let name_part = format!("{display_name:<available_name_width$}");
                     let safe_date_width = date_width.max(formatted_date.len());
-                    let date_part = format!("{:>width$}", formatted_date, width = safe_date_width);
+                    let date_part = format!("{formatted_date:>safe_date_width$}");
 
                     let line = Line::from(vec![
                         Span::styled(name_part, Style::default().fg(Color::White)),
@@ -409,21 +409,21 @@ pub fn display_certificate_tree_tui(
                 .collect();
 
             // Create the list widget with visual feedback for active state
-            let list_title = if !details_pane_active {
-                "Certificates (Active - Use ↑/↓/PgUp/PgDn to navigate)"
-            } else {
+            let list_title = if details_pane_active {
                 "Certificates (Press Tab to activate)"
+            } else {
+                "Certificates (Active - Use ↑/↓/PgUp/PgDn to navigate)"
             };
 
-            let list_block = if !details_pane_active {
+            let list_block = if details_pane_active {
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(list_title)
+            } else {
                 Block::default()
                     .borders(Borders::ALL)
                     .title(list_title)
                     .border_style(Style::default().fg(Color::Yellow))
-            } else {
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title(list_title)
             };
 
             let list = List::new(items)
@@ -666,7 +666,7 @@ fn flatten_node(
     let indentation = "  ".repeat(depth);
 
     // Format display name with bracketed sequence number, indentation, and certificate name
-    let display_name = format!("[{}] {}{}", line_number, indentation, cn);
+    let display_name = format!("[{line_number}] {indentation}{cn}");
 
     // Date is already in the correct format (YYYY-MM-DD HH:MM:SS)
     let valid_until = node.cert.not_after.clone();

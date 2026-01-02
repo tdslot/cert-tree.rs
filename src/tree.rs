@@ -1,12 +1,12 @@
 use crate::models::{CertificateInfo, CertificateNode, CertificateTree, ValidationStatus};
 use std::collections::HashMap;
 
-pub fn build_certificate_tree(certificates: Vec<CertificateInfo>) -> CertificateTree {
+pub fn build_certificate_tree(certificates: &[CertificateInfo]) -> CertificateTree {
     let mut cert_map: HashMap<String, CertificateInfo> = HashMap::new();
     let mut issuer_map: HashMap<String, Vec<String>> = HashMap::new();
 
     // Build maps for quick lookup
-    for cert in &certificates {
+    for cert in certificates {
         cert_map.insert(cert.subject.clone(), cert.clone());
 
         // Group certificates by issuer
@@ -20,7 +20,7 @@ pub fn build_certificate_tree(certificates: Vec<CertificateInfo>) -> Certificate
     let mut roots = Vec::new();
     let mut processed = std::collections::HashSet::new();
 
-    for cert in &certificates {
+    for cert in certificates {
         if !cert_map.contains_key(&cert.issuer) || cert.subject == cert.issuer {
             // This is a root certificate
             if !processed.contains(&cert.subject) {
@@ -31,7 +31,7 @@ pub fn build_certificate_tree(certificates: Vec<CertificateInfo>) -> Certificate
     }
 
     // Handle any remaining certificates that might not have been processed
-    for cert in &certificates {
+    for cert in certificates {
         if !processed.contains(&cert.subject) {
             let node = build_tree_node(cert, &cert_map, &issuer_map, &mut processed);
             roots.push(node);
@@ -55,7 +55,7 @@ fn build_tree_node(
 
     let mut children = Vec::new();
     if let Some(issued_certs) = issuer_map.get(&cert.subject) {
-        for subject in issued_certs.iter() {
+        for subject in issued_certs {
             if let Some(child_cert) = cert_map.get(subject) {
                 if !processed.contains(subject) {
                     let child_node = build_tree_node(child_cert, cert_map, issuer_map, processed);

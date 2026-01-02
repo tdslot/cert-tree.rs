@@ -25,6 +25,9 @@
 //! cert-tree --file certificate.pem --interactive
 //! ```
 
+#![allow(clippy::missing_docs_in_private_items)]
+#![allow(clippy::too_many_lines)]
+
 use mimalloc::MiMalloc;
 
 #[global_allocator]
@@ -62,11 +65,11 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
             CompletionCommands::Install { shell } => match install_completion(shell) {
                 Ok(message) => {
-                    println!("{}", message);
+                    println!("{message}");
                     return Ok(());
                 }
                 Err(err) => {
-                    eprintln!("Error: {}", err);
+                    eprintln!("Error: {err}");
                     std::process::exit(1);
                 }
             },
@@ -95,7 +98,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             display_verbose(cert_info);
         }
     } else {
-        let tree = build_certificate_tree(certificates);
+        let tree = build_certificate_tree(&certificates);
 
         if args.interactive {
             display_certificate_tree_tui(&tree)?;
