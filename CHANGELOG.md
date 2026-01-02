@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.9] - 2026-01-02
+
+### Added
+- **Version Validation**: Automated validation to ensure git tag matches Cargo.toml version before building releases
+- **Cargo Caching**: Implemented dependency caching to significantly reduce build times in CI/CD (from ~15-20 min to ~5-10 min)
+- **Build Matrix Strategy**: Consolidated RPM and DEB builds using matrix strategy for cleaner, more maintainable workflow
+
+### Changed
+- **Release Workflow Redesign**: Complete overhaul of GitHub Actions release workflow for better reliability and predictability
+- **Centralized Version Management**: Version now propagated through job outputs, eliminating duplicate grep commands
+- **Enhanced Release Notes**: Improved release notes generation with better CHANGELOG extraction and formatting
+- **Artifact Handling**: Added fail-fast error handling with `if-no-files-found: error` for all artifact uploads
+
+### Fixed
+- **Strip Binary Paths**: Corrected incorrect strip paths in Alma Linux (line 197) and Debian (line 231) build jobs that referenced wrong target directories
+- **Build Consistency**: All builds now use correct paths for their respective platforms
+
+### Technical
+- **Matrix Builds**: RPM builds consolidated into single job with CentOS/Rocky/Alma matrix; DEB builds with Debian/Ubuntu matrix
+- **Cache Strategy**: Implemented multi-level caching for cargo registry, git, and target directories
+- **Validation Job**: New validate job runs first to ensure version consistency before any builds start
+- **Error Handling**: Improved error detection and reporting throughout workflow
+- **Performance**: Reduced total workflow execution time through parallel builds and caching
+
 ## [0.14.8] - 2025-09-29
 
 ### Changed
