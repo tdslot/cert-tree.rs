@@ -64,6 +64,7 @@ This document outlines the comprehensive workflow guidelines for the cert-tree.r
    just commit "<generated-message>"  # Commit with generated conventional message
    just push           # Push changes
    ```
+   - Daily changes are committed and pushed to the 'develop' branch using conventional commit types such as 'feat', 'fix', 'docs', etc.
 
 ### Feature Development
 

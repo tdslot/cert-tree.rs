@@ -52,10 +52,8 @@
 - ✅ **Completed**: Updated version to 0.14.2 according to semver methodology (PATCH version for TUI display fix)
 - ✅ **Completed**: CHANGELOG.md updated with release notes for v0.14.2
 - ✅ **Completed**: Fixed certificate tree color coding in text mode - certificate names now display in white while status indicators remain colored based on validity
-- ✅ **Completed**: Implemented functional CRL (Certificate Revocation List) checking with visible status display
-- ✅ **Completed**: Added CRL distribution point extraction and URL fetching
-- ✅ **Completed**: Enhanced text mode display to show revocation status for all certificates
-- ✅ **Completed**: Updated version to 0.14.0 according to semver methodology (MINOR version for new functional CRL feature)
+- ✅ **Completed**: CRL extensions (e.g., Distribution Points) are displayed with human-readable names, but no active revocation checking or URL fetching is implemented
+- ✅ **Completed**: Updated version to 0.14.0 according to semver methodology (MINOR version for extension display improvements)
 - ✅ **Completed**: CHANGELOG.md updated with comprehensive release notes for v0.14.0
 - ✅ **Completed**: Added padding (3 spaces) after date column in TUI certificate list to move timestamps away from right edge
 - ✅ **Completed**: Updated version to 0.14.1 according to semver methodology (PATCH version for UI improvement)
