@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.1] - 2026-01-02
+
+### Changed
+- **Optimized Text Display Spacing**: Reduced spacing between certificate names and validity status in text mode tree output for more compact and readable display
+- **Column Position Adjustment**: Reduced fixed column position from 93 to 78 characters, making the output 15 characters more compact while maintaining clear visual separation
+
+### Technical
+- **Display Optimization**: Updated `DATE_COLUMN_START` constant from 93 to 78 in `src/display.rs`
+- **Improved Readability**: Tighter spacing maintains alignment while reducing excessive whitespace
+- **Visual Balance**: Certificate names and status information now have better visual separation without excessive gaps
+
 ## [0.15.0] - 2026-01-02
 
 ### Added
