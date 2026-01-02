@@ -61,11 +61,11 @@ curl https://mise.run | sh
 
 # Restart your shell or source the mise activation
 # Then install cert-tree globally
-mise use -g ubi:tdslot/cert-tree.rs[exe=cert-tree]
+mise use -g github:tdslot/cert-tree.rs
 cert-tree --help
 ```
 
-The `ubi` backend automatically downloads and installs the latest release from GitHub.
+The `github` backend automatically downloads and installs the latest release from GitHub.
 
 ## Justfile - Development Workflow
 
