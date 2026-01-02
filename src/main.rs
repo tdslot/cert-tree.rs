@@ -31,6 +31,7 @@ use mimalloc::MiMalloc;
 static GLOBAL: MiMalloc = MiMalloc;
 
 mod cli;
+mod completions;
 mod display;
 mod error;
 mod io;
@@ -40,7 +41,8 @@ mod tree;
 
 use std::error::Error;
 
-use cli::parse_args;
+use cli::{parse_args, Commands, CompletionCommands};
+use completions::{generate_completion, install_completion};
 use display::{
     display_certificate_tree_text, display_certificate_tree_tui, display_tui, display_verbose,
 };
@@ -50,6 +52,29 @@ use tree::build_certificate_tree;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = parse_args();
+
+    // Handle subcommands
+    match args.command {
+        Some(Commands::Completion(completion_cmd)) => match completion_cmd {
+            CompletionCommands::Generate { shell } => {
+                generate_completion(shell);
+                return Ok(());
+            }
+            CompletionCommands::Install { shell } => match install_completion(shell) {
+                Ok(message) => {
+                    println!("{}", message);
+                    return Ok(());
+                }
+                Err(err) => {
+                    eprintln!("Error: {}", err);
+                    std::process::exit(1);
+                }
+            },
+        },
+        None => {
+            // Continue with normal certificate inspection
+        }
+    }
 
     let certificates = if let Some(file) = args.file.as_ref() {
         let data = load_certificate_from_file(file)?;
