@@ -55,26 +55,22 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // Handle subcommands
     match args.command {
-        Some(Commands::Completion(completion_cmd)) => {
-            match completion_cmd {
-                CompletionCommands::Generate { shell } => {
-                    generate_completion(shell);
+        Some(Commands::Completion(completion_cmd)) => match completion_cmd {
+            CompletionCommands::Generate { shell } => {
+                generate_completion(shell);
+                return Ok(());
+            }
+            CompletionCommands::Install { shell } => match install_completion(shell) {
+                Ok(message) => {
+                    println!("{}", message);
                     return Ok(());
                 }
-                CompletionCommands::Install { shell } => {
-                    match install_completion(shell) {
-                        Ok(message) => {
-                            println!("{}", message);
-                            return Ok(());
-                        }
-                        Err(err) => {
-                            eprintln!("Error: {}", err);
-                            std::process::exit(1);
-                        }
-                    }
+                Err(err) => {
+                    eprintln!("Error: {}", err);
+                    std::process::exit(1);
                 }
-            }
-        }
+            },
+        },
         None => {
             // Continue with normal certificate inspection
         }
