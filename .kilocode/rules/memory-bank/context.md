@@ -2,13 +2,18 @@
 
 ## Current Work Focus
 - **Project Status**: Complete and fully functional with automated release process
-- **Last Major Update**: Code modularization and compilation fixes (v0.14.8)
+- **Last Major Update**: Text display spacing optimization (v0.15.1)
 - **Current Phase**: Production ready with professional release automation
 - **Code Quality**: Comprehensive code review applied with Microsoft Rust Guidelines, modularized structure
 - **Documentation Status**: README.md and release process documentation fully updated
 - **Memory Bank Status**: Updated and synchronized with current project state
 
 ## Recent Changes
+- ✅ **Completed**: Optimized text display spacing between certificate names and validity status (v0.15.1)
+- ✅ **Completed**: Reduced DATE_COLUMN_START constant from 93 to 78 characters for more compact output
+- ✅ **Completed**: Improved visual balance in certificate tree display while maintaining clear separation
+- ✅ **Completed**: Version updated to 0.15.1 according to semver methodology (PATCH version for display optimization)
+- ✅ **Completed**: CHANGELOG.md updated with release notes for v0.15.1
 - ✅ **Completed**: Added mise version manager support: Added installation instructions for mise with github backend in README.md and release notes
 - ✅ **Completed**: Project Standardization: Corrected binary name from `cert_tree` to `cert-tree` for consistency
 - ✅ **Completed**: Repository URL Corrections: Updated all repository URLs from `tadas` to `tdslot` across all files and documentation
