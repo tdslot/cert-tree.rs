@@ -6,17 +6,73 @@ on:
     tags:
       - 'v*'
 
-jobs:
-  build:
-    name: Build for Linux binary
-    runs-on: ubuntu-latest
+env:
+  CARGO_TERM_COLOR: always
 
+jobs:
+  # Validate that the tag matches the version in Cargo.toml
+  validate:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Version from tag: ${VERSION}"
+
+      - name: Get version from Cargo.toml
+        id: cargo_version
+        run: |
+          CARGO_VERSION=$(grep '^version =' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          echo "cargo_version=${CARGO_VERSION}" >> $GITHUB_OUTPUT
+          echo "Version from Cargo.toml: ${CARGO_VERSION}"
+
+      - name: Validate versions match
+        run: |
+          if [ "${{ steps.get_version.outputs.version }}" != "${{ steps.cargo_version.outputs.cargo_version }}" ]; then
+            echo "❌ Error: Tag version (${{ steps.get_version.outputs.version }}) does not match Cargo.toml version (${{ steps.cargo_version.outputs.cargo_version }})"
+            exit 1
+          fi
+          echo "✅ Versions match: ${{ steps.get_version.outputs.version }}"
+
+  # Build Linux binary
+  build-linux:
+    name: Build for Linux x86_64
+    needs: validate
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-gnu
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache target directory
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Build release
         run: cargo build --release --target x86_64-unknown-linux-gnu
@@ -24,25 +80,26 @@ jobs:
       - name: Strip binary
         run: strip target/x86_64-unknown-linux-gnu/release/cert-tree
 
-      - name: Create .tar.gz archive
+      - name: Create archive
         run: |
-          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          VERSION="${{ needs.validate.outputs.version }}"
           mkdir -p cert-tree-linux-x86_64
-          cp target/x86_64-unknown-linux-gnu/release/cert-tree \
-            cert-tree-linux-x86_64/
+          cp target/x86_64-unknown-linux-gnu/release/cert-tree cert-tree-linux-x86_64/
           cp README.md LICENSE cert-tree-linux-x86_64/
           tar -czf cert-tree-${VERSION}-linux-x86_64.tar.gz cert-tree-linux-x86_64/
 
-      - name: Upload .tar.gz artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: linux-binary
           path: cert-tree-*-linux-x86_64.tar.gz
+          if-no-files-found: error
 
+  # Build macOS Intel binary
   build-macos-intel:
-    name: Build for macOS Intel
+    name: Build for macOS x86_64
+    needs: validate
     runs-on: macos-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -52,30 +109,41 @@ jobs:
         with:
           targets: x86_64-apple-darwin
 
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-x86_64-cargo-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Build release
         run: cargo build --release --target x86_64-apple-darwin
 
       - name: Strip binary
         run: strip target/x86_64-apple-darwin/release/cert-tree || true
 
-      - name: Create .tar.gz archive
+      - name: Create archive
         run: |
-          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          VERSION="${{ needs.validate.outputs.version }}"
           mkdir -p cert-tree-macos-x86_64
           cp target/x86_64-apple-darwin/release/cert-tree cert-tree-macos-x86_64/
           cp README.md LICENSE cert-tree-macos-x86_64/
           tar -czf cert-tree-${VERSION}-macos-x86_64.tar.gz cert-tree-macos-x86_64/
 
-      - name: Upload .tar.gz artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: macos-intel-binary
           path: cert-tree-*-macos-x86_64.tar.gz
+          if-no-files-found: error
 
+  # Build macOS ARM binary
   build-macos-arm:
-    name: Build for macOS ARM
+    name: Build for macOS ARM64
+    needs: validate
     runs-on: macos-14
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -85,207 +153,147 @@ jobs:
         with:
           targets: aarch64-apple-darwin
 
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-aarch64-cargo-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Build release
         run: cargo build --release --target aarch64-apple-darwin
 
       - name: Strip binary
         run: strip target/aarch64-apple-darwin/release/cert-tree || true
 
-      - name: Create .tar.gz archive
+      - name: Create archive
         run: |
-          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          VERSION="${{ needs.validate.outputs.version }}"
           mkdir -p cert-tree-macos-aarch64
           cp target/aarch64-apple-darwin/release/cert-tree cert-tree-macos-aarch64/
           cp README.md LICENSE cert-tree-macos-aarch64/
           tar -czf cert-tree-${VERSION}-macos-aarch64.tar.gz cert-tree-macos-aarch64/
 
-      - name: Upload .tar.gz artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: macos-arm-binary
           path: cert-tree-*-macos-aarch64.tar.gz
+          if-no-files-found: error
 
-  build-rpm-centos:
-    name: Build RPM for CentOS
+  # Build RPM packages
+  build-rpm:
+    name: Build RPM for ${{ matrix.distro }}
+    needs: validate
     runs-on: ubuntu-latest
-    container: quay.io/centos/centos:stream9
+    strategy:
+      matrix:
+        include:
+          - distro: centos
+            container: quay.io/centos/centos:stream9
+            package_manager: yum
+          - distro: rocky
+            container: rockylinux:9
+            package_manager: dnf
+          - distro: alma
+            container: almalinux:9
+            package_manager: dnf
+    container: ${{ matrix.container }}
     steps:
       - name: Install dependencies
         run: |
-          yum update -y
-          yum install -y --allowerasing \
-            curl gcc make openssl-devel
+          ${{ matrix.package_manager }} update -y
+          ${{ matrix.package_manager }} install -y --allowerasing curl gcc make openssl-devel
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           . $HOME/.cargo/env
           cargo install cargo-generate-rpm
+
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Build release
         run: |
           . $HOME/.cargo/env
           cargo build --release
+
       - name: Strip binary
         run: strip target/release/cert-tree || true
-      - name: Build .rpm package
+
+      - name: Build RPM package
         run: |
           . $HOME/.cargo/env
           cargo generate-rpm
-          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          VERSION="${{ needs.validate.outputs.version }}"
           mv target/generate-rpm/cert-tree-${VERSION}-1.x86_64.rpm \
-            target/generate-rpm/cert-tree-centos-${VERSION}-1.x86_64.rpm
-      - name: Upload .rpm artifact
+            target/generate-rpm/cert-tree-${{ matrix.distro }}-${VERSION}-1.x86_64.rpm
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: centos-rpm
-          path: target/generate-rpm/cert-tree-centos-*.rpm
+          name: ${{ matrix.distro }}-rpm
+          path: target/generate-rpm/cert-tree-${{ matrix.distro }}-*.rpm
+          if-no-files-found: error
 
-  build-rpm-rocky:
-    name: Build RPM for Rocky Linux
+  # Build DEB packages
+  build-deb:
+    name: Build DEB for ${{ matrix.distro }}
+    needs: validate
     runs-on: ubuntu-latest
-    container: rockylinux:9
-    steps:
-      - name: Install dependencies
-        run: |
-          dnf clean all
-          dnf update -y --refresh
-          dnf install -y --allowerasing \
-            curl gcc make openssl-devel
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          . $HOME/.cargo/env
-          cargo install cargo-generate-rpm
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Build release
-        run: |
-          . $HOME/.cargo/env
-          cargo build --release
-      - name: Strip binary
-        run: strip target/release/cert-tree || true
-      - name: Build .rpm package
-        run: |
-          . $HOME/.cargo/env
-          cargo generate-rpm
-          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          mv target/generate-rpm/cert-tree-${VERSION}-1.x86_64.rpm \
-            target/generate-rpm/cert-tree-rocky-${VERSION}-1.x86_64.rpm
-      - name: Upload .rpm artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: rocky-rpm
-          path: target/generate-rpm/cert-tree-rocky-*.rpm
-
-  build-rpm-alma:
-    name: Build RPM for Alma Linux
-    runs-on: ubuntu-latest
-    container: almalinux:9
-    steps:
-      - name: Install dependencies
-        run: |
-          dnf update -y
-          dnf install -y --allowerasing \
-            curl gcc make openssl-devel
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          . $HOME/.cargo/env
-          cargo install cargo-generate-rpm
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Build release
-        run: |
-          . $HOME/.cargo/env
-          cargo build --release
-      - name: Strip binary
-        run: strip target/x86_64-apple-darwin/release/cert-tree || true
-      - name: Build .rpm package
-        run: |
-          . $HOME/.cargo/env
-          cargo generate-rpm
-          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          mv target/generate-rpm/cert-tree-${VERSION}-1.x86_64.rpm \
-            target/generate-rpm/cert-tree-alma-${VERSION}-1.x86_64.rpm
-      - name: Upload .rpm artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: alma-rpm
-          path: target/generate-rpm/cert-tree-alma-*.rpm
-
-  build-deb-debian:
-    name: Build DEB for Debian
-    runs-on: ubuntu-latest
-    container: debian:latest
+    strategy:
+      matrix:
+        include:
+          - distro: debian
+            container: debian:latest
+          - distro: ubuntu
+            container: ubuntu:latest
+    container: ${{ matrix.container }}
     steps:
       - name: Install dependencies
         run: |
           apt update -y
-          apt install -y curl build-essential \
-            libssl-dev pkg-config
+          apt install -y curl build-essential libssl-dev pkg-config
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           . $HOME/.cargo/env
           cargo install cargo-deb
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Build release
-        run: |
-          . $HOME/.cargo/env
-          cargo build --release
-      - name: Strip binary
-        run: strip target/x86_64-apple-darwin/release/cert-tree || true
-      - name: Build .deb package
-        run: |
-          . $HOME/.cargo/env
-          cargo deb
-          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          mv target/debian/cert-tree_${VERSION}-1_amd64.deb \
-            target/debian/cert-tree-debian-${VERSION}-1_amd64.deb
-      - name: Upload .deb artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: debian-deb
-          path: target/debian/cert-tree-debian-*.deb
 
-  build-deb-ubuntu:
-    name: Build DEB for Ubuntu
-    runs-on: ubuntu-latest
-    container: ubuntu:latest
-    steps:
-      - name: Install dependencies
-        run: |
-          apt update -y
-          apt install -y curl build-essential \
-            libssl-dev pkg-config
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          . $HOME/.cargo/env
-          cargo install cargo-deb
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Build release
         run: |
           . $HOME/.cargo/env
           cargo build --release
+
       - name: Strip binary
         run: strip target/release/cert-tree || true
-      - name: Build .deb package
+
+      - name: Build DEB package
         run: |
           . $HOME/.cargo/env
           cargo deb
-          VERSION=$(grep '^version =' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          VERSION="${{ needs.validate.outputs.version }}"
           mv target/debian/cert-tree_${VERSION}-1_amd64.deb \
-            target/debian/cert-tree-ubuntu-${VERSION}-1_amd64.deb
-      - name: Upload .deb artifact
+            target/debian/cert-tree-${{ matrix.distro }}-${VERSION}-1_amd64.deb
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ubuntu-deb
-          path: target/debian/cert-tree-ubuntu-*.deb
+          name: ${{ matrix.distro }}-deb
+          path: target/debian/cert-tree-${{ matrix.distro }}-*.deb
+          if-no-files-found: error
 
+  # Create GitHub release
   release:
+    name: Create GitHub Release
     needs:
-      - build
+      - validate
+      - build-linux
       - build-macos-intel
       - build-macos-arm
-      - build-rpm-centos
-      - build-rpm-rocky
-      - build-rpm-alma
-      - build-deb-debian
-      - build-deb-ubuntu
+      - build-rpm
+      - build-deb
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -296,139 +304,118 @@ jobs:
         with:
           path: artifacts
 
-      - name: Get version
-        id: get_version
-        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-      - name: Generate beautiful release notes
+      - name: Display artifact structure
         run: |
-          VERSION="${{ steps.get_version.outputs.version }}"
+          echo "Artifact structure:"
+          ls -R artifacts/
+
+      - name: Extract changelog for this version
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
           DATE=$(date +%Y-%m-%d)
+          
+          # Extract changelog section for this version
+          awk "/^## \\[${VERSION}\\]/{flag=1; next} /^## \\[/{flag=0} flag" CHANGELOG.md > changelog_section.md
+          
+          # Check if changelog section exists
+          if [ ! -s changelog_section.md ]; then
+            echo "⚠️ Warning: No changelog section found for version ${VERSION}"
+            echo "No changelog available for this version." > changelog_section.md
+          fi
 
-          # Extract changelog content
-          awk "/^## \\[${VERSION}\\]/{flag=1; next} /^## \\[/{flag=0} flag" \
-            CHANGELOG.md > changelog_raw.md
-
-          # Generate enhanced release notes with proper variable expansion
-          cat > release_notes.md << EOF
-          # 🎉 cert-tree v${VERSION} - Quality & Performance Release
-
-          **Released on:** ${DATE}
-
-          ## ✨ What's New
-
-          ### 🚀 Performance Improvements
-          - **High-performance memory allocator**: Added mimalloc for significantly better memory management and application performance
-          - **Optimized build configuration**: Enhanced compilation settings for maximum speed
-
-          ### 🔧 Code Quality Enhancements
-          - **Comprehensive code review**: Applied Microsoft Rust Guidelines for professional-grade code quality
-          - **Magic number elimination**: Replaced hardcoded values with descriptive constants
-          - **Enhanced documentation**: Added detailed inline documentation with examples and safety notes
-          - **Advanced linting**: Enabled pedantic, complexity, and performance clippy checks
-
-          ### 📊 Technical Improvements
-          - **Warning reduction**: Decreased compiler warnings from 74 to 57 for cleaner builds
-          - **Memory safety**: Maintained Rust's zero-cost abstractions and memory safety guarantees
-          - **Cross-platform compatibility**: Verified builds work across all supported platforms
-
+      - name: Generate release notes
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          DATE=$(date +%Y-%m-%d)
+          
+          cat > release_notes.md << 'EOF'
+          # 🎉 cert-tree v$VERSION
+          
+          **Released:** $DATE
+          
           ## 📦 Downloads
-
-          Choose the right package for your system:
-
+          
           ### 🐧 Linux
-          - **Binary**: \`cert-tree-${VERSION}-linux-x86_64.tar.gz\` (Universal Linux binary)
-          - **RPM Packages**:
-            - CentOS/RHEL: \`cert-tree-centos-${VERSION}-1.x86_64.rpm\`
-            - Rocky Linux: \`cert-tree-rocky-${VERSION}-1.x86_64.rpm\`
-            - Alma Linux: \`cert-tree-alma-${VERSION}-1.x86_64.rpm\`
-          - **DEB Packages**:
-            - Debian: \`cert-tree-debian-${VERSION}-1_amd64.deb\`
-            - Ubuntu: \`cert-tree-ubuntu-${VERSION}-1_amd64.deb\`
-
+          - **Binary**: `cert-tree-$VERSION-linux-x86_64.tar.gz`
+          - **RPM**: CentOS, Rocky, Alma packages available
+          - **DEB**: Debian, Ubuntu packages available
+          
           ### 🍎 macOS
-          - **Intel**: \`cert-tree-${VERSION}-macos-x86_64.tar.gz\`
-          - **Apple Silicon**: \`cert-tree-${VERSION}-macos-aarch64.tar.gz\`
-
+          - **Intel**: `cert-tree-$VERSION-macos-x86_64.tar.gz`
+          - **Apple Silicon**: `cert-tree-$VERSION-macos-aarch64.tar.gz`
+          
           ## 🚀 Quick Start
-
-          ### From Binary (All Platforms)
-          \`\`\`bash
-          # Download and extract
-          tar -xzf cert-tree-*-x86_64.tar.gz
-          cd cert-tree-*
-
-          # Make executable and run
-          chmod +x cert-tree
+          
+          ### Binary Installation
+          ```bash
+          # Extract
+          tar -xzf cert-tree-$VERSION-*.tar.gz
+          cd cert-tree-*/
+          
+          # Run
           ./cert-tree --help
-          \`\`\`
-
-          ### From Package Managers
-
-          **Ubuntu/Debian:**
-          \`\`\`bash
-          sudo dpkg -i cert-tree-ubuntu-${VERSION}-1_amd64.deb
-          cert-tree --help
-          \`\`\`
-
-          **CentOS/RHEL/Rocky/Alma:**
-          \`\`\`bash
-          sudo rpm -i cert-tree-centos-${VERSION}-1.x86_64.rpm
-          cert-tree --help
-          \`\`\`
-
-          ### From Version Managers
-
-          **mise (GitHub Backend):**
-          \`\`\`bash
-          # Install mise first (if not already installed)
-          curl https://mise.run | sh
-
-          # Restart your shell or source the mise activation
-          # Then install cert-tree globally
+          ```
+          
+          ### Package Manager
+          ```bash
+          # Ubuntu/Debian
+          sudo dpkg -i cert-tree-ubuntu-$VERSION-1_amd64.deb
+          
+          # CentOS/RHEL/Rocky/Alma
+          sudo rpm -i cert-tree-centos-$VERSION-1.x86_64.rpm
+          ```
+          
+          ### Version Manager (mise)
+          ```bash
           mise use -g github:tdslot/cert-tree.rs
-          cert-tree --help
-          \`\`\`
-
-          ### Basic Usage Examples
-
-          \`\`\`bash
-          # Inspect a certificate file
+          ```
+          
+          ## 📖 Usage Examples
+          
+          ```bash
+          # Inspect certificate file
           cert-tree --file certificate.pem
-
-          # Check website certificates
-          cert-tree --url https://github.com
-
+          
+          # Check website certificate
+          cert-tree --url https://example.com
+          
           # Interactive mode
           cert-tree --file certificate.pem --interactive
-          \`\`\`
-
-          ## 🔗 Links
-
-          - **📖 Documentation**: [README.md](https://github.com/tdslot/cert-tree.rs/blob/main/README.md)
-          - **🐛 Report Issues**: [GitHub Issues](https://github.com/tdslot/cert-tree.rs/issues)
-          - **💬 Discussions**: [GitHub Discussions](https://github.com/tdslot/cert-tree.rs/discussions)
-
-          ## 🙏 Acknowledgments
-
-          Built with ❤️ using Rust and modern development practices.
-
+          ```
+          
+          ## 📋 Changelog
+          
+          EOF
+          
+          # Replace variables in template
+          sed -i "s/\$VERSION/${VERSION}/g" release_notes.md
+          sed -i "s/\$DATE/${DATE}/g" release_notes.md
+          
+          # Append changelog section
+          cat changelog_section.md >> release_notes.md
+          
+          # Add footer
+          cat >> release_notes.md << 'EOF'
+          
           ---
-
-          *This release maintains full backward compatibility and includes comprehensive testing across all platforms.*
+          
+          ## 🔗 Links
+          - 📖 [Documentation](https://github.com/tdslot/cert-tree.rs/blob/main/README.md)
+          - 🐛 [Report Issues](https://github.com/tdslot/cert-tree.rs/issues)
+          - 💬 [Discussions](https://github.com/tdslot/cert-tree.rs/discussions)
+          
+          **Full Changelog**: https://github.com/tdslot/cert-tree.rs/blob/main/CHANGELOG.md
           EOF
 
-          # Append raw changelog for technical details
-          echo -e "\n## 📋 Technical Changelog\n" >> release_notes.md
-          cat changelog_raw.md >> release_notes.md
-          rm changelog_raw.md
-
-      - name: Create release
-        uses: softprops/action-gh-release@v1
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
           files: artifacts/**/*
           body_path: release_notes.md
           tag_name: ${{ github.ref }}
-          name: cert-tree ${{ github.ref_name }}
+          name: cert-tree v${{ needs.validate.outputs.version }}
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
