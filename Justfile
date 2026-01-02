@@ -277,19 +277,19 @@ release-archive: build-release
 release: prepare-release release-archive
     @echo "🎊 Full release workflow completed!"
 
-# GitHub release workflow (creates tag and lets GitHub Actions handle release)
+# GitHub release workflow (creates signed tag and lets GitHub Actions handle release)
 release-github:
     @echo "📝 Staging and committing release workflow updates..."
-    git add .github/workflows/release.yml Justfile Cargo.toml
+    git add .github/workflows/release.yml Justfile Cargo.toml CHANGELOG.md
     git commit -m "chore: update release workflow and Justfile for v{{version}}" || true
     git push
     @echo "🏷️ Cleaning up any existing release tags to avoid conflicts..."
     git tag -d v{{version}} || true
     git push origin --delete v{{version}} || true
-    @echo "🏷️ Creating new annotated version tag v{{version}}..."
-    git tag -a v{{version}} -m "Release v{{version}}"
+    @echo "🔐 Creating new GPG-signed annotated version tag v{{version}}..."
+    git tag -s v{{version}} -m "Release v{{version}}"
     git push origin v{{version}}
-    @echo "✅ Version tag v{{version}} successfully created and pushed to remote."
+    @echo "✅ Signed version tag v{{version}} successfully created and pushed to remote."
     @echo "🚀 Release workflow initiated. GitHub Actions will now build and publish the release."
 
 # Development environment recipes
