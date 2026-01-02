@@ -1,6 +1,6 @@
 # cert-tree
 
-[![Version](https://img.shields.io/badge/version-0.14.9-blue.svg)](https://github.com/tdslot/cert-tree.rs/releases)
+[![Version](https://img.shields.io/badge/version-0.15.0-blue.svg)](https://github.com/tdslot/cert-tree.rs/releases)
 
 A command-line utility for inspecting X.509 certificates in a tree-like structure, inspired by [cert_tree](https://github.com/jkolezyn/cert_tree).
 
@@ -24,6 +24,7 @@ A command-line utility for inspecting X.509 certificates in a tree-like structur
 - **Sequence numbering**: Bracketed sequence numbers [1], [2] for certificate identification
 - **Enhanced TUI**: Interactive navigation with Tab-based pane switching, scrollable certificate list and details, automatic text wrapping for long content, version display, responsive layout, ISO 8601 date-time format
 - **CRL Support**: Certificate revocation checking infrastructure with revocation status display
+- **Shell Completion**: Tab-completion support for bash, zsh, fish, and PowerShell
 - Comprehensive error handling for invalid certificates
 - Efficient parsing using the `x509-parser` crate
 
@@ -340,6 +341,85 @@ cert-tree --file ca_list.pem --interactive
 - `-t, --text`: Force text output mode (non-interactive, default: true)
 - `-h, --help`: Print help information
 - `-V, --version`: Print version information
+
+### Shell Completion
+
+cert-tree supports shell completion for bash, zsh, fish, and PowerShell. This provides tab-completion for commands, options, and arguments.
+
+#### Generating Completion Scripts
+
+```bash
+# Generate completion script for your shell
+cert-tree completion bash > cert-tree.bash
+cert-tree completion zsh > _cert-tree
+cert-tree completion fish > cert-tree.fish
+cert-tree completion powershell > _cert-tree.ps1
+```
+
+#### Installation Instructions
+
+**Bash (Linux)**
+```bash
+# System-wide installation
+cert-tree completion bash | sudo tee /etc/bash_completion.d/cert-tree
+
+# Then reload your shell or run
+source ~/.bashrc
+```
+
+**Bash (macOS)**
+```bash
+# Install bash-completion if not already installed
+brew install bash-completion
+
+# Add completion script
+cert-tree completion bash > /usr/local/etc/bash_completion.d/cert-tree
+
+# Then reload your shell
+source ~/.bash_profile
+```
+
+**Zsh**
+```bash
+# Create completion directory if it doesn't exist
+mkdir -p ~/.zsh/completion
+
+# Add completion script
+cert-tree completion zsh > ~/.zsh/completion/_cert-tree
+
+# Add to ~/.zshrc if not already present:
+# fpath=(~/.zsh/completion $fpath)
+# autoload -Uz compinit && compinit
+
+# Then reload your shell
+source ~/.zshrc
+```
+
+**Fish**
+```bash
+# Add completion script
+cert-tree completion fish > ~/.config/fish/completions/cert-tree.fish
+
+# Completions will be available immediately in new fish shells
+```
+
+**PowerShell**
+```powershell
+# Add to your PowerShell profile
+cert-tree completion powershell >> $PROFILE
+
+# Then reload your profile or restart PowerShell
+. $PROFILE
+```
+
+#### Verification
+
+After installation, you can verify completion is working by typing:
+```bash
+cert-tree <TAB>
+```
+
+This should show available options and subcommands.
 
 ## Interactive TUI Mode
 

@@ -5,6 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0] - 2026-01-02
+
+### Added
+- **Shell Completion Support**: Added comprehensive shell completion functionality for bash, zsh, fish, and PowerShell
+- **Completion Subcommand**: New `completion` subcommand for generating shell completion scripts (e.g., `cert-tree completion bash`)
+- **Multi-Shell Support**: Full tab-completion support across all major shells:
+  - Bash (Linux and macOS)
+  - Zsh (with oh-my-zsh compatibility)
+  - Fish (with intelligent completion)
+  - PowerShell (Windows and cross-platform)
+- **Installation Documentation**: Comprehensive installation instructions for each shell in README.md
+- **Completion Module**: New dedicated `completions.rs` module for shell completion generation
+
+### Changed
+- **CLI Structure**: Enhanced CLI with subcommand support while maintaining backward compatibility
+- **Documentation**: Updated README.md with detailed shell completion setup instructions for all supported platforms
+- **Dependencies**: Added `clap_complete` v4.5 for robust completion generation
+
+### Technical
+- **Module Organization**: Added `src/completions.rs` module with completion generation functions
+- **CLI Enhancement**: Updated `src/cli.rs` to support subcommands using clap's derive API
+- **Global Options**: Made all main CLI options global to work with subcommands
+- **Testing**: Added comprehensive tests for completion generation across all shells
+
+### User Experience
+- **Improved Productivity**: Tab-completion makes CLI usage faster and reduces typing errors
+- **Discoverability**: Users can easily discover available options and arguments
+- **Cross-Platform**: Consistent completion experience across different shells and operating systems
+- **Easy Setup**: Simple one-command installation for each shell with clear documentation
+
+### Example Usage
+```bash
+# Generate completion script for your shell
+cert-tree completion bash > cert-tree.bash
+cert-tree completion zsh > _cert-tree
+cert-tree completion fish > cert-tree.fish
+cert-tree completion powershell > _cert-tree.ps1
+```
+
 ## [0.14.9] - 2026-01-02
 
 ### Added
