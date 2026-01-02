@@ -346,22 +346,46 @@ cert-tree --file ca_list.pem --interactive
 
 cert-tree supports shell completion for bash, zsh, fish, and PowerShell. This provides tab-completion for commands, options, and arguments.
 
-#### Generating Completion Scripts
+#### Quick Installation (Recommended)
+
+The easiest way to install shell completion is using the automatic installer:
+
+```bash
+# Auto-detect your shell and install
+cert-tree completion install
+
+# Or specify a shell explicitly
+cert-tree completion install --shell bash
+cert-tree completion install --shell zsh
+cert-tree completion install --shell fish
+```
+
+The installer will:
+- Detect your current shell automatically
+- Create necessary directories
+- Install completion to the correct location
+- Provide post-installation instructions
+
+#### Manual Installation
+
+If you prefer manual installation or want to customize the location:
 
 ```bash
 # Generate completion script for your shell
-cert-tree completion bash > cert-tree.bash
-cert-tree completion zsh > _cert-tree
-cert-tree completion fish > cert-tree.fish
-cert-tree completion powershell > _cert-tree.ps1
+cert-tree completion generate bash > cert-tree.bash
+cert-tree completion generate zsh > _cert-tree
+cert-tree completion generate fish > cert-tree.fish
+cert-tree completion generate powershell > _cert-tree.ps1
 ```
-
-#### Installation Instructions
 
 **Bash (Linux)**
 ```bash
 # System-wide installation
-cert-tree completion bash | sudo tee /etc/bash_completion.d/cert-tree
+cert-tree completion generate bash | sudo tee /etc/bash_completion.d/cert-tree
+
+# User-local installation
+mkdir -p ~/.local/share/bash-completion/completions
+cert-tree completion generate bash > ~/.local/share/bash-completion/completions/cert-tree
 
 # Then reload your shell or run
 source ~/.bashrc
@@ -373,7 +397,7 @@ source ~/.bashrc
 brew install bash-completion
 
 # Add completion script
-cert-tree completion bash > /usr/local/etc/bash_completion.d/cert-tree
+cert-tree completion generate bash > /usr/local/etc/bash_completion.d/cert-tree
 
 # Then reload your shell
 source ~/.bash_profile
@@ -385,7 +409,7 @@ source ~/.bash_profile
 mkdir -p ~/.zsh/completion
 
 # Add completion script
-cert-tree completion zsh > ~/.zsh/completion/_cert-tree
+cert-tree completion generate zsh > ~/.zsh/completion/_cert-tree
 
 # Add to ~/.zshrc if not already present:
 # fpath=(~/.zsh/completion $fpath)
@@ -398,7 +422,7 @@ source ~/.zshrc
 **Fish**
 ```bash
 # Add completion script
-cert-tree completion fish > ~/.config/fish/completions/cert-tree.fish
+cert-tree completion generate fish > ~/.config/fish/completions/cert-tree.fish
 
 # Completions will be available immediately in new fish shells
 ```
@@ -406,7 +430,7 @@ cert-tree completion fish > ~/.config/fish/completions/cert-tree.fish
 **PowerShell**
 ```powershell
 # Add to your PowerShell profile
-cert-tree completion powershell >> $PROFILE
+cert-tree completion generate powershell >> $PROFILE
 
 # Then reload your profile or restart PowerShell
 . $PROFILE

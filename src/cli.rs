@@ -29,17 +29,36 @@ pub struct Args {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Generate shell completion scripts
+    /// Manage shell completions
+    #[command(subcommand)]
+    Completion(CompletionCommands),
+}
+
+#[derive(Subcommand)]
+pub enum CompletionCommands {
+    /// Generate shell completion script to stdout
     ///
     /// Examples:
-    ///   cert-tree completion bash > cert-tree.bash
-    ///   cert-tree completion zsh > _cert-tree
-    ///   cert-tree completion fish > cert-tree.fish
-    ///   cert-tree completion powershell > _cert-tree.ps1
-    Completion {
+    ///   cert-tree completion generate bash > cert-tree.bash
+    ///   cert-tree completion generate zsh > _cert-tree
+    ///   cert-tree completion generate fish > cert-tree.fish
+    Generate {
         /// Shell type
         #[arg(value_enum)]
         shell: Shell,
+    },
+    /// Install shell completion (auto-detects shell)
+    ///
+    /// Automatically detects your current shell and installs completion
+    /// to the appropriate location. You can also specify a shell explicitly.
+    ///
+    /// Examples:
+    ///   cert-tree completion install              # Auto-detect and install
+    ///   cert-tree completion install --shell bash # Install for bash
+    Install {
+        /// Shell type (optional, will auto-detect if not provided)
+        #[arg(short, long, value_enum)]
+        shell: Option<Shell>,
     },
 }
 

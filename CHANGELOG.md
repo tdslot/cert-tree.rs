@@ -9,39 +9,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Shell Completion Support**: Added comprehensive shell completion functionality for bash, zsh, fish, and PowerShell
-- **Completion Subcommand**: New `completion` subcommand for generating shell completion scripts (e.g., `cert-tree completion bash`)
+- **Automatic Installation**: New `completion install` command that auto-detects your shell and installs completion automatically
+- **Shell Detection**: Automatic detection of current shell from environment variables
+- **Smart Path Resolution**: Automatically determines correct installation path for each shell
+- **Completion Subcommands**:
+  - `completion generate <shell>` - Generate completion script to stdout
+  - `completion install [--shell <shell>]` - Auto-install completion (with optional shell specification)
 - **Multi-Shell Support**: Full tab-completion support across all major shells:
   - Bash (Linux and macOS)
   - Zsh (with oh-my-zsh compatibility)
   - Fish (with intelligent completion)
   - PowerShell (Windows and cross-platform)
-- **Installation Documentation**: Comprehensive installation instructions for each shell in README.md
-- **Completion Module**: New dedicated `completions.rs` module for shell completion generation
+- **User-Friendly Messages**: Clear success messages with post-installation instructions
+- **Completion Module**: New dedicated `completions.rs` module with installation logic
 
 ### Changed
-- **CLI Structure**: Enhanced CLI with subcommand support while maintaining backward compatibility
-- **Documentation**: Updated README.md with detailed shell completion setup instructions for all supported platforms
+- **CLI Structure**: Enhanced CLI with nested subcommand support for completion management
+- **Documentation**: Updated README.md with automatic installation instructions and manual alternatives
 - **Dependencies**: Added `clap_complete` v4.5 for robust completion generation
 
 ### Technical
-- **Module Organization**: Added `src/completions.rs` module with completion generation functions
-- **CLI Enhancement**: Updated `src/cli.rs` to support subcommands using clap's derive API
-- **Global Options**: Made all main CLI options global to work with subcommands
-- **Testing**: Added comprehensive tests for completion generation across all shells
+- **Module Organization**: Enhanced `src/completions.rs` module with:
+  - `detect_shell()` - Automatic shell detection from environment
+  - `get_completion_path()` - Platform-specific completion path resolution
+  - `install_completion()` - Automatic installation with directory creation
+  - `generate_completion()` - Stdout completion generation
+- **CLI Enhancement**: Implemented nested subcommands structure:
+  - `Commands::Completion(CompletionCommands)`
+  - `CompletionCommands::Generate` and `CompletionCommands::Install`
+- **Error Handling**: Comprehensive error messages for installation failures
+- **Cross-Platform**: Platform-specific path handling for different operating systems
 
 ### User Experience
+- **Zero-Configuration Setup**: Single command to install completion automatically
 - **Improved Productivity**: Tab-completion makes CLI usage faster and reduces typing errors
 - **Discoverability**: Users can easily discover available options and arguments
-- **Cross-Platform**: Consistent completion experience across different shells and operating systems
-- **Easy Setup**: Simple one-command installation for each shell with clear documentation
+- **Flexibility**: Supports both automatic and manual installation workflows
+- **Clear Feedback**: Detailed success messages with next steps
 
 ### Example Usage
 ```bash
-# Generate completion script for your shell
-cert-tree completion bash > cert-tree.bash
-cert-tree completion zsh > _cert-tree
-cert-tree completion fish > cert-tree.fish
-cert-tree completion powershell > _cert-tree.ps1
+# Automatic installation (recommended)
+cert-tree completion install              # Auto-detect and install
+
+# Manual shell specification
+cert-tree completion install --shell bash
+
+# Generate to stdout (for custom installations)
+cert-tree completion generate bash > cert-tree.bash
+cert-tree completion generate fish > cert-tree.fish
 ```
 
 ## [0.14.9] - 2026-01-02
