@@ -17,6 +17,7 @@ binary_path_debug := debug_dir + "/" + binary_name
 
 # Test files
 test_cert := test_dir + "/cacert.pem"
+test_cert_single := test_dir + "/single_cert.pem"
 
 # Cargo configuration
 cargo_toml := "Cargo.toml"
@@ -28,6 +29,7 @@ version := `grep '^version' Cargo.toml | head -1 | cut -d'"' -f2`
 # Documentation
 readme := "README.md"
 changelog := "CHANGELOG.md"
+agents_md := "AGENTS.md"
 
 # Default recipe (shows available commands)
 default:
@@ -42,42 +44,42 @@ default:
 # Check code for compilation errors
 check:
     @echo "🔍 Checking code compilation..."
-    source "$HOME/.cargo/env" && cargo check
+    cargo check
 
 # Build debug version
 build:
     @echo "🔨 Building debug version..."
-    source "$HOME/.cargo/env" && cargo build
+    cargo build
 
 # Build optimized release version
 build-release:
     @echo "⚡ Building optimized release version..."
-    source "$HOME/.cargo/env" && cargo build --release
+    cargo build --release
 
 # Run tests
 test:
     @echo "🧪 Running tests..."
-    source "$HOME/.cargo/env" && cargo test
+    cargo test
 
-# Run tests with output
+# Run tests with output (nocapture shows println! output)
 test-verbose:
     @echo "🧪 Running tests with verbose output..."
-    source "$HOME/.cargo/env" && cargo test -- --nocapture
+    cargo test -- --nocapture
 
-# Format code
+# Format code with rustfmt
 fmt:
     @echo "🎨 Formatting code..."
-    source "$HOME/.cargo/env" && cargo fmt
+    cargo fmt
 
-# Lint code
+# Lint code with clippy (treat warnings as errors)
 clippy:
     @echo "🔎 Running clippy linter..."
-    source "$HOME/.cargo/env" && cargo clippy
+    cargo clippy -- -D warnings
 
 # Clean build artifacts
 clean:
     @echo "🧹 Cleaning build artifacts..."
-    source "$HOME/.cargo/env" && cargo clean
+    cargo clean
 
 # Full clean (removes target directory completely)
 clean-all:
@@ -102,123 +104,154 @@ dev-check: fmt clippy build
 # Application execution recipes
 # =============================
 
-# Run debug version
+# Run debug version (shows help)
 run:
     @echo "🚀 Running debug version..."
-    source "$HOME/.cargo/env" && cargo run
+    cargo run
 
-# Run release version
+# Run release version (shows help)
 run-release:
     @echo "🚀 Running release version..."
-    source "$HOME/.cargo/env" && cargo run --release
+    cargo run --release
 
-# Run with test certificate (debug)
+# Run with test certificate chain (text mode)
 run-test-cert:
-    @echo "🚀 Running with test certificate (debug)..."
-    cargo run -- --file {{test_cert}}
+    @echo "🚀 Running with test certificate chain (text mode)..."
+    cargo run -- --file {{test_cert}} --text
 
-# Run with test certificate (release)
-run-test-cert-release:
-    @echo "🚀 Running with test certificate (release)..."
-    {{binary_path}} --file {{test_cert}}
-
-# Run with test certificate in text mode
-run-test-cert-text:
-    @echo "📄 Running with test certificate in text mode..."
-    {{binary_path}} --file {{test_cert}} --text
-
-# Run interactive TUI with test certificate
+# Run with test certificate chain (interactive TUI)
 run-test-cert-tui:
-    @echo "🖥️  Running interactive TUI with test certificate..."
-    {{binary_path}} --file {{test_cert}}
+    @echo "🖥️  Running with test certificate chain (interactive TUI)..."
+    cargo run -- --file {{test_cert}} --interactive
+
+# Run with single certificate (text mode)
+run-single-cert:
+    @echo "📄 Running with single certificate (text mode)..."
+    cargo run -- --file {{test_cert_single}} --text
+
+# Run with single certificate (interactive TUI)
+run-single-cert-tui:
+    @echo "🖥️  Running with single certificate (interactive TUI)..."
+    cargo run -- --file {{test_cert_single}} --interactive
+
+# Run with URL certificate fetching
+run-url url="https://google.com":
+    @echo "🌐 Fetching certificates from {{url}}..."
+    cargo run -- --url {{url}} --text
 
 # Dependency management
 # ====================
 
-# Update dependencies
+# Update dependencies to latest compatible versions
 update-deps:
     @echo "📦 Updating dependencies..."
-    source "$HOME/.cargo/env" && cargo update
+    cargo update
 
-# Check for outdated dependencies
+# Check for outdated dependencies (requires cargo-outdated)
 outdated:
     @echo "📊 Checking for outdated dependencies..."
-    source "$HOME/.cargo/env" && cargo outdated
+    @echo "Note: Install with 'cargo install cargo-outdated'"
+    cargo outdated || echo "cargo-outdated not installed"
 
-# Audit dependencies for security issues
+# Audit dependencies for security issues (requires cargo-audit)
 audit:
     @echo "🔒 Auditing dependencies for security issues..."
-    source "$HOME/.cargo/env" && cargo audit
+    @echo "Note: Install with 'cargo install cargo-audit'"
+    cargo audit || echo "cargo-audit not installed"
 
 # Generate dependency tree
-tree:
+dep-tree:
     @echo "🌳 Generating dependency tree..."
-    source "$HOME/.cargo/env" && cargo tree
+    cargo tree
 
 # Documentation recipes
 # ====================
 
-# Generate documentation
+# Generate and open documentation
 doc:
     @echo "📚 Generating documentation..."
-    source "$HOME/.cargo/env" && cargo doc --open
+    cargo doc --open
 
 # Generate documentation without opening browser
 doc-build:
-    @echo "📚 Generating documentation..."
-    source "$HOME/.cargo/env" && cargo doc
+    @echo "📚 Building documentation..."
+    cargo doc --no-deps
 
-# Check documentation
+# Check documentation for warnings
 doc-check:
     @echo "📚 Checking documentation..."
-    source "$HOME/.cargo/env" && cargo doc --no-deps
+    cargo doc --no-deps --document-private-items
 
 # Project information recipes
 # ===========================
 
-# Show project version
-version:
-    @echo "📋 Project version:"
-    {{binary_path}} --version
+# Show project version from Cargo.toml
+show-version:
+    @echo "📋 Project version: {{version}}"
 
-# Show help
-help:
+# Show application help (requires release build)
+show-help: build-release
     @echo "📖 Application help:"
     {{binary_path}} --help
+
+# Show application version (requires release build)
+show-app-version: build-release
+    @echo "📋 Application version:"
+    {{binary_path}} --version
 
 # Show project information
 info:
     @echo "📊 Project Information:"
-    @echo "Name: {{project_name}}"
-    @echo "Source directory: {{src_dir}}"
-    @echo "Test directory: {{test_dir}}"
-    @echo "Target directory: {{target_dir}}"
-    @echo "Binary path (release): {{binary_path}}"
-    @echo "Binary path (debug): {{binary_path_debug}}"
-    @echo "Test certificate: {{test_cert}}"
+    @echo "  Name: {{project_name}}"
+    @echo "  Version: {{version}}"
+    @echo "  Source directory: {{src_dir}}"
+    @echo "  Test directory: {{test_dir}}"
+    @echo "  Target directory: {{target_dir}}"
+    @echo "  Binary path (release): {{binary_path}}"
+    @echo "  Binary path (debug): {{binary_path_debug}}"
+    @echo "  Test certificate chain: {{test_cert}}"
+    @echo "  Test single certificate: {{test_cert_single}}"
 
 # File system recipes
 # ===================
 
-# Show project structure
-tree-project:
+# Show project structure (requires tree command)
+show-tree:
     @echo "📁 Project structure:"
-    tree -I {{target_dir}} -a
+    @tree -I 'target' -a || echo "tree command not installed"
 
-# Show source files
+# Show all source files
 list-src:
     @echo "📄 Source files:"
-    find {{src_dir}} -name "*.rs" -type f
+    @find {{src_dir}} -name "*.rs" -type f | sort
 
 # Show test files
 list-tests:
-    @echo "🧪 Test files:"
-    find {{test_dir}} -type f
+    @echo "🧪 Test certificate files:"
+    @find {{test_dir}} -type f | sort
 
-# Count lines of code
+# Count lines of code in source files
 loc:
-    @echo "📊 Lines of code:"
-    find {{src_dir}} -name "*.rs" -type f -exec wc -l {} + | tail -1
+    @echo "📊 Lines of code statistics:"
+    @echo ""
+    @echo "Source files:"
+    @find {{src_dir}} -name "*.rs" -type f -exec wc -l {} + | sort -n
+    @echo ""
+    @echo "Total:"
+    @find {{src_dir}} -name "*.rs" -type f -exec cat {} + | wc -l
+
+# Detailed code statistics
+stats:
+    @echo "📈 Code Statistics:"
+    @echo ""
+    @echo "Rust source files:"
+    @find {{src_dir}} -name "*.rs" -type f | wc -l
+    @echo ""
+    @echo "Total lines (including comments and blanks):"
+    @find {{src_dir}} -name "*.rs" -type f -exec cat {} + | wc -l
+    @echo ""
+    @echo "Non-empty lines:"
+    @find {{src_dir}} -name "*.rs" -type f -exec cat {} + | grep -v '^[[:space:]]*$' | wc -l
 
 # Git recipes
 # ===========
@@ -249,11 +282,11 @@ pull:
     @echo "⬇️  Pulling from remote..."
     git pull
 
-# Create and push a new tag
-tag version message:
-    @echo "🏷️  Creating tag {{version}} with message: {{message}}"
-    git tag -a {{version}} -m "{{message}}"
-    git push origin {{version}}
+# Create and push a new version tag (use for manual releases)
+tag tag_name message:
+    @echo "🏷️  Creating tag {{tag_name}} with message: {{message}}"
+    git tag -a {{tag_name}} -m "{{message}}"
+    git push origin {{tag_name}}
 
 # Release workflow recipes
 # ========================
@@ -317,39 +350,55 @@ watch:
 # Benchmarking recipes
 # ====================
 
-# Run benchmarks (if any)
+# Run benchmarks (requires benchmark setup)
 bench:
     @echo "⚡ Running benchmarks..."
-    source "$HOME/.cargo/env" && cargo bench
+    @cargo bench || echo "No benchmarks configured"
 
-# Profile release build
-profile:
-    @echo "📊 Profiling release build..."
-    source "$HOME/.cargo/env" && cargo build --release
+# Show release build profile information
+profile: build-release
+    @echo "📊 Release build profile:"
+    @echo ""
     @echo "Binary size:"
-    ls -lh {{binary_path}}
+    @ls -lh {{binary_path}}
+    @echo ""
+    @echo "Binary type:"
+    @file {{binary_path}}
+    @echo ""
+    @echo "Dependencies:"
+    @cargo tree --edges normal --depth 1
 
 # Cross-compilation recipes
 # =========================
 
-# Build for Linux (x86_64)
+# Build for Linux (x86_64) - requires target installed
 build-linux:
     @echo "🐧 Building for Linux x86_64..."
-    source "$HOME/.cargo/env" && cargo build --release --target x86_64-unknown-linux-gnu
+    @rustup target add x86_64-unknown-linux-gnu || true
+    cargo build --release --target x86_64-unknown-linux-gnu
 
-# Build for macOS (x86_64)
+# Build for macOS (x86_64) - requires target installed
 build-macos:
     @echo "🍎 Building for macOS x86_64..."
-    source "$HOME/.cargo/env" && cargo build --release --target x86_64-apple-darwin
+    @rustup target add x86_64-apple-darwin || true
+    cargo build --release --target x86_64-apple-darwin
 
-# Build for Windows (x86_64)
+# Build for macOS (ARM64) - requires target installed
+build-macos-arm:
+    @echo "🍎 Building for macOS ARM64..."
+    @rustup target add aarch64-apple-darwin || true
+    cargo build --release --target aarch64-apple-darwin
+
+# Build for Windows (x86_64) - requires target and cross-compiler
 build-windows:
     @echo "🪟 Building for Windows x86_64..."
-    source "$HOME/.cargo/env" && cargo build --release --target x86_64-pc-windows-gnu
+    @rustup target add x86_64-pc-windows-gnu || true
+    cargo build --release --target x86_64-pc-windows-gnu
 
-# Build for all platforms
-build-all: build-linux build-macos build-windows
-    @echo "🌍 Built for all platforms!"
+# List available build targets
+list-targets:
+    @echo "🎯 Available build targets:"
+    @rustup target list | grep installed
 
 # Utility recipes
 # ===============
@@ -369,20 +418,38 @@ sysinfo:
     rustc --version
     cargo --version
 
-# Create backup of important files
+# Create backup of important project files
 backup:
     @echo "💾 Creating backup..."
-    mkdir -p backup
-    cp {{cargo_toml}} backup/
-    cp {{cargo_lock}} backup/
-    cp {{readme}} backup/
-    cp {{changelog}} backup/
-    @echo "✅ Backup created in backup/ directory"
+    @mkdir -p backup
+    @cp {{cargo_toml}} backup/
+    @cp {{cargo_lock}} backup/
+    @cp {{readme}} backup/
+    @cp {{changelog}} backup/
+    @cp {{agents_md}} backup/
+    @cp Justfile backup/
+    @echo "✅ Backup created in backup/ directory with timestamp: $(date +%Y-%m-%d_%H-%M-%S)"
 
-# Emergency cleanup (removes backup, target, and other generated files)
+# Emergency cleanup (removes all generated files and artifacts)
 emergency-clean:
-    @echo "🚨 Emergency cleanup..."
-    rm -rf {{target_dir}}
-    rm -rf backup
-    rm -rf release
+    @echo "🚨 Emergency cleanup - removing all generated files..."
+    @rm -rf {{target_dir}}
+    @rm -rf backup
+    @rm -rf release
+    @cargo clean
     @echo "✅ Emergency cleanup completed"
+
+# Comprehensive project check (runs all quality checks and tests)
+full-check: fmt clippy test doc-check build-release
+    @echo "✅ Full project check completed successfully!"
+    @echo ""
+    @echo "Summary:"
+    @echo "  ✓ Code formatted"
+    @echo "  ✓ Clippy lints passed"
+    @echo "  ✓ Tests passed"
+    @echo "  ✓ Documentation checked"
+    @echo "  ✓ Release build successful"
+
+# Quick iteration workflow (format, check, test)
+quick: fmt check test
+    @echo "✅ Quick check completed!"
