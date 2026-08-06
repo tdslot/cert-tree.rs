@@ -52,6 +52,11 @@ Download pre-built binaries for your platform from the [GitHub Releases](https:/
 
 Releases are automatically built and published via GitHub Actions when version tags are pushed.
 
+> **macOS Note:** Pre-built binaries are not notarized by Apple. On first run, macOS Gatekeeper may block the binary with "cannot be opened". Remove the quarantine attribute:
+> ```bash
+> xattr -d com.apple.quarantine ./cert-tree
+> ```
+
 ### Using mise (Version Manager)
 
 [mise](https://mise.jdx.dev/) is a modern version manager that can install tools from various backends including GitHub releases.
@@ -196,9 +201,11 @@ just tag v1.0.0 "Release notes"  # Create and push tag
 
 #### Release Management
 ```bash
-just prepare-release  # Full release preparation
-just release-archive  # Create release archive
-just release          # Complete release workflow
+just version-bump patch   # Bump version (patch|minor|major) + update all references
+just prepare-release      # Full release preparation (QA + build)
+just release-archive      # Create release archive
+just release              # Complete local release workflow
+just release-github       # Create signed tag, trigger GitHub Actions release
 ```
 
 #### Cross-Platform Building
@@ -242,7 +249,7 @@ test_cert := test_dir + "/cacert.pem"
 | **Docs** | Documentation | `doc`, `doc-build`, `doc-check` |
 | **Info** | Project information | `info`, `version`, `help` |
 | **Git** | Version control | `status`, `commit`, `push`, `tag` |
-| **Release** | Release management | `prepare-release`, `release` |
+| **Release** | Release management | `version-bump`, `prepare-release`, `release-github` |
 | **Cross** | Cross-platform | `build-*` variants |
 | **Util** | Utilities | `backup`, `clean`, `setup` |
 
@@ -252,6 +259,8 @@ test_cert := test_dir + "/cacert.pem"
 2. **Run `just quality`** before committing changes
 3. **Use `just dev-check`** for quick validation during development
 4. **Run `just prepare-release`** before creating releases
+5. **Use `just version-bump`** to bump version across Cargo.toml, README, and CHANGELOG
+6. **Use `just release-github`** for releases — it runs pre-flight checks and never rewrites tags
 5. **Use `just info`** to verify project configuration
 
 ### Integration with Development Workflow

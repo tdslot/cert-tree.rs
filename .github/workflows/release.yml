@@ -319,8 +319,9 @@ jobs:
           
           # Check if changelog section exists
           if [ ! -s changelog_section.md ]; then
-            echo "⚠️ Warning: No changelog section found for version ${VERSION}"
-            echo "No changelog available for this version." > changelog_section.md
+            echo "❌ Error: No changelog section found for version ${VERSION}"
+            echo "Please add a changelog entry before releasing."
+            exit 1
           fi
 
       - name: Generate release notes
@@ -414,7 +415,7 @@ jobs:
           body_path: release_notes.md
           tag_name: ${{ github.ref }}
           name: cert-tree v${{ needs.validate.outputs.version }}
-          draft: false
+          draft: true
           prerelease: false
           fail_on_unmatched_files: true
         env:

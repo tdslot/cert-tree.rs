@@ -91,26 +91,41 @@ git push origin --delete <branch-name>
 
 ### 6. Release (User-Requested Only)
 
-**Prerequisites:** Clean main branch, all quality checks pass.
+**Prerequisites:** Clean main branch, changelog entry for the new version.
 
 ```bash
-# Verify
-git status                        # Must be clean
-just quality-release              # Must pass
+# 1. Bump version (updates Cargo.toml, README badge, CHANGELOG template)
+just version-bump patch          # or minor / major
 
-# Update version (if not done in step 3)
-# Edit Cargo.toml, CHANGELOG.md, README.md
+# 2. Edit CHANGELOG.md — fill in release notes under the new version heading
 
-git add .
-git commit -m "chore: release v<version>"
+# 3. Commit the bump
+git add -A
+git commit -m "chore: bump version to v<version>"
 git push origin main
 
-# Create signed tag
-git tag -s "v<version>" -m "Release v<version>"
-git push origin "v<version>"
+# 4. Release — pre-flight checks (clean tree, main branch, changelog,
+#    no existing tag) + confirmation prompt before creating signed tag
+just release-github
 ```
 
-GitHub Actions builds multi-platform binaries automatically.
+`just release-github` depends on `prepare-release` (full QA) and **never rewrites existing tags**.
+
+GitHub Actions then:
+1. Validates tag ↔ `Cargo.toml` version match
+2. Builds multi-platform binaries (Linux, macOS x86_64/ARM64, RPM, DEB)
+3. **Fails if no changelog section** exists for the version
+4. Creates a **draft release** — review artifacts, publish manually in GitHub UI
+
+### Failed Release Recovery
+
+If release CI fails after the tag was pushed, deleting the remote tag is the **only exception** to "never delete tags":
+
+```bash
+git push origin --delete v<version>
+git tag -d v<version>
+# Fix the issue, then run just release-github again
+```
 
 ## Pitfalls
 
@@ -121,10 +136,13 @@ GitHub Actions builds multi-platform binaries automatically.
 | Uncommitted changes block branch | `git stash`, branch, `git stash pop` |
 | Failed post-merge checks | `git reset --hard HEAD~1`, fix on branch, retry |
 | Unclear version bump | Ask user: "Is this a feature (MINOR) or fix (PATCH)?" |
+| Release CI fails after tag push | Delete remote tag (only exception), fix, re-run `just release-github` |
+| Release appears as draft | Expected — review artifacts, publish manually in GitHub UI |
 
 ## Prohibited Without User Approval
 
-- Creating release tags
+- Creating release tags (always use `just release-github` on explicit request)
+- Deleting or rewriting published tags (except failed-release recovery)
 - Force pushing to main
 - Merging with failing quality checks
 - Committing directly to main
