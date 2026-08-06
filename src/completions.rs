@@ -79,9 +79,7 @@ pub fn get_completion_path(shell: Shell) -> Option<PathBuf> {
                 )))
             }
         }
-        Shell::Zsh => Some(PathBuf::from(format!(
-            "{home}/.zsh/completion/_cert-tree"
-        ))),
+        Shell::Zsh => Some(PathBuf::from(format!("{home}/.zsh/completion/_cert-tree"))),
         Shell::Fish => Some(PathBuf::from(format!(
             "{home}/.config/fish/completions/cert-tree.fish"
         ))),
@@ -178,8 +176,7 @@ mod tests {
             // Verify some output was generated
             assert!(
                 !buffer.is_empty(),
-                "Completion generation should produce output for {:?}",
-                shell
+                "Completion generation should produce output for {shell:?}"
             );
         }
     }

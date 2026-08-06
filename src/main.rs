@@ -195,7 +195,7 @@ mod tests {
         // Test basic field access
         assert_eq!(cert.subject, "CN=test");
         assert_eq!(cert.issuer, "CN=issuer");
-        assert_eq!(cert.is_ca, true);
+        assert!(cert.is_ca);
         assert_eq!(cert.version, 3);
     }
 }

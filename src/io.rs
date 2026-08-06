@@ -1,3 +1,9 @@
+//! Certificate input sources.
+//!
+//! Loads certificates from local PEM/DER files and fetches certificate
+//! chains from remote HTTPS endpoints, returning parsed certificate
+//! information ready for display.
+
 use crate::error::CertError;
 use crate::models::CertificateInfo;
 use crate::parser::extract_cert_info;
