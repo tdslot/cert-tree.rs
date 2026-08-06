@@ -1,3 +1,9 @@
+//! Core data models.
+//!
+//! Defines the data structures shared across the crate: certificate
+//! information extracted from X.509 documents, extension metadata,
+//! certificate chain trees, and validity status classifications.
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 

@@ -311,19 +311,77 @@ release: prepare-release release-archive
     @echo "🎊 Full release workflow completed!"
 
 # GitHub release workflow (creates signed tag and lets GitHub Actions handle release)
-release-github:
-    @echo "📝 Staging and committing release workflow updates..."
-    git add .github/workflows/release.yml Justfile Cargo.toml CHANGELOG.md
-    git commit -m "chore: update release workflow and Justfile for v{{version}}" || true
-    git push
-    @echo "🏷️ Cleaning up any existing release tags to avoid conflicts..."
-    git tag -d v{{version}} || true
-    git push origin --delete v{{version}} || true
-    @echo "🔐 Creating new GPG-signed annotated version tag v{{version}}..."
+# SAFETY: Requires clean main branch, changelog entry, and explicit confirmation.
+release-github: prepare-release
+    @echo "🔍 Running pre-flight checks..."
+    @git diff --quiet || (echo "❌ Working tree not clean. Commit or stash changes first." && exit 1)
+    @test "$(git branch --show-current)" = "main" || (echo "❌ Must be on main branch. Current: $(git branch --show-current)" && exit 1)
+    @grep -q "^## \[{{version}}\]" {{changelog}} || (echo "❌ No CHANGELOG.md entry found for version {{version}}" && exit 1)
+    @test -z "$(git tag -l v{{version}})" || (echo "❌ Tag v{{version}} already exists. Never rewrite published tags." && exit 1)
+    @echo "✅ Pre-flight checks passed for v{{version}}"
+    @echo ""
+    @echo "About to create and push signed tag v{{version}} to origin/main."
+    @echo "This will trigger GitHub Actions release workflow."
+    @echo "Continue? [y/N]" && read ans && [ "$${ans:-N}" = "y" ]
+    @echo "🔐 Creating GPG-signed annotated tag v{{version}}..."
     git tag -s v{{version}} -m "Release v{{version}}"
-    git push origin v{{version}}
-    @echo "✅ Signed version tag v{{version}} successfully created and pushed to remote."
-    @echo "🚀 Release workflow initiated. GitHub Actions will now build and publish the release."
+    git push origin main v{{version}}
+    @echo "✅ Signed tag v{{version}} created and pushed."
+    @echo "🚀 GitHub Actions will now build and publish the release."
+
+# Bump version (patch|minor|major) and update all version references
+version-bump TYPE:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "📦 Bumping version ({{TYPE}})..."
+    
+    # Read current version
+    current=$(grep '^version' {{cargo_toml}} | head -1 | cut -d'"' -f2)
+    echo "Current version: $current"
+    
+    # Parse and bump
+    IFS='.' read -r major minor patch <<< "$current"
+    case "{{TYPE}}" in
+        patch) patch=$((patch + 1)) ;;
+        minor) minor=$((minor + 1)); patch=0 ;;
+        major) major=$((major + 1)); minor=0; patch=0 ;;
+        *) echo "❌ Invalid type: {{TYPE}}. Use patch, minor, or major." && exit 1 ;;
+    esac
+    new="$major.$minor.$patch"
+    echo "New version: $new"
+    
+    # Update Cargo.toml
+    sed -i '' "s/^version = \"$current\"/version = \"$new\"/" {{cargo_toml}}
+    
+    # Update README.md badge
+    sed -i '' "s/version-$current/version-$new/" {{readme}}
+    
+    # Prepend CHANGELOG.md entry using awk for reliable newline handling
+    today=$(date +%Y-%m-%d)
+    awk -v ver="$new" -v date="$today" '
+        /^## \[/ && !done {
+            print "## [" ver "] - " date
+            print ""
+            print "### Added"
+            print "- "
+            print ""
+            print "### Changed"
+            print "- "
+            print ""
+            print "### Fixed"
+            print "- "
+            print ""
+            done=1
+        }
+        { print }
+    ' {{changelog}} > {{changelog}}.tmp && mv {{changelog}}.tmp {{changelog}}
+    
+    echo "✅ Version bumped to $new"
+    echo ""
+    echo "Next steps:"
+    echo "  1. Edit CHANGELOG.md to fill in release notes"
+    echo "  2. git add -A && git commit -m \"chore: bump version to v$new\""
+    echo "  3. just release-github"
 
 # Development environment recipes
 # ===============================

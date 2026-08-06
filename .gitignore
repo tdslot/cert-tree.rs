@@ -1,1 +1,12 @@
 /target
+.DS_Store
+
+# AI assistant tooling (local only)
+.kilo/
+.kilocode/
+.pi-subagents/
+
+# Pi project config (skills are versioned, sessions/missions are local)
+.pi/sessions/
+.pi/missions/
+.pi-subagents/

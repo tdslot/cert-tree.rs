@@ -1,3 +1,9 @@
+//! X.509 certificate parsing.
+//!
+//! Parses PEM- and DER-encoded certificates using [`x509_parser`] and
+//! extracts human-readable information (subject, issuer, validity dates,
+//! extensions, key usages) into the crate's data models.
+
 use crate::error::CertError;
 use crate::models::{CertificateInfo, ExtensionInfo};
 use pem::parse_many;

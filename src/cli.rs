@@ -1,3 +1,9 @@
+//! Command-line interface definition.
+//!
+//! Defines the argument parser ([`clap`] derive-based) including global flags
+//! (input source, output format) and subcommands such as shell completion
+//! generation and installation.
+
 use clap::{CommandFactory, Parser, Subcommand};
 use clap_complete::Shell;
 

@@ -1,3 +1,12 @@
+//! Certificate display and rendering.
+//!
+//! Provides all output modes of the application:
+//!
+//! - verbose text output for a single certificate,
+//! - hierarchical tree rendering of certificate chains for the terminal,
+//! - interactive TUI built on [`ratatui`] with color-coded validity status
+//!   and keyboard navigation.
+
 use crate::models::{
     CertificateDisplayItem, CertificateInfo, CertificateNode, CertificateTree, ValidityStatus,
 };

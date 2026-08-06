@@ -1,3 +1,8 @@
+//! Error types for the cert-tree crate.
+//!
+//! Defines [`CertError`], the unified error type used across parsing,
+//! I/O, and display operations, implemented with [`thiserror`].
+
 use thiserror::Error;
 
 #[derive(Error, Debug)]

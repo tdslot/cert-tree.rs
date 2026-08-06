@@ -1,3 +1,9 @@
+//! Certificate chain tree construction.
+//!
+//! Builds hierarchical [`crate::models::CertificateTree`] structures from
+//! flat certificate lists by matching subjects to issuers, and validates
+//! each chain's trust and expiry status.
+
 use crate::models::{CertificateInfo, CertificateNode, CertificateTree, ValidationStatus};
 use std::collections::HashMap;
 

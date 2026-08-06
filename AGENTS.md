@@ -72,12 +72,48 @@ cargo fmt              # Format
 - Use `Result<T, E>` for fallible operations
 - Define custom error types using `thiserror::Error`
 
-### Error Handling
-- Use `thiserror` crate for custom error types
-- Implement `From` traits for error conversions
-- Use `anyhow` for main() error handling only
-- Error messages should be descriptive and user-friendly
-- Pattern match on specific error variants when needed
+### Error Handling Pattern
+
+```rust
+// Library errors: thiserror
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum CertError {
+    #[error("IO error: {0}")]
+    Io(#[from] std::io::Error),
+    #[error("Parse error: {0}")]
+    Parse(String),
+}
+
+// Main binary: anyhow
+use anyhow::{Context, Result};
+
+fn main() -> Result<()> {
+    let config = load_config().context("Failed to load configuration")?;
+    Ok(())
+}
+```
+
+### Performance Patterns
+
+```rust
+// GOOD: Pre-allocate with capacity
+let mut result = Vec::with_capacity(data.len() / 10);
+
+// GOOD: Borrow instead of copy
+fn process(slice: &[i32]) -> Option<&i32> { slice.iter().max() }
+
+// GOOD: Iterator chains
+let result: Vec<i32> = data.iter()
+    .filter(|&&x| x > 0)
+    .map(|&x| x * 2)
+    .collect();
+
+// BAD: Manual loops with repeated allocation
+let mut result = Vec::new();
+for x in &data { if *x > 0 { result.push(x * 2); } }
+```
 
 ### Documentation
 - Use `///` for public API documentation
@@ -96,7 +132,18 @@ cargo fmt              # Format
 - Clippy is configured with pedantic level in Cargo.toml
 - All warnings are treated as errors (warn level)
 - Key enabled lints: complexity, correctness, perf, style, suspicious
-- Use `#![allow]` sparingly and only in main.rs when necessary
+- Use `#[expect(lint_name, reason = "...")]` instead of `#[allow]` — prevents accumulation of outdated lints
+- `#![allow]` only in main.rs for pedantic documentation lints (module docs are in individual files)
+
+### Lint Overrides
+When a lint must be overridden, use `#[expect]` with explicit reason:
+
+```rust
+#[expect(clippy::missing_docs_in_private_items, reason = "Internal helper, documented at module level")]
+fn internal_helper() { ... }
+```
+
+Never use bare `#[allow]` — it hides when the lint becomes unnecessary.
 
 ### CLI (clap)
 - Use `#[derive(Parser)]` for CLI arguments
@@ -140,6 +187,14 @@ cargo fmt              # Format
 - Create signed git tags for releases
 - GitHub Actions builds multi-platform binaries
 - Release notes generated from CHANGELOG.md
+
+## Available Skills
+
+Project-specific skills in `.pi/skills/`:
+
+| Skill | Description |
+|-------|-------------|
+| `project-workflow` | Git branching, conventional commits, semver versioning, quality gates, and release process |
 
 ## Project-Specific Patterns
 
