@@ -188,6 +188,14 @@ Never use bare `#[allow]` — it hides when the lint becomes unnecessary.
 - GitHub Actions builds multi-platform binaries
 - Release notes generated from CHANGELOG.md
 
+## Available Skills
+
+Project-specific skills in `.pi/skills/`:
+
+| Skill | Description |
+|-------|-------------|
+| `project-workflow` | Git branching, conventional commits, semver versioning, quality gates, and release process |
+
 ## Project-Specific Patterns
 
 ### Certificate Parsing

@@ -1,218 +1,143 @@
 ---
 name: project-workflow
-description: Complete development workflow for cert-tree.rs — git branching, conventional commits, semver versioning, quality gates, and release process. Use when making code changes, creating commits, managing versions, or preparing releases.
+description: Git workflow, versioning, and release process for cert-tree.rs. Use when making code changes, creating commits, managing versions, or preparing releases.
 ---
 
-# Project Workflow for cert-tree.rs
+# Project Workflow
 
-Complete development workflow combining git management, versioning, and release processes.
+Git branching, conventional commits, semantic versioning, and release process for cert-tree.rs.
 
 ## When to Use
 
-- User requests a feature, fix, or change
-- Creating commits or branches
+- Making code changes (features, fixes, refactoring)
+- Creating commits or managing branches
 - Determining version bumps
-- Preparing releases
-- Any git operation beyond simple status/log
+- Preparing and executing releases
 
----
+## Prerequisites
 
-## Part 1: Git Workflow
+- Working directory: clean or changes intentionally stashed
+- Rust toolchain available (`cargo`, `just` in PATH)
+- GPG key configured for signed tags (releases only)
 
-### Core Principles
+## Procedure
 
-1. **Feature Branch Workflow** — every change in dedicated branch
-2. **Conventional Commits** — all commits follow conventional format
-3. **Semver Compliance** — version updates follow semantic versioning
-4. **Quality Gates** — code must pass `just quality` before merging
-5. **Clean History** — maintain clear, linear Git history
-
-### Automatic Workflow
-
-#### 1. Task Initialization
+### 1. Start Work
 
 ```bash
-git status
-
-# Branch naming convention
-git checkout -b feature/description   # new features (MINOR)
-git checkout -b fix/description       # bug fixes (PATCH)
-git checkout -b refactor/description  # refactoring (PATCH)
-git checkout -b docs/description      # documentation (PATCH)
-git checkout -b chore/description     # maintenance (PATCH)
+git status                                    # Verify clean state
+git checkout -b <type>/<description>          # Create feature branch
 ```
 
-**Communicate:** `🔀 Created new branch: feature/xyz`
+Branch types and their version impact:
 
-#### 2. Development Phase
+| Prefix | Use Case | Version |
+|--------|----------|---------|
+| `feature/` | New functionality | MINOR |
+| `fix/` | Bug fixes | PATCH |
+| `refactor/` | Code restructuring | PATCH |
+| `docs/` | Documentation | PATCH |
+| `chore/` | Maintenance | PATCH |
 
-- Implement changes following AGENTS.md guidelines
-- Write/update tests
+### 2. Develop
+
+- Follow [AGENTS.md](../AGENTS.md) coding guidelines
+- Write/update tests in `#[cfg(test)]` modules
 - Run quality checks: `just quality` (fmt + clippy + test + build)
-- Fix any failures before proceeding
 
-#### 3. Version Management
+### 3. Update Version
 
-Update version based on change type (see Semver section below).
+Determine bump type from change:
 
-Update files:
-1. `Cargo.toml` — version field
-2. `CHANGELOG.md` — release notes
-3. `README.md` — version badge if present
+| Change | Version | Example |
+|--------|---------|---------|
+| Breaking CLI/output changes | MAJOR | Remove `--format` option |
+| New features, backward compatible | MINOR | Add `--json-pretty` |
+| Bug fixes, performance, docs | PATCH | Fix parsing error |
 
-#### 4. Commit Creation
+Update these files:
+1. `Cargo.toml` — `version` field
+2. `CHANGELOG.md` — release notes entry
+3. `README.md` — version badge (if present)
 
-Format: `<type>[optional scope]: <description>`
+### 4. Commit
 
-Types: `feat`, `fix`, `refactor`, `docs`, `style`, `test`, `chore`, `perf`, `ci`
+Format: `<type>[scope]: <description>`
+
+| Type | Version | Example |
+|------|---------|---------|
+| `feat` | MINOR | `feat: add OCSP validation support` |
+| `fix` | PATCH | `fix: correct certificate chain parsing` |
+| `refactor` | PATCH | `refactor: simplify display logic` |
+| `docs` | PATCH | `docs: update installation guide` |
+| `chore` | PATCH | `chore: update dependencies` |
 
 ```bash
 git add .
-git commit -m "feat: add OCSP certificate validation support"
+git commit -m "<type>: <description>"
 ```
 
-#### 5. Pre-Merge Quality
+### 5. Merge to Main
 
 ```bash
 git checkout main
 git pull origin main
-git merge --no-ff feature/xyz
-just quality-release
-```
-
-If checks fail → fix on feature branch → retry merge
-
-#### 6. Push and Cleanup
-
-```bash
+git merge --no-ff <branch-name>
+just quality-release              # Final verification
 git push origin main
-git branch -d feature/xyz
-git push origin --delete feature/xyz
+git branch -d <branch-name>
+git push origin --delete <branch-name>
 ```
 
----
+### 6. Release (User-Requested Only)
 
-## Part 2: Semantic Versioning
-
-### Version Format
-
-`MAJOR.MINOR.PATCH`
-
-- **MAJOR** (X.y.z): Breaking changes requiring user intervention
-- **MINOR** (x.Y.z): New features, backward compatible
-- **PATCH** (x.y.Z): Bug fixes, backward compatible
-
-### Version Increment Rules
-
-| Change Type | Version | Examples |
-|-------------|---------|----------|
-| **MAJOR** | Breaking CLI changes, output format changes, feature removal | Changing `--tree` to `--format tree`, removing PEM support |
-| **MINOR** | New features, CLI enhancements, display improvements | Adding `--json-pretty`, new X.509 extensions, TUI features |
-| **PATCH** | Bug fixes, performance, security, documentation | Fixing parsing errors, memory optimization, README updates |
-
-### Commit Message → Version Mapping
-
-- `fix: correct parsing bug` → **PATCH**
-- `feat: add XML output` → **MINOR**
-- `BREAKING: remove legacy options` → **MAJOR**
-
-### Pre-release Versions
-
-- **Alpha** (`1.0.0-alpha.1`): Early testing, features may change
-- **Beta** (`1.0.0-beta.1`): Feature complete, testing phase
-- **RC** (`1.0.0-rc.1`): Ready for release, final testing
-
----
-
-## Part 3: Release Process
-
-**Only execute when user explicitly requests release.**
-
-### Pre-release Checklist
+**Prerequisites:** Clean main branch, all quality checks pass.
 
 ```bash
-git status  # Should be clean
-just quality-release  # fmt + clippy + test + build-release
+# Verify
+git status                        # Must be clean
+just quality-release              # Must pass
+
+# Update version (if not done in step 3)
+# Edit Cargo.toml, CHANGELOG.md, README.md
+
+git add .
+git commit -m "chore: release v<version>"
+git push origin main
+
+# Create signed tag
+git tag -s "v<version>" -m "Release v<version>"
+git push origin "v<version>"
 ```
 
-### Release Steps
+GitHub Actions builds multi-platform binaries automatically.
 
-1. **Version confirmation** — verify Cargo.toml version is correct
-2. **Changelog review** — ensure CHANGELOG.md has entry for this version
-3. **Commit release** (if needed):
-   ```bash
-   git add .
-   git commit -m "chore: release v{version}"
-   git push origin main
-   ```
-4. **Create and push tag**:
-   ```bash
-   git tag -s "v{version}" -m "Release v{version}"
-   git push origin "v{version}"
-   ```
-5. **GitHub Actions** builds and publishes automatically
+## Pitfalls
 
-### Release Communication
+| Problem | Solution |
+|---------|----------|
+| Quality checks fail | Fix on feature branch, never force merge |
+| Merge conflicts | `git merge --abort`, ask user for resolution |
+| Uncommitted changes block branch | `git stash`, branch, `git stash pop` |
+| Failed post-merge checks | `git reset --hard HEAD~1`, fix on branch, retry |
+| Unclear version bump | Ask user: "Is this a feature (MINOR) or fix (PATCH)?" |
 
-```
-🎉 Release v{version} process started
-🤖 GitHub Actions building packages...
-📦 Packages available in releases page in a few minutes
-```
+## Prohibited Without User Approval
 
----
+- Creating release tags
+- Force pushing to main
+- Merging with failing quality checks
+- Committing directly to main
+- Skipping version updates for code changes
 
-## Communication Guidelines
+## Verification
 
-**Always inform user about:**
-- Branch creation: `🔀 Created branch: feature/xyz`
-- Quality checks: `✅ All quality checks passed`
-- Version updates: `📦 Version updated to v{version} ({type})`
-- Commits: `✅ Commit: {type}: {description}`
-- Merge: `🔀 Changes merged to main`
-- Issues: `⚠️ Error: {issue}, fixing...`
+After completing workflow, confirm:
 
-**Always ask user when:**
-- Breaking changes (MAJOR version bump)
-- Ready to trigger release
-- Merge conflicts need resolution
-- Unclear if feature or fix
-
-## Prohibited Actions (WITHOUT USER APPROVAL)
-
-❌ Never create release tags without explicit request
-❌ Never force push to main
-❌ Never merge failing quality checks
-❌ Never commit directly to main
-❌ Never skip version updates when code changes
-
-## Emergency Procedures
-
-**Uncommitted changes conflict:**
-```bash
-git stash
-git checkout -b fix/emergency
-git stash pop
-```
-
-**Merge conflict:**
-```bash
-git merge --abort
-# Report to user, get resolution instructions
-```
-
-**Failed checks after merge:**
-```bash
-git reset --hard HEAD~1
-git checkout feature/branch
-# Fix, retry
-```
-
-## Success Criteria
-
-✅ Every change in feature branch
-✅ Every commit follows conventional format
-✅ Version updated for every code change
-✅ All quality checks pass before merging
-✅ Clean Git history
-✅ User informed at every step
+- [ ] Branch created with correct prefix
+- [ ] All commits follow conventional format
+- [ ] Version bumped appropriately (MAJOR/MINOR/PATCH)
+- [ ] `just quality` passes before merge
+- [ ] `just quality-release` passes after merge
+- [ ] CHANGELOG.md updated for user-facing changes
+- [ ] Clean git history (no fixup commits)
