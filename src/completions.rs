@@ -178,6 +178,30 @@ mod tests {
                 !buffer.is_empty(),
                 "Completion generation should produce output for {shell:?}"
             );
+            if matches!(shell, Shell::Bash) {
+                let output = String::from_utf8(buffer).unwrap();
+                assert!(output.contains("--format"));
+                assert!(output.contains("--check"));
+            }
         }
+    }
+
+    #[test]
+    fn test_inspection_arguments_are_not_global_on_completion_commands() {
+        let command = Args::command();
+        let completion = command
+            .get_subcommands()
+            .find(|subcommand| subcommand.get_name() == "completion")
+            .unwrap();
+        let generate = completion
+            .get_subcommands()
+            .find(|subcommand| subcommand.get_name() == "generate")
+            .unwrap();
+        let argument_ids: Vec<String> = generate
+            .get_arguments()
+            .map(|argument| argument.get_id().to_string())
+            .collect();
+        assert!(!argument_ids.iter().any(|id| id == "check"));
+        assert!(!argument_ids.iter().any(|id| id == "format"));
     }
 }

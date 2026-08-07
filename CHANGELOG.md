@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.0] - 2026-08-06
+
+### Added
+- Stable JSON schema v1 output through `--format json`
+- `--check` policy mode with exit code `2` for validity or chain construction problems, including certificates expiring in 30 days or less
+- Structured SAN, Key Usage, Extended Key Usage, Basic Constraints, SKI, and complete AKI metadata
+- SHA-256 certificate fingerprints and per-certificate construction diagnostics
+
+### Changed
+- Certificate dates are represented as typed UTC timestamps with explicit unknown states
+- Chain output now uses honest construction terminology instead of implying trust validation
+- Issuer resolution preserves duplicate subjects, matches canonical encoded names, and uses AKI/SKI or AKI issuer/serial references when available
+- Invoking `cert-tree` without arguments again prints help and exits successfully
+
+### Fixed
+- Invalid or missing dates no longer silently appear valid
+- Authority Key Identifier OID `2.5.29.35` is labeled correctly
+- Documentation no longer claims unsupported command-line input, arbitrary HTTPS behavior, or revocation checking
+- Duplicate certificate subjects are no longer lost during relationship construction
+- DER input with trailing data is rejected instead of being silently truncated
+- Self-issued certificates now report verified, invalid, or unsupported self-signature status
+- JSON URL metadata omits credentials, query strings, and fragments
+
 ## [0.15.1] - 2026-01-02
 
 ### Changed

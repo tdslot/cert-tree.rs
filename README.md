@@ -1,32 +1,25 @@
 # cert-tree
 
-[![Version](https://img.shields.io/badge/version-0.15.1-blue.svg)](https://github.com/tdslot/cert-tree.rs/releases)
+[![Version](https://img.shields.io/badge/version-0.16.0-blue.svg)](https://github.com/tdslot/cert-tree.rs/releases)
 
 A command-line utility for inspecting X.509 certificates in a tree-like structure, inspired by [cert_tree](https://github.com/jkolezyn/cert_tree).
 
 ## Features
 
-- Parse X.509 certificates from files (PEM/DER), URLs, or command-line input
-- **Certificate Chain Support**: Automatically detect and display certificate hierarchies
-- **HTTPS Certificate Chain Fetching**: Extract certificate chains from any HTTPS website via TLS handshake
-- Display certificate information in multiple formats:
-  - Text mode (default - non-interactive)
-  - Interactive TUI with colors and detailed certificate inspection
-  - Tree view for certificate chains
-  - Verbose text output for single certificates
-- Show detailed certificate information including:
-  - Subject and issuer (CN only for cleaner display)
-  - Validity dates with expiration status
-  - Public key and signature algorithms
-  - **Human-readable extensions** (Key Usage, Subject Alternative Names, Authority Information Access, etc.)
-  - CA status
-- **Color-coded validity status**: Green (valid), Yellow (expiring soon), Red (expired)
-- **Sequence numbering**: Bracketed sequence numbers [1], [2] for certificate identification
-- **Enhanced TUI**: Interactive navigation with Tab-based pane switching, scrollable certificate list and details, automatic text wrapping for long content, version display, responsive layout, ISO 8601 date-time format
-- **CRL Support**: Certificate revocation checking infrastructure with revocation status display
-- **Shell Completion**: Tab-completion support for bash, zsh, fish, and PowerShell
-- Comprehensive error handling for invalid certificates
-- Efficient parsing using the `x509-parser` crate
+- Parse X.509 certificates from local PEM/DER files or HTTPS URLs
+- Fetch the certificate chain served by an HTTPS endpoint on its standard port
+- Construct certificate relationships using issuer/subject names and AKI/SKI identifiers
+- Display text, interactive TUI, or stable machine-readable JSON schema v1
+- Inspect typed validity dates, SHA-256 fingerprints, SAN, Key Usage, Extended Key Usage,
+  Basic Constraints, Subject Key Identifier, and Authority Key Identifier
+- Report honest construction states: `linked`, `missing_issuer`, `ambiguous_issuer`,
+  `self_signed`, and `self_issued_unverified`
+- Optional `--check` mode with CI-friendly exit code `2`
+- Shell completion for bash, zsh, fish, and PowerShell
+
+> **Security scope:** Chain construction only describes relationships between supplied certificates.
+> It is not RFC 5280 path validation, does not establish trust, and does not perform OCSP or CRL
+> revocation checks.
 
 ## Installation
 
@@ -299,57 +292,46 @@ cert-tree --url https://example.com
 cert-tree --url https://example.com/certificate.pem
 ```
 
-### Output Formats
+### Output Formats and Checks
 
 ```bash
-# Text mode (default - non-interactive)
-cert-tree --file cert.pem
+# Text mode (default)
+cert-tree --file cert.pem --format text
 
-# Interactive TUI with colors
-cert-tree --file cert.pem --interactive
+# Stable JSON schema v1
+cert-tree --file cert.pem --format json
 
-# Text mode for certificate chains (explicit)
-cert-tree --file cert-chain.pem --text
+# Interactive TUI (text only)
+cert-tree --file cert-chain.pem --interactive
+
+# Emit the report, then return 2 if validity or construction problems are found
+cert-tree --file cert-chain.pem --format json --check
 ```
 
-### Certificate Chain Examples
-
-```bash
-# Display certificate chain from HTTPS website
-cert-tree --url https://github.com --text
-
-# Display certificate chain in text format
-cert-tree --file ca_list.pem --text
-```
-
-Output:
-```
-━ Entrust Root Certification Authority                                                     [1] [VALID until: 2026-11-27 20:53:42]
-━ QuoVadis Root CA 2                                                                       [2] [VALID until: 2031-11-24 18:23:33]
-━ QuoVadis Root CA 3                                                                       [3] [VALID until: 2031-11-24 19:06:44]
-━ DigiCert Assured ID Root CA                                                              [4] [VALID until: 2031-11-10 00:00:00]
-━ DigiCert Global Root CA                                                                  [5] [VALID until: 2031-11-10 00:00:00]
-━ DigiCert High Assurance EV Root CA                                                       [6] [VALID until: 2031-11-10 00:00:00]
-━ SwissSign Gold CA - G2                                                                   [7] [VALID until: 2036-10-25 08:30:35]
-━ SecureTrust CA                                                                           [8] [VALID until: 2029-12-31 19:40:55]
-━ Secure Global CA                                                                         [9] [VALID until: 2029-12-31 19:52:06]
-━ COMODO Certification Authority                                                           [10] [VALID until: 2029-12-31 23:59:59]
-```
-
-```bash
-# Interactive TUI for certificate chains
-cert-tree --file ca_list.pem --interactive
-```
-*TUI mode provides color-coded display with interactive navigation*
+`-t/--text` remains as a deprecated, hidden compatibility alias. Prefer `--format text`.
 
 ### Options
 
-- `-f, --file <FILE>`: Certificate file path (PEM or DER)
-- `-U, --url <URL>`: Certificate URL
-- `-i, --interactive`: Interactive TUI mode (default: false)
-- `-t, --text`: Force text output mode (non-interactive, default: true)
-- `-h, --help`: Print help information
-- `-V, --version`: Print version information
+- `-f, --file <FILE>`: local PEM or DER certificate input
+- `-U, --url <URL>`: HTTPS certificate file URL or HTTPS endpoint
+- `--format <text|json>`: output format (default: `text`)
+- `--check`: evaluate validity and construction policy after output; certificates expiring in
+  30 days or less are `expiring_soon` and cause exit code `2`
+- `-i, --interactive`: interactive TUI; incompatible with JSON and `--check`
+- `-h, --help`: print help information
+- `-V, --version`: print version information
+
+### Exit Codes
+
+| Code | Meaning |
+|---:|---|
+| `0` | Inspection and output succeeded; `--check` found no problem |
+| `1` | CLI, input, parse, network, TUI, or JSON error |
+| `2` | Output succeeded, but `--check` found a validity or construction problem, including `expiring_soon` (30 days or less) |
+
+JSON reports include `schema_version: 1`, input metadata, certificates in stable input order,
+and per-certificate construction diagnostics. JSON is written only to stdout; errors and check
+summaries are written to stderr.
 
 ### Shell Completion
 
@@ -481,7 +463,7 @@ cert-tree --file cert.pem --interactive
 - Version number displayed in title bar
 - Dynamic column sizing that adapts to terminal width
 - Responsive layout for different terminal sizes
-- ISO 8601 date-time format for precise validity periods (e.g., 2024-11-10T12:00:00Z)
+- UTC date-time display for validity periods (e.g., `2024-11-10 12:00:00 UTC`)
 - Interactive interface (Tab Toggle Panes | ↑/↓ Navigate/Scroll | PageUp/PageDown Fast Nav | 'q' Quit)
 - Clean, organized layout with borders and sections
 - Human-readable formatting for all certificate fields
@@ -495,20 +477,33 @@ cert-tree --file cert.pem --interactive
 ### Inspect a single certificate (text mode)
 
 ```bash
-cert-tree --file certificate.pem --text
+cert-tree --file certificate.pem --format text
 ```
 
-Output:
+Output (abridged):
+```text
+Certificate Information:
+======================
+CN: example.com
+Issuer: CN=Example Issuing CA
+Serial Number: 01ab...
+Validity:
+  Not Before: 2024-08-10 12:00:00 UTC
+  Not After: 2024-11-10 12:00:00 UTC
+Validity Status: VALID
+Chain Construction: MISSING ISSUER
+SHA-256 Fingerprint: 0123...
 ```
-━ example.com                      [1] [VALID until: 2024-11-10 12:00:00]
-```
+
+Running `cert-tree` with no arguments prints help and exits successfully. Supplying inspection
+options without either `--file` or `--url` is an argument error.
 
 
 ## Dependencies
 
 - `clap`: Command-line argument parsing
 - `x509-parser`: X.509 certificate parsing
-- `reqwest`: HTTP client for URL fetching
+- `reqwest`: HTTPS client for certificate URL fetching
 - `rustls`: TLS library for certificate chain extraction
 - `webpki-roots`: Trusted root certificates for TLS validation
 - `anyhow` & `thiserror`: Error handling
