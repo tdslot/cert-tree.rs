@@ -19,6 +19,10 @@ pub enum CertError {
     InvalidFormat,
     #[error("Certificate not found")]
     NotFound,
+    #[error("JSON serialization error: {0}")]
+    Json(#[from] serde_json::Error),
+    #[error("Invalid arguments: {0}")]
+    InvalidArguments(String),
 }
 
 impl From<rustls::Error> for CertError {

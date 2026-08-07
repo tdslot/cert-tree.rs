@@ -1,29 +1,8 @@
-//! # cert-tree.rs - X.509 Certificate Inspection Utility
+//! # cert-tree.rs — read-only X.509 certificate inspection
 //!
-//! This crate provides a command-line tool for inspecting and displaying X.509 certificates
-//! in a human-readable tree format. It supports multiple input sources (files, URLs) and
-//! output formats (tree view, verbose text, interactive TUI).
-//!
-//! ## Features
-//!
-//! - Parse certificates from PEM/DER files or HTTPS URLs
-//! - Display certificate chains with hierarchical tree structure
-//! - Interactive TUI with color-coded validity status
-//! - Text mode for non-interactive environments
-//! - Comprehensive certificate information including extensions
-//!
-//! ## Usage
-//!
-//! ```bash
-//! # Inspect a certificate file
-//! cert-tree --file certificate.pem
-//!
-//! # Inspect certificates from a website
-//! cert-tree --url https://example.com
-//!
-//! # Interactive mode
-//! cert-tree --file certificate.pem --interactive
-//! ```
+//! Inspects PEM/DER files and HTTPS endpoints as text, an interactive TUI, or
+//! stable JSON schema v1. Relationship construction is not PKIX path validation
+//! and does not establish trust or check revocation.
 
 #![allow(clippy::missing_docs_in_private_items)]
 #![allow(clippy::too_many_lines)]
@@ -40,162 +19,129 @@ mod error;
 mod io;
 mod models;
 mod parser;
+mod report;
 mod tree;
 
-use std::error::Error;
-
-use cli::{parse_args, Commands, CompletionCommands};
+use chrono::Utc;
+use clap::CommandFactory;
+use cli::{parse_args, Args, Commands, CompletionCommands, OutputFormat};
 use completions::{generate_completion, install_completion};
 use display::{
     display_certificate_tree_text, display_certificate_tree_tui, display_tui, display_verbose,
 };
+use error::CertError;
 use io::{fetch_certificate_chain_from_url, load_certificate_from_file};
+use models::{CertificateInfo, CertificateTree};
 use parser::parse_certificate_chain;
-use tree::build_certificate_tree;
+use report::{policy_failed, write_json, InputKind, InspectionReport};
+use std::process::ExitCode;
+use tree::build_certificate_tree_at;
 
-fn main() -> Result<(), Box<dyn Error>> {
-    let args = parse_args();
-
-    // Handle subcommands
-    match args.command {
-        Some(Commands::Completion(completion_cmd)) => match completion_cmd {
-            CompletionCommands::Generate { shell } => {
-                generate_completion(shell);
-                return Ok(());
-            }
-            CompletionCommands::Install { shell } => match install_completion(shell) {
-                Ok(message) => {
-                    println!("{message}");
-                    return Ok(());
-                }
-                Err(err) => {
-                    eprintln!("Error: {err}");
-                    std::process::exit(1);
-                }
-            },
-        },
-        None => {
-            // Continue with normal certificate inspection
+fn main() -> ExitCode {
+    if std::env::args_os().len() == 1 {
+        let mut command = Args::command();
+        if command.print_help().is_err() {
+            return ExitCode::from(1);
         }
+        println!();
+        return ExitCode::SUCCESS;
     }
 
-    let certificates = if let Some(file) = args.file.as_ref() {
-        let data = load_certificate_from_file(file)?;
-        parse_certificate_chain(&data)?
-    } else if let Some(url) = args.url.as_ref() {
-        fetch_certificate_chain_from_url(url)?
-    } else {
-        // Unreachable due to CLI validation
-        unreachable!();
+    let args = match parse_args() {
+        Ok(args) => args,
+        Err(error) => {
+            let success = matches!(
+                error.kind(),
+                clap::error::ErrorKind::DisplayHelp | clap::error::ErrorKind::DisplayVersion
+            );
+            let _ = error.print();
+            return ExitCode::from(u8::from(!success));
+        }
     };
-
-    if certificates.len() == 1 {
-        let cert_info = &certificates[0];
-
-        if args.interactive {
-            display_tui(cert_info)?;
-        } else {
-            display_verbose(cert_info);
-        }
-    } else {
-        let tree = build_certificate_tree(&certificates);
-
-        if args.interactive {
-            display_certificate_tree_tui(&tree)?;
-        } else {
-            display_certificate_tree_text(&tree);
+    if let Err(message) = args.validate() {
+        eprintln!("Error: {message}");
+        return ExitCode::from(1);
+    }
+    match run(&args) {
+        Ok(code) => code,
+        Err(error) => {
+            eprintln!("Error: {error}");
+            ExitCode::from(1)
         }
     }
-
-    Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::error::CertError;
-    use crate::models::{
-        CertificateInfo, CertificateNode, CertificateTree, ValidationStatus, ValidityStatus,
-    };
-    use crate::parser::parse_certificate_chain;
-
-    #[test]
-    fn test_parse_certificate_chain_invalid_data() {
-        let invalid_data = b"invalid certificate data";
-        let result = parse_certificate_chain(invalid_data);
-        assert!(result.is_err());
+fn run(args: &Args) -> Result<ExitCode, CertError> {
+    if let Some(command) = &args.command {
+        return run_command(command);
     }
 
-    #[test]
-    fn test_load_certificate_from_file_not_found() {
-        let result = load_certificate_from_file("nonexistent.pem");
-        assert!(matches!(result, Err(CertError::NotFound)));
+    let certificates = load_certificates(args)?;
+    let now = Utc::now();
+    let tree = build_certificate_tree_at(&certificates, now);
+    emit_output(args, &certificates, &tree, now)?;
+
+    if args.check && policy_failed(&tree) {
+        eprintln!("Inspection policy found certificate validity or chain construction problems.");
+        return Ok(ExitCode::from(2));
     }
+    Ok(ExitCode::SUCCESS)
+}
 
-    #[test]
-    fn test_display_tree() {
-        let cert = CertificateInfo {
-            subject: "CN=example.com".to_string(),
-            issuer: "CN=CA".to_string(),
-            serial_number: "12345".to_string(),
-            not_before: "2023-01-01".to_string(),
-            not_after: "2024-01-01".to_string(),
-            public_key_algorithm: "RSA".to_string(),
-            signature_algorithm: "SHA256-RSA".to_string(),
-            version: 3,
-            extensions: vec![
-                crate::models::ExtensionInfo {
-                    oid: "2.5.29.14".to_string(),
-                    name: crate::parser::oid_to_name("2.5.29.14"),
-                    critical: false,
-                    value: "KeyIdentifier(...)".to_string(),
-                },
-                crate::models::ExtensionInfo {
-                    oid: "2.5.29.17".to_string(),
-                    name: crate::parser::oid_to_name("2.5.29.17"),
-                    critical: false,
-                    value: "GeneralNames(...)".to_string(),
-                },
-            ],
-            is_ca: false,
-            key_usage: Some("Digital Signature".to_string()),
-            subject_alt_names: vec!["example.com".to_string()],
-        };
-
-        // This will print to stdout, but we can't easily test output
-        // In a real scenario, we'd capture stdout or use a different approach
-        let tree = CertificateTree {
-            roots: vec![CertificateNode {
-                cert: cert.clone(),
-                children: vec![],
-                validity_status: ValidityStatus::Valid,
-                validation_status: ValidationStatus::Valid,
-            }],
-        };
-        crate::display::display_certificate_tree_text(&tree);
+fn run_command(command: &Commands) -> Result<ExitCode, CertError> {
+    match command {
+        Commands::Completion(CompletionCommands::Generate { shell }) => generate_completion(*shell),
+        Commands::Completion(CompletionCommands::Install { shell }) => {
+            let message = install_completion(*shell).map_err(CertError::InvalidArguments)?;
+            println!("{message}");
+        }
     }
+    Ok(ExitCode::SUCCESS)
+}
 
-    #[test]
-    fn test_certificate_info_creation() {
-        let cert = CertificateInfo {
-            subject: "CN=test".to_string(),
-            issuer: "CN=issuer".to_string(),
-            serial_number: "67890".to_string(),
-            not_before: "2023-01-01".to_string(),
-            not_after: "2024-01-01".to_string(),
-            public_key_algorithm: "ECDSA".to_string(),
-            signature_algorithm: "SHA256-ECDSA".to_string(),
-            version: 3,
-            extensions: vec![],
-            is_ca: true,
-            key_usage: None,
-            subject_alt_names: vec![],
-        };
+fn load_certificates(args: &Args) -> Result<Vec<CertificateInfo>, CertError> {
+    if let Some(file) = args.file.as_deref() {
+        return parse_certificate_chain(&load_certificate_from_file(file)?);
+    }
+    if let Some(url) = args.url.as_deref() {
+        return fetch_certificate_chain_from_url(url);
+    }
+    Err(CertError::InvalidArguments(
+        "one of --file or --url is required".to_string(),
+    ))
+}
 
-        // Test basic field access
-        assert_eq!(cert.subject, "CN=test");
-        assert_eq!(cert.issuer, "CN=issuer");
-        assert!(cert.is_ca);
-        assert_eq!(cert.version, 3);
+fn emit_output(
+    args: &Args,
+    certificates: &[CertificateInfo],
+    tree: &CertificateTree,
+    now: chrono::DateTime<Utc>,
+) -> Result<(), CertError> {
+    match args.effective_format() {
+        OutputFormat::Json => {
+            let (kind, source) = if let Some(file) = args.file.as_deref() {
+                (InputKind::File, file)
+            } else {
+                (InputKind::Url, args.url.as_deref().unwrap_or_default())
+            };
+            let report = InspectionReport::new(kind, source, certificates, tree, now);
+            write_json(&mut std::io::stdout().lock(), &report)
+        }
+        OutputFormat::Text if args.interactive => {
+            if tree.roots.len() == 1 && tree.roots[0].children.is_empty() {
+                display_tui(&tree.roots[0])?;
+            } else {
+                display_certificate_tree_tui(tree)?;
+            }
+            Ok(())
+        }
+        OutputFormat::Text => {
+            if tree.roots.len() == 1 && tree.roots[0].children.is_empty() {
+                display_verbose(&tree.roots[0]);
+            } else {
+                display_certificate_tree_text(tree);
+            }
+            Ok(())
+        }
     }
 }

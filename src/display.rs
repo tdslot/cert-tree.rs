@@ -8,9 +8,9 @@
 //!   and keyboard navigation.
 
 use crate::models::{
-    CertificateDisplayItem, CertificateInfo, CertificateNode, CertificateTree, ValidityStatus,
+    CertificateDisplayItem, CertificateNode, CertificateTree, ConstructionStatus, ValidityStatus,
 };
-use chrono::DateTime;
+use chrono::{DateTime, Utc};
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
@@ -39,7 +39,53 @@ const SLEEP_MS: u64 = 50;
 /// Starting position for date column in text display
 const DATE_COLUMN_START: usize = 78;
 
-pub fn display_verbose(cert: &CertificateInfo) {
+fn format_certificate_date(date: Option<DateTime<Utc>>) -> String {
+    date.map_or_else(
+        || "Unknown".to_string(),
+        |value| value.format("%Y-%m-%d %H:%M:%S UTC").to_string(),
+    )
+}
+
+fn validity_label(status: ValidityStatus) -> &'static str {
+    match status {
+        ValidityStatus::NotYetValid => "NOT YET VALID",
+        ValidityStatus::Valid => "VALID",
+        ValidityStatus::ExpiringSoon => "EXPIRES SOON",
+        ValidityStatus::Expired => "EXPIRED",
+        ValidityStatus::Unknown => "UNKNOWN",
+    }
+}
+
+fn validity_color(status: ValidityStatus) -> Color {
+    match status {
+        ValidityStatus::Valid => Color::Green,
+        ValidityStatus::ExpiringSoon => Color::Yellow,
+        ValidityStatus::NotYetValid | ValidityStatus::Expired => Color::Red,
+        ValidityStatus::Unknown => Color::Gray,
+    }
+}
+
+fn construction_label(status: ConstructionStatus) -> &'static str {
+    match status {
+        ConstructionStatus::Linked => "LINKED",
+        ConstructionStatus::MissingIssuer => "MISSING ISSUER",
+        ConstructionStatus::AmbiguousIssuer => "AMBIGUOUS ISSUER",
+        ConstructionStatus::SelfSigned => "SELF-SIGNED",
+        ConstructionStatus::SelfIssuedUnverified => "SELF-ISSUED (UNVERIFIED)",
+    }
+}
+
+fn construction_color(status: ConstructionStatus) -> Color {
+    match status {
+        ConstructionStatus::Linked | ConstructionStatus::SelfSigned => Color::Green,
+        ConstructionStatus::MissingIssuer
+        | ConstructionStatus::AmbiguousIssuer
+        | ConstructionStatus::SelfIssuedUnverified => Color::Yellow,
+    }
+}
+
+pub fn display_verbose(node: &CertificateNode) {
+    let cert = &node.cert;
     println!("Certificate Information:");
     println!("======================");
     let cn = crate::parser::extract_cn(&cert.subject);
@@ -47,15 +93,38 @@ pub fn display_verbose(cert: &CertificateInfo) {
     println!("Issuer: {}", cert.issuer);
     println!("Serial Number: {}", cert.serial_number);
     println!("Validity:");
-    println!("  Not Before: {}", cert.not_before);
-    println!("  Not After: {}", cert.not_after);
+    println!("  Not Before: {}", format_certificate_date(cert.not_before));
+    println!("  Not After: {}", format_certificate_date(cert.not_after));
+    println!("Validity Status: {}", validity_label(node.validity_status));
+    println!(
+        "Chain Construction: {}",
+        construction_label(node.construction_status)
+    );
+    println!("SHA-256 Fingerprint: {}", cert.sha256_fingerprint);
     println!("Public Key Algorithm: {}", cert.public_key_algorithm);
     println!("Signature Algorithm: {}", cert.signature_algorithm);
     println!("Version: {}", cert.version);
     println!("Is CA: {}", cert.is_ca);
 
-    if let Some(ku) = &cert.key_usage {
-        println!("Key Usage: {ku}");
+    if !cert.key_usage.is_empty() {
+        println!(
+            "Key Usage: {}",
+            cert.key_usage
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+    }
+    if !cert.extended_key_usage.is_empty() {
+        println!(
+            "Extended Key Usage: {}",
+            cert.extended_key_usage
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
     }
 
     if !cert.subject_alt_names.is_empty() {
@@ -75,12 +144,13 @@ pub fn display_verbose(cert: &CertificateInfo) {
             } else {
                 "non-critical"
             },
-            ext.value
+            ext.value_hex
         );
     }
 }
 
-pub fn display_tui(cert: &CertificateInfo) -> Result<(), Box<dyn std::error::Error>> {
+pub fn display_tui(node: &CertificateNode) -> io::Result<()> {
+    let cert = &node.cert;
     // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -88,7 +158,7 @@ pub fn display_tui(cert: &CertificateInfo) -> Result<(), Box<dyn std::error::Err
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let validity_status = ValidityStatus::from_dates(&cert.not_after);
+    let validity_status = node.validity_status;
 
     // Force initial clear and small delay to ensure proper layout on startup
     terminal.clear()?;
@@ -141,15 +211,21 @@ pub fn display_tui(cert: &CertificateInfo) -> Result<(), Box<dyn std::error::Err
                 ]),
                 Line::from(vec![
                     Span::styled("Validity: ", Style::default().fg(Color::Blue)),
-                    Span::styled(&cert.not_before, Style::default().fg(Color::White)),
+                    Span::styled(
+                        format_certificate_date(cert.not_before),
+                        Style::default().fg(Color::White),
+                    ),
                     Span::raw(" → "),
-                    Span::styled(&cert.not_after, Style::default().fg(Color::White)),
+                    Span::styled(
+                        format_certificate_date(cert.not_after),
+                        Style::default().fg(Color::White),
+                    ),
                 ]),
                 Line::from(vec![
                     Span::styled("Status: ", Style::default().fg(Color::Blue)),
                     Span::styled(
-                        validity_status.text(),
-                        Style::default().fg(validity_status.color()),
+                        validity_label(validity_status),
+                        Style::default().fg(validity_color(validity_status)),
                     ),
                 ]),
                 Line::from(vec![
@@ -180,10 +256,17 @@ pub fn display_tui(cert: &CertificateInfo) -> Result<(), Box<dyn std::error::Err
                 ]),
             ];
 
-            if let Some(ku) = &cert.key_usage {
+            if !cert.key_usage.is_empty() {
                 cert_info.push(Line::from(vec![
                     Span::styled("Key Usage: ", Style::default().fg(Color::Blue)),
-                    Span::styled(ku, Style::default().fg(Color::Magenta)),
+                    Span::styled(
+                        cert.key_usage
+                            .iter()
+                            .map(ToString::to_string)
+                            .collect::<Vec<_>>()
+                            .join(", "),
+                        Style::default().fg(Color::Magenta),
+                    ),
                 ]));
             }
 
@@ -191,7 +274,11 @@ pub fn display_tui(cert: &CertificateInfo) -> Result<(), Box<dyn std::error::Err
                 cert_info.push(Line::from(vec![
                     Span::styled("Subject Alt Names: ", Style::default().fg(Color::Blue)),
                     Span::styled(
-                        cert.subject_alt_names.join(", "),
+                        cert.subject_alt_names
+                            .iter()
+                            .map(ToString::to_string)
+                            .collect::<Vec<_>>()
+                            .join(", "),
                         Style::default().fg(Color::Cyan),
                     ),
                 ]));
@@ -275,8 +362,7 @@ fn display_tree_node_text(
         cn.clone()
     };
 
-    // Date is already in the correct format
-    let date_str = node.cert.not_after.clone();
+    let date_str = format_certificate_date(node.cert.not_after);
 
     // Calculate exact padding to align date column
     let name_end_pos = prefix.len() + display_name.len();
@@ -287,16 +373,18 @@ fn display_tree_node_text(
     };
     let padding = " ".repeat(padding_needed);
 
-    // Color codes for terminal output
-    let (status_text, color_code) = match node.validity_status {
-        ValidityStatus::Expired => ("EXPIRED", "\x1b[31m"), // Red
-        ValidityStatus::ExpiringSoon => ("EXPIRES SOON", "\x1b[33m"), // Yellow
-        ValidityStatus::Valid => ("VALID", "\x1b[32m"),     // Green
+    let status_text = validity_label(node.validity_status);
+    let color_code = match validity_color(node.validity_status) {
+        Color::Green => "\x1b[32m",
+        Color::Yellow => "\x1b[33m",
+        Color::Red => "\x1b[31m",
+        _ => "\x1b[90m",
     };
+    let construction = construction_label(node.construction_status);
 
     // Use white for certificate names, color only the status/date part
     println!(
-        "\x1b[37m[{sequence_num}] {prefix}{display_name}{padding}\x1b[0m{color_code}[{status_text}] [until: {date_str}]\x1b[0m"
+        "\x1b[37m[{sequence_num}] {prefix}{display_name}{padding}\x1b[0m{color_code}[{status_text}] [until: {date_str}] [{construction}]\x1b[0m"
     );
 
     // Display children with cascading tree structure
@@ -311,9 +399,7 @@ fn display_tree_node_text(
     }
 }
 
-pub fn display_certificate_tree_tui(
-    tree: &CertificateTree,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub fn display_certificate_tree_tui(tree: &CertificateTree) -> io::Result<()> {
     // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -395,12 +481,10 @@ pub fn display_certificate_tree_tui(
                         item.display_name.clone()
                     };
 
-                    // Reformat date using adaptive format
-                    let formatted_date = if let Ok(dt) = DateTime::parse_from_str(&item.valid_until, "%Y-%m-%d %H:%M:%S") {
-                        dt.format(date_format).to_string()
-                    } else {
-                        item.valid_until.clone()
-                    };
+                    let formatted_date = item.valid_until.map_or_else(
+                        || "Unknown".to_string(),
+                        |date| date.format(date_format).to_string(),
+                    );
 
                     // Create formatted strings for each column
                     let name_part = format!("{display_name:<available_name_width$}");
@@ -409,7 +493,7 @@ pub fn display_certificate_tree_tui(
 
                     let line = Line::from(vec![
                         Span::styled(name_part, Style::default().fg(Color::White)),
-                        Span::styled(date_part, Style::default().fg(item.validity_status.color())),
+                        Span::styled(date_part, Style::default().fg(validity_color(item.validity_status))),
                         Span::raw("   "), // Add 3 spaces padding after date
                     ]);
 
@@ -463,17 +547,17 @@ pub fn display_certificate_tree_tui(
                 ]),
                 Line::from(vec![
                     Span::styled("Validity Period: ", Style::default().fg(Color::Blue)),
-                    Span::styled(&cert.not_before, Style::default().fg(Color::White)),
+                    Span::styled(format_certificate_date(cert.not_before), Style::default().fg(Color::White)),
                     Span::raw(" → "),
-                    Span::styled(&cert.not_after, Style::default().fg(Color::White)),
+                    Span::styled(format_certificate_date(cert.not_after), Style::default().fg(Color::White)),
                 ]),
                 Line::from(vec![
                     Span::styled("Status: ", Style::default().fg(Color::Blue)),
-                    Span::styled(selected_cert.validity_status.text(), Style::default().fg(selected_cert.validity_status.color())),
+                    Span::styled(validity_label(selected_cert.validity_status), Style::default().fg(validity_color(selected_cert.validity_status))),
                 ]),
                 Line::from(vec![
-                    Span::styled("Chain Validation: ", Style::default().fg(Color::Blue)),
-                    Span::styled(selected_cert.validation_status.text(), Style::default().fg(selected_cert.validation_status.color())),
+                    Span::styled("Chain Construction: ", Style::default().fg(Color::Blue)),
+                    Span::styled(construction_label(selected_cert.construction_status), Style::default().fg(construction_color(selected_cert.construction_status))),
                 ]),
                 Line::from(vec![
                     Span::styled("Version: ", Style::default().fg(Color::Blue)),
@@ -493,17 +577,20 @@ pub fn display_certificate_tree_tui(
                 ]),
             ];
 
-            if let Some(ku) = &cert.key_usage {
+            if !cert.key_usage.is_empty() {
                 details_lines.push(Line::from(vec![
                     Span::styled("Key Usage: ", Style::default().fg(Color::Blue)),
-                    Span::styled(ku, Style::default().fg(Color::Magenta)),
+                    Span::styled(
+                        cert.key_usage.iter().map(ToString::to_string).collect::<Vec<_>>().join(", "),
+                        Style::default().fg(Color::Magenta),
+                    ),
                 ]));
             }
 
             if !cert.subject_alt_names.is_empty() {
                 details_lines.push(Line::from(vec![
                     Span::styled("Subject Alternative Names: ", Style::default().fg(Color::Blue)),
-                    Span::styled(cert.subject_alt_names.join(", "), Style::default().fg(Color::Cyan)),
+                    Span::styled(cert.subject_alt_names.iter().map(ToString::to_string).collect::<Vec<_>>().join(", "), Style::default().fg(Color::Cyan)),
                 ]));
             }
 
@@ -677,14 +764,13 @@ fn flatten_node(
     // Format display name with bracketed sequence number, indentation, and certificate name
     let display_name = format!("[{line_number}] {indentation}{cn}");
 
-    // Date is already in the correct format (YYYY-MM-DD HH:MM:SS)
-    let valid_until = node.cert.not_after.clone();
+    let valid_until = node.cert.not_after;
 
     certificates.push(CertificateDisplayItem {
         display_name,
         valid_until,
-        validity_status: node.validity_status.clone(),
-        validation_status: node.validation_status.clone(),
+        validity_status: node.validity_status,
+        construction_status: node.construction_status,
         certificate_info: node.cert.clone(),
     });
 
@@ -693,5 +779,43 @@ fn flatten_node(
     // Add children
     for child in &node.children {
         flatten_node(child, certificates, depth + 1, line_number);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::{CertificateTree, SelfSignatureStatus};
+    use crate::parser::parse_certificate_chain;
+    use crate::tree::build_certificate_tree_at;
+    use chrono::{Duration, TimeZone, Utc};
+
+    fn tree_with_validity(offset_days: (i64, i64)) -> CertificateTree {
+        let certs = parse_certificate_chain(include_bytes!("../test/single_cert.pem")).unwrap();
+        let mut cert = certs[0].clone();
+        cert.self_signature_status = SelfSignatureStatus::Verified;
+        let now = Utc.with_ymd_and_hms(2026, 8, 6, 0, 0, 0).unwrap();
+        cert.not_before = Some(now + Duration::days(offset_days.0));
+        cert.not_after = Some(now + Duration::days(offset_days.1));
+        build_certificate_tree_at(&[cert], now)
+    }
+
+    #[test]
+    fn test_display_does_not_panic_for_any_status() {
+        // Covers: valid, not-yet-valid, expired, expiring-soon, unknown.
+        for offsets in [(-1, 365), (1, 365), (-365, -1), (-1, 30)] {
+            let tree = tree_with_validity(offsets);
+            display_verbose(&tree.roots[0]);
+            display_certificate_tree_text(&tree);
+        }
+
+        let certs = parse_certificate_chain(include_bytes!("../test/single_cert.pem")).unwrap();
+        let mut cert = certs[0].clone();
+        cert.not_before = None;
+        cert.not_after = None;
+        let now = Utc.with_ymd_and_hms(2026, 8, 6, 0, 0, 0).unwrap();
+        let tree = build_certificate_tree_at(&[cert], now);
+        display_verbose(&tree.roots[0]);
+        display_certificate_tree_text(&tree);
     }
 }

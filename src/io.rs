@@ -36,26 +36,38 @@ pub fn load_certificate_from_file(path: &str) -> Result<Vec<u8>, CertError> {
 }
 
 pub fn fetch_certificate_chain_from_url(url: &str) -> Result<Vec<CertificateInfo>, CertError> {
-    // Parse the URL to extract hostname
-    let url_parsed = Url::parse(url).map_err(|_| CertError::InvalidFormat)?;
+    let url_parsed = parse_https_url(url)?;
     let hostname = url_parsed.host_str().ok_or(CertError::InvalidFormat)?;
 
-    // First, try to fetch as direct certificate data (for URLs like cacert.pem)
+    // First, try to fetch direct PEM or DER certificate data.
     let client = reqwest::blocking::Client::new();
-    if let Ok(response) = client.get(url).send() {
+    if let Ok(response) = client
+        .get(url)
+        .send()
+        .and_then(reqwest::blocking::Response::error_for_status)
+    {
         let data = response.bytes()?;
-        let content = String::from_utf8_lossy(&data);
-
-        // Check if the URL contains certificate data
-        if content.contains("-----BEGIN CERTIFICATE-----") {
-            return crate::parser::parse_certificate_chain(&data);
+        if let Ok(certificates) = parse_downloaded_certificate(&data) {
+            return Ok(certificates);
         }
-    } else {
-        // If direct fetch fails, try to get certificate chain from HTTPS connection
     }
 
-    // For HTTPS URLs, establish a TLS connection and capture the certificate chain
+    // Otherwise, inspect the certificate chain served by the HTTPS endpoint.
     fetch_certificate_chain_via_tls(hostname)
+}
+
+fn parse_https_url(url: &str) -> Result<Url, CertError> {
+    let parsed = Url::parse(url).map_err(|_| CertError::InvalidFormat)?;
+    if parsed.scheme() != "https" {
+        return Err(CertError::InvalidArguments(
+            "--url only supports HTTPS URLs".to_string(),
+        ));
+    }
+    Ok(parsed)
+}
+
+fn parse_downloaded_certificate(data: &[u8]) -> Result<Vec<CertificateInfo>, CertError> {
+    crate::parser::parse_certificate_chain(data)
 }
 
 fn fetch_certificate_chain_via_tls(hostname: &str) -> Result<Vec<CertificateInfo>, CertError> {
@@ -103,10 +115,16 @@ fn fetch_certificate_chain_via_tls(hostname: &str) -> Result<Vec<CertificateInfo
     if let Some(certs) = conn.peer_certificates() {
         let mut certificates = Vec::new();
         for cert_der in certs {
-            let (_, cert) = X509Certificate::from_der(cert_der.as_ref())
+            let (remaining, cert) = X509Certificate::from_der(cert_der.as_ref())
                 .map_err(|e| CertError::X509Parse(format!("Failed to parse certificate: {e}")))?;
+            if !remaining.is_empty() {
+                return Err(CertError::X509Parse(format!(
+                    "trailing data after TLS DER certificate ({} bytes)",
+                    remaining.len()
+                )));
+            }
 
-            let cert_info = extract_cert_info(&cert);
+            let cert_info = extract_cert_info(&cert, cert_der.as_ref());
             certificates.push(cert_info);
         }
         Ok(certificates)
@@ -114,5 +132,33 @@ fn fetch_certificate_chain_via_tls(hostname: &str) -> Result<Vec<CertificateInfo
         Err(CertError::X509Parse(
             "No certificates found in TLS handshake".to_string(),
         ))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_downloaded_der_body_is_parsed_without_network() {
+        let pem = pem::parse(include_bytes!("../test/single_cert.pem")).unwrap();
+        let certificates = parse_downloaded_certificate(pem.contents()).unwrap();
+        assert_eq!(certificates.len(), 1);
+    }
+
+    #[test]
+    fn test_url_scheme_validation_accepts_only_https_without_network() {
+        let parsed = parse_https_url("https://example.test/cert.pem").unwrap();
+        assert_eq!(parsed.scheme(), "https");
+
+        for unsupported in [
+            "http://example.test/cert.pem",
+            "ftp://example.test/cert.pem",
+            "file:///tmp/cert.pem",
+        ] {
+            let error = parse_https_url(unsupported).unwrap_err();
+            assert!(matches!(error, CertError::InvalidArguments(_)));
+            assert!(error.to_string().contains("only supports HTTPS"));
+        }
     }
 }
